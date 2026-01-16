@@ -33,7 +33,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
 
 const navGroups = [
     {
@@ -85,12 +84,6 @@ const navGroups = [
 export function MainNav() {
   const pathname = usePathname();
   const { state } = useSidebar();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
 
   return (
     <>
@@ -118,7 +111,7 @@ export function MainNav() {
                 )}
                 <SidebarMenu className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                    const isActive = isClient ? pathname.startsWith(item.href) : false;
+                    const isActive = pathname.startsWith(item.href);
                     return (
                     <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
