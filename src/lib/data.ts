@@ -70,8 +70,7 @@ export const toolList = [
     { id: 'brand', title: 'Designsystem & Brandstudio', icon: 'palette', color: 'amber', desc: 'Brand-Assets.' },
     { id: 'automation', title: 'Automation & OPS Studio', icon: 'workflow', color: 'indigo', desc: 'Workflows.' },
     { id: 'prompt', title: 'AI Dispatch & prompt Studio', icon: 'command', color: 'zinc', desc: 'Prompts.' },
-    { id: 'code', title: 'Code & developer Studio', icon: 'code', color: 'blue', desc: 'Entwicklung.' },
-    { id: 'qmail', title: 'Qmail', icon: 'mail', color: 'rose', desc: 'KI-gestütztes E-Mail Management.' }
+    { id: 'code', title: 'Code & developer Studio', icon: 'code', color: 'blue', desc: 'Entwicklung.' }
 ];
 
 export const tasks = [

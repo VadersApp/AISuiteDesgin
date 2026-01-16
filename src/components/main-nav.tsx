@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Settings,
   MessageCircle,
+  Mail,
 } from "lucide-react";
 import {
   SidebarHeader,
@@ -43,6 +44,7 @@ const navGroups = [
         title: "Interaktion",
         items: [
             { href: "/chat", icon: MessageSquare, label: "Chat" },
+            { href: "/qmail", icon: Mail, label: "Qmail" },
             { href: "/knowledge-base", icon: Database, label: "Wissensdatenbank", special: true },
             { href: "/meeting", icon: Video, label: "AI Meeting" },
         ]

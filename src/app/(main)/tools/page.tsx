@@ -13,7 +13,6 @@ import {
   Command,
   Code,
   ArrowUpRight,
-  Mail,
 } from "lucide-react";
 
 const iconMap: { [key: string]: React.ElementType } = {
@@ -28,7 +27,6 @@ const iconMap: { [key: string]: React.ElementType } = {
   workflow: Workflow,
   command: Command,
   code: Code,
-  mail: Mail,
 };
 
 export default function ToolsPage() {
