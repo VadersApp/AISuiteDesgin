@@ -1,45 +1,79 @@
-import { PageHeader } from "@/components/page-header";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { toolList } from "@/lib/data";
+import {
+  Globe,
+  FileEdit,
+  Presentation,
+  Image,
+  Video,
+  Share2,
+  Volume2,
+  Palette,
+  Workflow,
+  Command,
+  Code,
+  ArrowUpRight,
+} from "lucide-react";
+
+const iconMap: { [key: string]: React.ElementType } = {
+  globe: Globe,
+  "file-edit": FileEdit,
+  presentation: Presentation,
+  image: Image,
+  video: Video,
+  "share-2": Share2,
+  "volume-2": Volume2,
+  palette: Palette,
+  workflow: Workflow,
+  command: Command,
+  code: Code,
+};
 
 export default function ToolsPage() {
-  const tools = PlaceHolderImages.filter(img => img.id.startsWith("tool-"));
   return (
-    <>
-      <PageHeader
-        title="AI Tool Studios"
-        description="AI-powered tools for content creation, image generation, and more."
-      />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {tools.map(tool => (
-          <Card key={tool.id} className="group flex flex-col justify-between overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-primary/20">
-            <Link href="#">
-              <div>
-                <Image
-                  src={tool.imageUrl}
-                  alt={tool.description}
-                  width={600}
-                  height={400}
-                  className="h-48 w-full object-cover"
-                  data-ai-hint={tool.imageHint}
-                />
-                <div className="p-4">
-                  <CardTitle className="text-lg">{tool.description}</CardTitle>
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-white tracking-tight">
+          AI Tools
+        </h1>
+        <p className="text-slate-400">Ihre spezialisierten Studios.</p>
+      </header>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {toolList.map((t) => {
+          const Icon = iconMap[t.icon];
+          return (
+            <Card
+              key={t.id}
+              className="p-6 group cursor-pointer hover:border-blue-500 transition-all flex flex-col h-full"
+            >
+              <div className="mb-4">
+                <div
+                  className={`w-12 h-12 rounded-2xl bg-${t.color}-500/10 text-${t.color}-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}
+                >
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3
+                  className="text-lg font-bold text-white mb-2 uppercase italic tracking-tight line-clamp-2"
+                  title={t.title}
+                >
+                  {t.title}
+                </h3>
+                <p
+                  className="text-xs text-slate-500 leading-relaxed line-clamp-3"
+                  title={t.desc}
+                >
+                  {t.desc}
+                </p>
+              </div>
+              <div className="flex justify-end mt-auto pt-2">
+                <div className="p-2 rounded-lg bg-slate-800 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                  <ArrowUpRight className="w-4 h-4" />
                 </div>
               </div>
-              <div className="p-4 pt-0">
-                <div className="flex items-center text-sm font-medium text-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  Use Tool
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </div>
-              </div>
-            </Link>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 }

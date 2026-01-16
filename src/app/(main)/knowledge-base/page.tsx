@@ -7,53 +7,38 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-const faqs = [
-  {
-    question: "How do I reset my password?",
-    answer: "You can reset your password by going to the settings page and clicking on 'Change Password'. Follow the on-screen instructions from there.",
-  },
-  {
-    question: "What is the AI Assistant?",
-    answer: "The AI Assistant is a powerful tool that can help you with a variety of tasks, from answering questions to automating workflows. You can interact with it through the chat interface.",
-  },
-  {
-    question: "How is my data used?",
-    answer: "We take data privacy very seriously. Your data is used to improve our services and provide you with a personalized experience. We do not sell your data to third parties. Please refer to our privacy policy for more details.",
-  },
-  {
-    question: "Can I integrate my own tools?",
-    answer: "Yes, we offer an API and webhooks for integrating custom tools and services. You can find the documentation in the developer section of your account.",
-  },
-  {
-    question: "How do I contact support?",
-    answer: "If you need assistance, you can contact our support team via the 'Support' link in your account dropdown menu or by emailing support@aisuite.com. We're available 24/7 to help.",
-  },
-];
+import { kbDepartments } from "@/lib/data";
+import { Card } from "@/components/ui/card";
 
 export default function KnowledgeBasePage() {
   return (
-    <>
-      <PageHeader
-        title="Knowledge Base"
-        description="Find quick answers to common questions."
-      />
-      <div className="mx-auto max-w-3xl">
-        <div className="relative mb-8">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder="Search articles..." className="pl-10" />
+     <div className="space-y-8 pb-20">
+        <header><h1 className="text-3xl font-bold text-white tracking-tight">Wissensdatenbank</h1><p className="text-slate-400 italic">Das zentrale Gehirn Ihrer AISUITE.</p></header>
+        
+        <div className="mt-12 pt-8 border-t border-slate-700/50">
+            <header className="mb-6">
+                <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Abteilungs-Wissensdatenbank</h2>
+                <p className="text-slate-400 text-sm">Lade Dokumente gezielt pro Abteilung hoch, damit die KI in diesem Kontext korrekt arbeiten kann.</p>
+            </header>
+            
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              {kbDepartments.map(dept => (
+                <AccordionItem value={dept.slug} key={dept.slug} className="bg-slate-800/40 border border-slate-700/50 rounded-xl overflow-hidden">
+                  <AccordionTrigger className="w-full flex items-center justify-between p-4 bg-[#1E293B]/60 hover:bg-[#1E293B]/80 text-left transition-colors hover:no-underline">
+                    <div className="flex items-center gap-3">
+                        <Search className="w-5 h-5 text-blue-400"/>
+                        <span className="text-sm font-bold text-white">{dept.name}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="p-6 bg-slate-900/30">
+                        <p className="text-slate-400 italic">Details for {dept.name} will be shown here.</p>
+                      </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
         </div>
-        <Accordion type="single" collapsible className="w-full">
-          {faqs.map((faq, index) => (
-            <AccordionItem value={`item-${index}`} key={index}>
-              <AccordionTrigger className="text-left text-base">{faq.question}</AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </>
+    </div>
   );
 }

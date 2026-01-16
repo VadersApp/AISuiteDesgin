@@ -1,32 +1,41 @@
-import { suggestTasks } from "@/ai/flows/ai-suggested-tasks";
-import { PageHeader } from "@/components/page-header";
-import { TaskList } from "@/components/tasks/task-list";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { tasks } from "@/lib/data";
+import { Hash } from "lucide-react";
 
-export default async function TasksPage() {
-  // Hardcode input for demonstration purposes
-  const { suggestedTasks } = await suggestTasks({
-    userRole: "Project Manager",
-    currentProjects: "Q3 Product Launch, Website Redesign",
-  });
-
+export default function TasksPage() {
   return (
-    <>
-      <PageHeader
-        title="AI Task Management"
-        description="AI-suggested tasks to keep you on track."
-      >
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Task
-        </Button>
-      </PageHeader>
-      <div className="space-y-6">
-        <TaskList title="Suggested For You" tasks={suggestedTasks} />
-        <TaskList title="Today" tasks={["Finalize Q3 marketing brief", "Review new landing page mockups", "Onboarding call with new designer"]} />
-        <TaskList title="Upcoming" tasks={["Prepare for weekly sync", "Draft Q4 roadmap"]} />
+    <div className="space-y-8 pb-20">
+      <header>
+        <h1 className="text-3xl font-bold text-white tracking-tight">
+          Meine Aufgaben
+        </h1>
+        <p className="text-slate-400">Von der KI vorbereitete Aufgaben.</p>
+      </header>
+      <div className="grid grid-cols-1 gap-4">
+        {tasks.map((t) => (
+          <Card
+            key={t.id}
+            className="p-6 hover:border-slate-600 border-l-4 transition-all hover:translate-x-1"
+            style={{ borderLeftColor: t.color }}
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-[10px] text-slate-500 font-mono mb-1 flex items-center gap-2">
+                  <Hash className="w-3 h-3" /> {t.id}
+                </p>
+                <h3 className="text-lg font-bold text-white">{t.title}</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Erstellt von{" "}
+                  <span className="text-slate-300 font-bold">{t.from}</span>
+                </p>
+              </div>
+              <button className="bg-slate-800 text-white px-5 py-2 rounded-xl text-xs font-bold hover:bg-white hover:text-black transition-all">
+                Öffnen
+              </button>
+            </div>
+          </Card>
+        ))}
       </div>
-    </>
+    </div>
   );
 }

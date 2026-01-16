@@ -1,16 +1,20 @@
 import { MainNav } from '@/components/main-nav';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { type PropsWithChildren } from 'react';
+import { Header } from '@/components/header';
 
 export default function MainLayout({ children }: PropsWithChildren) {
   return (
     <SidebarProvider>
-      <Sidebar>
+      <Sidebar className="w-72 border-r border-slate-700/50 bg-sidebar flex flex-col transition-all duration-300 z-50 flex-shrink-0">
         <MainNav />
       </Sidebar>
-      <SidebarInset>
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-          {children}
+      <SidebarInset className="bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-[#020617] relative">
+        <Header />
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+            <div className="max-w-7xl mx-auto h-full pb-20">
+                {children}
+            </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

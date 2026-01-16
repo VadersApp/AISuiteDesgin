@@ -1,91 +1,57 @@
-import { PageHeader } from "@/components/page-header";
-import { OverviewChart } from "@/components/dashboard/overview-chart";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell } from "recharts";
+import { Card } from "@/components/ui/card";
+import { reportingStats } from "@/lib/data";
+import { Coins, PiggyBank, TrendingUp, ShieldCheck } from "lucide-react";
 
-const roiData = [
-  { month: "January", roi: 186 },
-  { month: "February", roi: 305 },
-  { month: "March", roi: 237 },
-  { month: "April", roi: 273 },
-  { month: "May", roi: 209 },
-  { month: "June", roi: 214 },
-];
-
-const roiChartConfig = {
-  roi: {
-    label: "ROI (%)",
-    color: "hsl(var(--primary))",
-  },
-} satisfies ChartConfig;
-
-const costData = [
-  { name: "Infrastructure", value: 400, fill: "var(--color-infra)" },
-  { name: "API Usage", value: 300, fill: "var(--color-api)" },
-  { name: "Licensing", value: 300, fill: "var(--color-license)" },
-  { name: "Support", value: 200, fill: "var(--color-support)" },
-];
-const costChartConfig = {
-  infra: { label: "Infrastructure", color: "hsl(var(--chart-1))" },
-  api: { label: "API Usage", color: "hsl(var(--chart-2))" },
-  license: { label: "Licensing", color: "hsl(var(--chart-3))" },
-  support: { label: "Support", color: "hsl(var(--chart-4))" },
-} satisfies ChartConfig
+const iconMap: { [key: string]: React.ElementType } = {
+  coins: Coins,
+  "piggy-bank": PiggyBank,
+  "trending-up": TrendingUp,
+  "shield-check": ShieldCheck,
+};
 
 export default function ReportingPage() {
   return (
-    <>
-      <PageHeader
-        title="Reporting & ROI"
-        description="Financial and operational metrics for measuring return on investment."
-      />
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>ROI Over Time</CardTitle>
-            <CardDescription>Return on investment percentage month-over-month.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={roiChartConfig} className="h-[250px] w-full">
-              <BarChart data={roiData}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="roi" fill="var(--color-roi)" radius={4} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Usage by Department</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <OverviewChart />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Cost Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={costChartConfig} className="h-[250px] w-full">
-                <PieChart>
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  <Pie data={costData} dataKey="value" nameKey="name" innerRadius={60}>
-                    {costData.map((entry) => (
-                      <Cell key={`cell-${entry.name}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+    <div className="space-y-8">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">
+            Reporting & ROI
+          </h1>
+          <p className="text-slate-400">Finanzielle und operative Analyse.</p>
         </div>
+        <div className="bg-slate-800/50 p-1 rounded-xl border border-slate-700/50 flex text-xs font-bold">
+          <button className="px-4 py-2 rounded-lg transition-all bg-blue-600 text-white shadow-lg">
+            Monatlich
+          </button>
+          <button className="px-4 py-2 rounded-lg transition-all text-slate-400 hover:text-white">
+            Jährlich
+          </button>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {reportingStats.map((s, i) => {
+          const Icon = iconMap[s.icon];
+          return (
+            <Card
+              key={i}
+              className="p-6 flex items-center gap-4"
+            >
+              <div
+                className={`p-3 rounded-xl bg-${s.color}-500/10 text-${s.color}-400`}
+              >
+                <Icon className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-slate-500 text-xs font-bold uppercase">
+                  {s.title}
+                </p>
+                <h3 className="text-2xl font-bold text-white">{s.value}</h3>
+              </div>
+            </Card>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 }
