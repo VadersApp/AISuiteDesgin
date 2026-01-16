@@ -51,7 +51,7 @@ export default function ChatPage() {
     }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] gap-6">
+    <div className="flex flex-col flex-1 gap-6">
         <div className="flex-1 flex flex-col overflow-hidden bg-card/50 border border-border rounded-2xl relative shadow-2xl backdrop-blur-lg">
             <div className="p-4 border-b border-border bg-card/80 backdrop-blur-lg flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/50"><MessageSquare className="w-4 h-4" /></div>

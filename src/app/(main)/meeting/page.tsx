@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 export default function MeetingPage() {
 
     return (
-        <div className="space-y-8 h-[calc(100vh-8rem)] flex flex-col">
+        <div className="space-y-8 flex flex-col flex-1">
             <header className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground tracking-tight">AI Meeting</h1>
