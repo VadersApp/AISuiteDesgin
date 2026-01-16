@@ -15,7 +15,7 @@ export function DepartmentGrid() {
         return (
           <Link href={`/departments/${d.id}`} key={d.id}>
           <Card
-            className="p-6 hover:border-blue-500/50 transition-all group cursor-pointer flex flex-col h-full"
+            className="p-6 hover:border-primary/50 transition-all group cursor-pointer flex flex-col h-full"
           >
             <div className="mb-6 min-w-0">
               <div
@@ -24,17 +24,17 @@ export function DepartmentGrid() {
                 <Building2 className="w-6 h-6" />
               </div>
               <h3
-                className="text-lg font-bold text-white mb-2 line-clamp-2"
+                className="text-lg font-bold text-foreground mb-2 line-clamp-2"
                 title={d.name}
               >
                 {d.name}
               </h3>
-              <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed h-[3.5em]">
+              <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed h-[3.5em]">
                 {d.desc}
               </p>
             </div>
-            <div className="mt-auto pt-4 border-t border-slate-700/50 flex flex-wrap justify-between items-center gap-2">
-              <span className="text-[10px] text-blue-400 font-bold uppercase flex items-center gap-1 whitespace-nowrap">
+            <div className="mt-auto pt-4 border-t border-border flex flex-wrap justify-between items-center gap-2">
+              <span className="text-[10px] text-primary font-bold uppercase flex items-center gap-1 whitespace-nowrap">
                 <Bot className="w-3 h-3" /> {agentsLabel}{" "}
                 {d.agents.length > 1 ? `+${d.agents.length - 1}` : ""}
               </span>

@@ -6,7 +6,7 @@ export default function NewsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
           Neuigkeiten
         </h1>
       </header>
@@ -14,7 +14,7 @@ export default function NewsPage() {
         {newsItems.map((n, i) => (
           <Card
             key={i}
-            className="p-6 hover:bg-slate-800/60 transition-colors"
+            className="p-6 hover:bg-accent/80 transition-colors"
           >
             <div className="flex justify-between items-start">
               <span
@@ -22,10 +22,10 @@ export default function NewsPage() {
               >
                 {n.cat}
               </span>
-              <ExternalLink className="w-4 h-4 text-slate-600" />
+              <ExternalLink className="w-4 h-4 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">{n.title}</h3>
-            <p className="text-sm text-slate-400">{n.desc}</p>
+            <h3 className="text-lg font-bold text-foreground mb-2">{n.title}</h3>
+            <p className="text-sm text-muted-foreground">{n.desc}</p>
           </Card>
         ))}
       </div>

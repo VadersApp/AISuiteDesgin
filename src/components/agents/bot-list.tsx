@@ -2,6 +2,7 @@
 import { bots } from '@/lib/data';
 import { Bot, Plus, Star, MessageSquare, Clock, Target, TrendingUp, Zap, FileText, CheckCircle, ShieldCheck, Activity, AlertCircle, Shield, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { Card } from '@/components/ui/card';
 
 const iconMap: {[key: string]: React.ElementType} = {
     star: Star,
@@ -24,8 +25,8 @@ export function BotList() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {bots.map((b) => (
         <Link href={`/agents/${b.id}`} key={b.id}>
-        <div
-          className="group flex flex-col bg-[#1E293B]/50 border border-slate-700/50 rounded-2xl p-6 cursor-pointer hover:border-emerald-500/40 min-h-[220px] hover:shadow-lg hover:shadow-emerald-900/10 transition-all active:scale-[0.98]"
+        <Card
+          className="group flex flex-col p-6 cursor-pointer hover:border-emerald-500/40 min-h-[220px] transition-all active:scale-[0.98]"
         >
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3">
@@ -33,34 +34,34 @@ export function BotList() {
                 <Bot className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-white leading-none group-hover:text-emerald-400 transition-colors">
+                <h3 className="font-bold text-foreground leading-none group-hover:text-emerald-400 transition-colors">
                   {b.name}
                 </h3>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase font-bold tracking-wide">
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wide">
                   {b.role}
                 </p>
               </div>
             </div>
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
           </div>
-          <p className="text-xs text-slate-400 mb-6 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-muted-foreground mb-6 line-clamp-2 leading-relaxed">
             {b.desc}
           </p>
           <div className="grid grid-cols-2 gap-3 mt-auto">
-            <div className="bg-black/20 rounded-xl p-3 border border-slate-700/50 text-center group-hover:bg-black/40 transition-colors">
-              <p className="text-[9px] text-slate-500 font-bold uppercase">
+            <div className="bg-background/50 dark:bg-black/20 rounded-xl p-3 border border-border text-center group-hover:bg-accent/80 transition-colors">
+              <p className="text-[9px] text-muted-foreground font-bold uppercase">
                 Aufgaben
               </p>
-              <p className="text-lg font-bold text-white">{b.tasksCount}</p>
+              <p className="text-lg font-bold text-foreground">{b.tasksCount}</p>
             </div>
-            <div className="bg-black/20 rounded-xl p-3 border border-slate-700/50 text-center group-hover:bg-black/40 transition-colors">
-              <p className="text-[9px] text-slate-500 font-bold uppercase">
+            <div className="bg-background/50 dark:bg-black/20 rounded-xl p-3 border border-border text-center group-hover:bg-accent/80 transition-colors">
+              <p className="text-[9px] text-muted-foreground font-bold uppercase">
                 Ersparnis
               </p>
-              <p className="text-lg font-bold text-blue-400">{b.timeSaved}</p>
+              <p className="text-lg font-bold text-primary">{b.timeSaved}</p>
             </div>
           </div>
-        </div>
+        </Card>
         </Link>
       ))}
     </div>

@@ -33,10 +33,10 @@ export default function ToolsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
           AI Tools
         </h1>
-        <p className="text-slate-400">Ihre spezialisierten Studios.</p>
+        <p className="text-muted-foreground">Ihre spezialisierten Studios.</p>
       </header>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {toolList.map((t) => {
@@ -44,7 +44,7 @@ export default function ToolsPage() {
           return (
             <Card
               key={t.id}
-              className="p-6 group cursor-pointer hover:border-blue-500 transition-all flex flex-col h-full"
+              className="p-6 group cursor-pointer hover:border-primary transition-all flex flex-col h-full"
             >
               <div className="mb-4">
                 <div
@@ -53,20 +53,20 @@ export default function ToolsPage() {
                   <Icon className="w-6 h-6" />
                 </div>
                 <h3
-                  className="text-lg font-bold text-white mb-2 uppercase italic tracking-tight line-clamp-2"
+                  className="text-lg font-bold text-foreground mb-2 uppercase italic tracking-tight line-clamp-2"
                   title={t.title}
                 >
                   {t.title}
                 </h3>
                 <p
-                  className="text-xs text-slate-500 leading-relaxed line-clamp-3"
+                  className="text-xs text-muted-foreground leading-relaxed line-clamp-3"
                   title={t.desc}
                 >
                   {t.desc}
                 </p>
               </div>
               <div className="flex justify-end mt-auto pt-2">
-                <div className="p-2 rounded-lg bg-slate-800 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                <div className="p-2 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                   <ArrowUpRight className="w-4 h-4" />
                 </div>
               </div>

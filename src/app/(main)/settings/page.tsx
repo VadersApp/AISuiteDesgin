@@ -22,33 +22,33 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8 pb-20">
       <header>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
           Einstellungen
         </h1>
-        <p className="text-slate-400">
+        <p className="text-muted-foreground">
           Verwalten Sie Ihr Konto und die Systemeinstellungen.
         </p>
       </header>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-slate-800/50 h-auto p-1.5">
-          <TabsTrigger value="profile" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-muted/50 h-auto p-1.5">
+          <TabsTrigger value="profile" className="py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground">
             <User className="w-4 h-4 mr-2" />
             Profil
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+          <TabsTrigger value="notifications" className="py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground">
             <Bell className="w-4 h-4 mr-2" />
             Benachrichtigungen
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+          <TabsTrigger value="appearance" className="py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground">
             <Palette className="w-4 h-4 mr-2" />
             Darstellung
           </TabsTrigger>
-          <TabsTrigger value="security" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+          <TabsTrigger value="security" className="py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground">
             <Shield className="w-4 h-4 mr-2" />
             Sicherheit
           </TabsTrigger>
-          <TabsTrigger value="api" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+          <TabsTrigger value="api" className="py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground">
             <KeyRound className="w-4 h-4 mr-2" />
             API-Schlüssel
           </TabsTrigger>
@@ -67,22 +67,22 @@ export default function SettingsPage() {
               <div className="flex items-center gap-6">
                  <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-slate-600 to-slate-400 flex-shrink-0"></div>
                  <div>
-                    <h3 className="text-lg font-bold text-white">Dr. Müller</h3>
-                    <p className="text-sm text-slate-400">CEO</p>
+                    <h3 className="text-lg font-bold text-foreground">Dr. Müller</h3>
+                    <p className="text-sm text-muted-foreground">CEO</p>
                  </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" defaultValue="Dr. Müller" className="bg-slate-900 border-slate-700" />
+                  <Input id="name" defaultValue="Dr. Müller" className="bg-input" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">E-Mail</Label>
-                  <Input id="email" type="email" defaultValue="ceo@aisuite.de" disabled className="bg-slate-800 border-slate-700 disabled:opacity-70" />
+                  <Input id="email" type="email" defaultValue="ceo@aisuite.de" disabled className="bg-muted disabled:opacity-70" />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+            <CardFooter className="border-t border-border px-6 py-4 justify-end">
               <Button>Änderungen speichern</Button>
             </CardFooter>
           </Card>
@@ -98,29 +98,29 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                    <div>
-                       <Label htmlFor="email-notifications" className="font-bold text-white">E-Mail Benachrichtigungen</Label>
-                       <p className="text-xs text-slate-400">Zusammenfassungen und wichtige Alerts per Mail erhalten.</p>
+                       <Label htmlFor="email-notifications" className="font-bold text-foreground">E-Mail Benachrichtigungen</Label>
+                       <p className="text-xs text-muted-foreground">Zusammenfassungen und wichtige Alerts per Mail erhalten.</p>
                    </div>
                    <Switch id="email-notifications" defaultChecked />
                </div>
-               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                    <div>
-                       <Label htmlFor="push-notifications" className="font-bold text-white">Push-Benachrichtigungen</Label>
-                       <p className="text-xs text-slate-400">System-Updates und Eskalationen sofort sehen. (In-App)</p>
+                       <Label htmlFor="push-notifications" className="font-bold text-foreground">Push-Benachrichtigungen</Label>
+                       <p className="text-xs text-muted-foreground">System-Updates und Eskalationen sofort sehen. (In-App)</p>
                    </div>
                    <Switch id="push-notifications" defaultChecked />
                </div>
-               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                    <div>
-                       <Label htmlFor="task-notifications" className="font-bold text-white">Neue Aufgaben</Label>
-                       <p className="text-xs text-slate-400">Benachrichtigen, wenn eine KI eine neue Aufgabe erstellt.</p>
+                       <Label htmlFor="task-notifications" className="font-bold text-foreground">Neue Aufgaben</Label>
+                       <p className="text-xs text-muted-foreground">Benachrichtigen, wenn eine KI eine neue Aufgabe erstellt.</p>
                    </div>
                    <Switch id="task-notifications" />
                </div>
             </CardContent>
-            <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+            <CardFooter className="border-t border-border px-6 py-4 justify-end">
               <Button>Einstellungen speichern</Button>
             </CardFooter>
           </Card>
@@ -138,10 +138,10 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label>Theme</Label>
-                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                 <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                    <div>
-                       <p className="font-bold text-white">Dark Mode</p>
-                       <p className="text-xs text-slate-400">Derzeit ist nur der Dark Mode verfügbar.</p>
+                       <p className="font-bold text-foreground">Dark Mode</p>
+                       <p className="text-xs text-muted-foreground">Derzeit ist nur der Dark Mode verfügbar.</p>
                    </div>
                    <Switch checked disabled />
                </div>
@@ -160,22 +160,22 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                    <div>
-                       <Label className="font-bold text-white">Passwort ändern</Label>
-                       <p className="text-xs text-slate-400">Ändern Sie regelmäßig Ihr Passwort für mehr Sicherheit.</p>
+                       <Label className="font-bold text-foreground">Passwort ändern</Label>
+                       <p className="text-xs text-muted-foreground">Ändern Sie regelmäßig Ihr Passwort für mehr Sicherheit.</p>
                    </div>
                    <Button variant="outline">Passwort ändern</Button>
                </div>
-               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                    <div>
-                       <Label htmlFor="2fa" className="font-bold text-white">Zwei-Faktor-Authentifizierung (2FA)</Label>
-                       <p className="text-xs text-slate-400">Fügen Sie eine zusätzliche Sicherheitsebene hinzu.</p>
+                       <Label htmlFor="2fa" className="font-bold text-foreground">Zwei-Faktor-Authentifizierung (2FA)</Label>
+                       <p className="text-xs text-muted-foreground">Fügen Sie eine zusätzliche Sicherheitsebene hinzu.</p>
                    </div>
                    <Switch id="2fa" />
                </div>
             </CardContent>
-             <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+             <CardFooter className="border-t border-border px-6 py-4 justify-end">
               <Button>Sicherheitseinstellungen speichern</Button>
             </CardFooter>
           </Card>
@@ -191,19 +191,19 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                 <div>
-                  <p className="font-bold text-white font-mono text-sm">sk-.....-a1b2</p>
-                  <p className="text-xs text-slate-400">Google Gemini API (LLM Provider)</p>
+                  <p className="font-bold text-foreground font-mono text-sm">sk-.....-a1b2</p>
+                  <p className="text-xs text-muted-foreground">Google Gemini API (LLM Provider)</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase font-bold px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-500/20">Aktiv</span>
-                  <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-400 hover:text-white"><Pencil className="w-4 h-4"/></Button>
-                  <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-400 hover:text-rose-400"><Trash2 className="w-4 h-4"/></Button>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground"><Pencil className="w-4 h-4"/></Button>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-rose-400"><Trash2 className="w-4 h-4"/></Button>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+            <CardFooter className="border-t border-border px-6 py-4 justify-end">
               <Button>Neuen API-Schlüssel erstellen</Button>
             </CardFooter>
           </Card>

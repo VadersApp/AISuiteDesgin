@@ -28,12 +28,12 @@ export function Header() {
     };
 
     return (
-        <header className="h-16 border-b border-border/50 flex items-center justify-between px-8 bg-card/20 backdrop-blur-lg sticky top-0 z-40">
+        <header className="h-16 border-b border-border/50 flex items-center justify-between px-8 bg-background/50 backdrop-blur-lg sticky top-0 z-40">
             <div className="flex items-center gap-4">
                 <SidebarTrigger className="p-2 text-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-accent md:hidden" />
-                <div className="hidden lg:flex items-center bg-background/50 border border-border/50 rounded-xl px-4 py-1.5 gap-2 w-72 focus-within:border-primary/50 focus-within:bg-background transition-all">
+                <div className="hidden lg:flex items-center bg-background/50 border border-border rounded-xl px-4 py-1.5 gap-2 w-72 focus-within:border-primary/50 focus-within:bg-background transition-all">
                     <Search className="w-3.5 h-3.5 text-muted-foreground" />
-                    <input type="text" placeholder="Durchsuche QORE..." className="bg-transparent border-none text-xs text-foreground focus:outline-none w-full placeholder-muted-foreground" />
+                    <input type="text" placeholder="Durchsuche QORE..." className="bg-transparent border-none text-xs text-foreground focus:outline-none w-full placeholder:text-muted-foreground" />
                 </div>
             </div>
             <div className="flex items-center gap-4">

@@ -31,20 +31,20 @@ export default function KnowledgeBasePage() {
   return (
     <div className="space-y-8 pb-20">
       <header>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
           Wissensdatenbank
         </h1>
-        <p className="text-slate-400 italic">
+        <p className="text-muted-foreground italic">
           Das zentrale Gehirn von QORE.
         </p>
       </header>
 
-      <div className="mt-12 pt-8 border-t border-slate-700/50">
+      <div className="mt-12 pt-8 border-t border-border">
         <header className="mb-6">
-          <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
+          <h2 className="text-2xl font-bold text-foreground tracking-tight mb-2">
             Abteilungs-Wissensdatenbank
           </h2>
-          <p className="text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             Lade Dokumente gezielt pro Abteilung hoch, damit die KI in diesem
             Kontext korrekt arbeiten kann.
           </p>
@@ -61,12 +61,12 @@ export default function KnowledgeBasePage() {
               <AccordionItem
                 value={dept.slug}
                 key={dept.slug}
-                className="bg-slate-800/40 border border-slate-700/50 rounded-xl overflow-hidden"
+                className="bg-card/80 border border-border rounded-xl overflow-hidden"
               >
-                <AccordionTrigger className="w-full flex items-center justify-between p-4 bg-[#1E293B]/60 hover:bg-[#1E293B]/80 text-left transition-colors hover:no-underline">
+                <AccordionTrigger className="w-full flex items-center justify-between p-4 bg-muted/50 hover:bg-accent/80 text-left transition-colors hover:no-underline">
                   <div className="flex items-center gap-3">
                     <Folder className="w-5 h-5 text-blue-400" />
-                    <span className="text-sm font-bold text-white">
+                    <span className="text-sm font-bold text-foreground">
                       {dept.name}
                     </span>
                   </div>
@@ -79,24 +79,24 @@ export default function KnowledgeBasePage() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <div className="p-6 bg-slate-900/30">
+                  <div className="p-6 bg-background/50">
                     {/* Upload Zone */}
-                    <div className="border-2 border-dashed border-slate-700/60 rounded-xl p-6 mb-6 text-center hover:border-blue-500/50 hover:bg-slate-800/50 transition-all">
+                    <div className="border-2 border-dashed border-border rounded-xl p-6 mb-6 text-center hover:border-primary/50 hover:bg-accent/50 transition-all">
                       <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="p-3 bg-slate-800 rounded-full text-slate-400">
+                        <div className="p-3 bg-muted rounded-full text-muted-foreground">
                           <Upload className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white mb-1">
+                          <p className="text-sm font-bold text-foreground mb-1">
                             Dateien für {dept.name} hochladen
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-muted-foreground">
                             PDF, DOCX, XLSX (Max 25MB)
                           </p>
                         </div>
                         <div className="flex gap-2 mt-2 w-full max-w-xs">
                           <Select>
-                            <SelectTrigger className="bg-slate-950 border-slate-700 rounded-lg text-xs text-white px-3 py-2 flex-1 focus:border-blue-500 outline-none">
+                            <SelectTrigger className="bg-background rounded-lg text-xs text-foreground px-3 py-2 flex-1 focus:border-primary outline-none">
                               <SelectValue placeholder="Dokumenttyp wählen..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -120,7 +120,7 @@ export default function KnowledgeBasePage() {
 
                     {/* File List */}
                     <div>
-                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
                         Vorhandene Dateien
                       </h4>
                       {files.length > 0 ? (
@@ -128,21 +128,21 @@ export default function KnowledgeBasePage() {
                           {files.map((f, i) => (
                             <div
                               key={i}
-                              className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 transition-colors"
+                              className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border hover:border-border/80 transition-colors"
                             >
                               <div className="flex items-center gap-3">
-                                <FileText className="w-4 h-4 text-slate-400" />
+                                <FileText className="w-4 h-4 text-muted-foreground" />
                                 <div>
-                                  <p className="text-xs font-bold text-white">
+                                  <p className="text-xs font-bold text-foreground">
                                     {f.name}
                                   </p>
-                                  <p className="text-[10px] text-slate-500">
+                                  <p className="text-[10px] text-muted-foreground">
                                     {f.type} • {f.date}
                                   </p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">
+                                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
                                   {f.status}
                                 </span>
                                 <Button
@@ -157,7 +157,7 @@ export default function KnowledgeBasePage() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-600 italic">
+                        <p className="text-xs text-muted-foreground italic">
                           Noch keine Dokumente für diesen Bereich hochgeladen.
                         </p>
                       )}
