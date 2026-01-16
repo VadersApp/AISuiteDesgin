@@ -33,6 +33,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 const navGroups = [
     {
@@ -84,6 +85,12 @@ const navGroups = [
 export function MainNav() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   return (
     <>
@@ -110,26 +117,28 @@ export function MainNav() {
                      <p className="px-2 pb-2 pt-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{group.title}</p>
                 )}
                 <SidebarMenu className="flex flex-col gap-1">
-                {group.items.map((item) => (
+                {group.items.map((item) => {
+                    const isActive = isClient ? pathname.startsWith(item.href) : false;
+                    return (
                     <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                         asChild
-                        isActive={pathname.startsWith(item.href)}
+                        isActive={isActive}
                         tooltip={{ children: item.label, side: "right" }}
                         className={cn(
                             "w-full flex items-center justify-start gap-3 p-3 rounded-lg transition-all font-semibold",
-                            pathname.startsWith(item.href) ? "bg-primary text-primary-foreground shadow-md shadow-blue-900/20" : "text-secondary-foreground/70 hover:bg-accent hover:text-accent-foreground",
-                            item.special && !pathname.startsWith(item.href) && "bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20",
-                            item.special && pathname.startsWith(item.href) && "bg-primary text-primary-foreground"
+                            isActive ? "bg-primary text-primary-foreground shadow-md shadow-blue-900/20" : "text-secondary-foreground/70 hover:bg-accent hover:text-accent-foreground",
+                            item.special && !isActive && "bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20",
+                            item.special && isActive && "bg-primary text-primary-foreground"
                         )}
                     >
                         <Link href={item.href}>
-                          <item.icon className={cn("w-5 h-5 shrink-0", item.special && !pathname.startsWith(item.href) && "text-purple-400", pathname.startsWith(item.href) && item.special && "text-primary-foreground")}/>
+                          <item.icon className={cn("w-5 h-5 shrink-0", item.special && !isActive && "text-purple-400", isActive && item.special && "text-primary-foreground")}/>
                           <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
                         </Link>
                     </SidebarMenuButton>
                     </SidebarMenuItem>
-                ))}
+                )})}
                 </SidebarMenu>
             </div>
         ))}
