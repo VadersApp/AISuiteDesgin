@@ -1,3 +1,5 @@
+'use client';
+
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import {
@@ -11,10 +13,21 @@ import {
   ExternalLink,
   ListChecks,
   User,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-const currentEscalation = {
+const initialEscalation = {
   id: 'ESC-2910',
   status: 'In Prüfung',
   responsible: 'Nicht zugewiesen',
@@ -29,17 +42,181 @@ const currentEscalation = {
   notes: '',
 };
 
+type Measure = {
+  text: string;
+  status: string;
+}
+
+type Escalation = {
+  id: string;
+  status: string;
+  responsible: string;
+  context: string;
+  measures: Measure[];
+  notes: string;
+}
+
 export default function EscalationDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [escalation, setEscalation] = useState<Escalation>(initialEscalation);
+
+  // When entering edit mode, create a copy of the current state to edit
+  const [editData, setEditData] = useState<Escalation>(escalation);
+
+  const handleEdit = () => {
+    setEditData(escalation); // Reset edit data to current saved state
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = () => {
+    setEscalation(editData);
+    setIsEditing(false);
+  };
+
+  const handleEditDataChange = (field: keyof Escalation, value: any) => {
+    setEditData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleMeasureChange = (index: number, field: 'text' | 'status', value: string) => {
+    const newMeasures = [...editData.measures];
+    newMeasures[index] = { ...newMeasures[index], [field]: value };
+    setEditData(prev => ({ ...prev, measures: newMeasures }));
+  };
+
   const statusColor =
-    currentEscalation.status === 'Neu'
+    escalation.status === 'Neu'
       ? 'rose'
-      : currentEscalation.status === 'In Prüfung'
+      : escalation.status === 'In Prüfung'
       ? 'amber'
       : 'emerald';
+
+  if (isEditing) {
+    return (
+      <div className="space-y-8 pb-20">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={handleCancel} className="h-9 w-9">
+              <X className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                Eskalation bearbeiten
+              </h1>
+              <p className="text-slate-400 mt-1">
+                Änderungen werden nach dem Speichern übernommen.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={handleCancel}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="bg-emerald-600 hover:bg-emerald-500"
+            >
+              Speichern
+            </Button>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <Card className="p-6">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">
+                Status
+              </label>
+              <Select
+                value={editData.status}
+                onValueChange={(value) => handleEditDataChange('status', value)}
+              >
+                <SelectTrigger className="w-full bg-slate-900 border-slate-700 mb-4">
+                  <SelectValue placeholder="Status wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Neu">Neu</SelectItem>
+                  <SelectItem value="In Prüfung">In Prüfung</SelectItem>
+                  <SelectItem value="Gelöst">Gelöst</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">
+                Kontext / Begründung
+              </label>
+              <Textarea
+                value={editData.context}
+                onChange={(e) => handleEditDataChange('context', e.target.value)}
+                rows={6}
+                className="bg-slate-900 border-slate-700"
+              />
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card className="p-6">
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">
+                Verantwortlich
+              </label>
+              <Input
+                value={editData.responsible}
+                onChange={(e) =>
+                  handleEditDataChange('responsible', e.target.value)
+                }
+                className="bg-slate-900 border-slate-700 mb-4"
+              />
+
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">
+                Maßnahmen
+              </label>
+              <div className="space-y-3 mb-4">
+                {editData.measures.map((m, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={m.text}
+                      onChange={(e) => handleMeasureChange(index, 'text', e.target.value)}
+                      className="bg-slate-800 border-slate-700/50 text-sm"
+                    />
+                    <Select
+                      value={m.status}
+                      onValueChange={(value) => handleMeasureChange(index, 'status', value)}
+                    >
+                      <SelectTrigger className="w-[120px] bg-slate-900 border-slate-700 text-xs">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Offen">Offen</SelectItem>
+                        <SelectItem value="In Arbeit">In Arbeit</SelectItem>
+                        <SelectItem value="Erledigt">Erledigt</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+
+              <label className="text-xs font-bold text-slate-400 uppercase block mb-2">
+                Notiz
+              </label>
+              <Textarea
+                value={editData.notes}
+                onChange={(e) => handleEditDataChange('notes', e.target.value)}
+                rows={3}
+                placeholder="Interne Notiz hinzufügen..."
+                className="bg-slate-900 border-slate-700"
+              />
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-20">
@@ -59,7 +236,7 @@ export default function EscalationDetailPage({
               <span
                 className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-${statusColor}-500/10 text-${statusColor}-400 border border-${statusColor}-500/20`}
               >
-                {currentEscalation.status}
+                {escalation.status}
               </span>
             </div>
             <p className="text-slate-400 mt-1">
@@ -69,8 +246,10 @@ export default function EscalationDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="cursor-default">Ansehen</Button>
-          <Button>Bearbeiten</Button>
+          <Button variant="outline" className="cursor-default">
+            Ansehen
+          </Button>
+          <Button onClick={handleEdit}>Bearbeiten</Button>
         </div>
       </header>
 
@@ -104,7 +283,7 @@ export default function EscalationDetailPage({
               <Info className="w-4 h-4 text-blue-400" /> Kontext / Begründung
             </h3>
             <div className="text-slate-300 text-sm leading-relaxed">
-              {currentEscalation.context}
+              {escalation.context}
             </div>
           </Card>
 
@@ -130,7 +309,7 @@ export default function EscalationDetailPage({
               Maßnahmen
             </h3>
             <div className="space-y-3">
-              {currentEscalation.measures.map((m, i) => (
+              {escalation.measures.map((m, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-700/30"
@@ -154,7 +333,7 @@ export default function EscalationDetailPage({
               </div>
               <div>
                 <p className="text-sm font-bold text-white">
-                  {currentEscalation.responsible}
+                  {escalation.responsible}
                 </p>
                 <p className="text-xs text-slate-500">Verantwortlich</p>
               </div>
@@ -180,7 +359,7 @@ export default function EscalationDetailPage({
               Notiz
             </h3>
             <p className="text-sm text-slate-400 italic mb-2">
-              {currentEscalation.notes || 'Keine Notizen vorhanden.'}
+              {escalation.notes || 'Keine Notizen vorhanden.'}
             </p>
           </Card>
         </div>
