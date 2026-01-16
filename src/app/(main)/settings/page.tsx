@@ -1,18 +1,214 @@
-import { Card } from "@/components/ui/card";
-import { Settings2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import { User, Bell, Palette, KeyRound, Shield, Pencil, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   return (
-    <div>
+    <div className="space-y-8 pb-20">
       <header>
         <h1 className="text-3xl font-bold text-white tracking-tight">
           Einstellungen
         </h1>
+        <p className="text-slate-400">
+          Verwalten Sie Ihr Konto und die Systemeinstellungen.
+        </p>
       </header>
-      <Card className="mt-10 p-8 text-slate-400 italic flex items-center gap-3">
-        <Settings2 className="w-5 h-5" />
-        Konfigurationsmenü wird geladen...
-      </Card>
+
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-slate-800/50 h-auto p-1.5">
+          <TabsTrigger value="profile" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+            <User className="w-4 h-4 mr-2" />
+            Profil
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+            <Bell className="w-4 h-4 mr-2" />
+            Benachrichtigungen
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+            <Palette className="w-4 h-4 mr-2" />
+            Darstellung
+          </TabsTrigger>
+          <TabsTrigger value="security" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+            <Shield className="w-4 h-4 mr-2" />
+            Sicherheit
+          </TabsTrigger>
+          <TabsTrigger value="api" className="py-2.5 data-[state=active]:bg-slate-700/50 data-[state=active]:text-white">
+            <KeyRound className="w-4 h-4 mr-2" />
+            API-Schlüssel
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile">
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Profil-Einstellungen</CardTitle>
+              <CardDescription>
+                Aktualisieren Sie hier Ihre persönlichen Daten.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center gap-6">
+                 <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-slate-600 to-slate-400 flex-shrink-0"></div>
+                 <div>
+                    <h3 className="text-lg font-bold text-white">Dr. Müller</h3>
+                    <p className="text-sm text-slate-400">CEO</p>
+                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" defaultValue="Dr. Müller" className="bg-slate-900 border-slate-700" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-Mail</Label>
+                  <Input id="email" type="email" defaultValue="ceo@aisuite.de" disabled className="bg-slate-800 border-slate-700 disabled:opacity-70" />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+              <Button>Änderungen speichern</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Benachrichtigungen</CardTitle>
+              <CardDescription>
+                Wählen Sie, wie Sie benachrichtigt werden möchten.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                   <div>
+                       <Label htmlFor="email-notifications" className="font-bold text-white">E-Mail Benachrichtigungen</Label>
+                       <p className="text-xs text-slate-400">Zusammenfassungen und wichtige Alerts per Mail erhalten.</p>
+                   </div>
+                   <Switch id="email-notifications" defaultChecked />
+               </div>
+               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                   <div>
+                       <Label htmlFor="push-notifications" className="font-bold text-white">Push-Benachrichtigungen</Label>
+                       <p className="text-xs text-slate-400">System-Updates und Eskalationen sofort sehen. (In-App)</p>
+                   </div>
+                   <Switch id="push-notifications" defaultChecked />
+               </div>
+               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                   <div>
+                       <Label htmlFor="task-notifications" className="font-bold text-white">Neue Aufgaben</Label>
+                       <p className="text-xs text-slate-400">Benachrichtigen, wenn eine KI eine neue Aufgabe erstellt.</p>
+                   </div>
+                   <Switch id="task-notifications" />
+               </div>
+            </CardContent>
+            <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+              <Button>Einstellungen speichern</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* Appearance Tab */}
+        <TabsContent value="appearance">
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Darstellung</CardTitle>
+              <CardDescription>
+                Passen Sie das Aussehen der AISUITE an.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label>Theme</Label>
+                 <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                   <div>
+                       <p className="font-bold text-white">Dark Mode</p>
+                       <p className="text-xs text-slate-400">Derzeit ist nur der Dark Mode verfügbar.</p>
+                   </div>
+                   <Switch checked disabled />
+               </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Sicherheit</CardTitle>
+              <CardDescription>
+                Verwalten Sie Ihre Sicherheitseinstellungen.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                   <div>
+                       <Label className="font-bold text-white">Passwort ändern</Label>
+                       <p className="text-xs text-slate-400">Ändern Sie regelmäßig Ihr Passwort für mehr Sicherheit.</p>
+                   </div>
+                   <Button variant="outline">Passwort ändern</Button>
+               </div>
+               <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                   <div>
+                       <Label htmlFor="2fa" className="font-bold text-white">Zwei-Faktor-Authentifizierung (2FA)</Label>
+                       <p className="text-xs text-slate-400">Fügen Sie eine zusätzliche Sicherheitsebene hinzu.</p>
+                   </div>
+                   <Switch id="2fa" />
+               </div>
+            </CardContent>
+             <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+              <Button>Sicherheitseinstellungen speichern</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        {/* API Tab */}
+        <TabsContent value="api">
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>API-Schlüssel</CardTitle>
+              <CardDescription>
+                Verwalten Sie Ihre API-Schlüssel für Integrationen.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
+                <div>
+                  <p className="font-bold text-white font-mono text-sm">sk-.....-a1b2</p>
+                  <p className="text-xs text-slate-400">Google Gemini API (LLM Provider)</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase font-bold px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-500/20">Aktiv</span>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-400 hover:text-white"><Pencil className="w-4 h-4"/></Button>
+                  <Button variant="ghost" size="icon" className="w-8 h-8 text-slate-400 hover:text-rose-400"><Trash2 className="w-4 h-4"/></Button>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="border-t border-slate-700/50 px-6 py-4 justify-end">
+              <Button>Neuen API-Schlüssel erstellen</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
