@@ -18,7 +18,6 @@ import {
   ShieldCheck,
   Settings,
   MessageCircle,
-  Home,
 } from "lucide-react";
 import {
   SidebarHeader,
@@ -88,7 +87,7 @@ export function MainNav() {
       <SidebarHeader className="p-4 flex items-center gap-4 overflow-hidden h-auto">
         <Link href="/dashboard" className="flex items-center gap-3 bg-slate-800/30 rounded-2xl p-3 border border-slate-700/50 w-full">
           <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shrink-0 shadow-lg">
-              <Home className="w-5 h-5 text-white" />
+              <span className="text-white font-black text-xl">Q</span>
           </div>
           <div
             className={cn(
@@ -96,7 +95,8 @@ export function MainNav() {
               state === "collapsed" && "opacity-0 hidden"
             )}
           >
-            <span className="font-bold text-lg text-white">AISUITE</span>
+            <span className="font-black text-2xl tracking-tighter text-white uppercase italic leading-none">QORE</span>
+            <span className="text-[9px] font-bold text-blue-300/80 uppercase tracking-[0.2em] mt-1 ml-0.5">Intelligent Agents</span>
           </div>
         </Link>
       </SidebarHeader>

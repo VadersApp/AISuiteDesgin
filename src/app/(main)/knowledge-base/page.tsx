@@ -35,7 +35,7 @@ export default function KnowledgeBasePage() {
           Wissensdatenbank
         </h1>
         <p className="text-slate-400 italic">
-          Das zentrale Gehirn Ihrer AISUITE.
+          Das zentrale Gehirn von QORE.
         </p>
       </header>
 

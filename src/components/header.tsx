@@ -9,7 +9,7 @@ export function Header() {
                 <SidebarTrigger className="p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700/50 md:hidden" />
                 <div className="hidden lg:flex items-center bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-1.5 gap-2 w-72 focus-within:border-blue-500/50 focus-within:bg-slate-900 transition-all">
                     <Search className="w-3.5 h-3.5 text-slate-500" />
-                    <input type="text" placeholder="Durchsuche AISUITE..." className="bg-transparent border-none text-xs text-white focus:outline-none w-full placeholder-slate-500" />
+                    <input type="text" placeholder="Durchsuche QORE..." className="bg-transparent border-none text-xs text-white focus:outline-none w-full placeholder-slate-500" />
                 </div>
             </div>
             <div className="flex items-center gap-4">

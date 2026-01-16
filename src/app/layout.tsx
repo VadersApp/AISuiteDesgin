@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'AISUITE - Intelligent Agents',
+  title: 'QORE - Intelligent Agents',
   description: 'The all-in-one AI platform for your business.',
 };
 

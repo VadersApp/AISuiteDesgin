@@ -8,7 +8,7 @@ export default function AgentsPage() {
           KI-Mitarbeiter
         </h1>
         <p className="text-slate-400">
-          Ihre digitale Expertenbelegschaft der AISUITE.
+          Ihre digitale Expertenbelegschaft von QORE.
         </p>
       </header>
       <BotList />
