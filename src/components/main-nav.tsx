@@ -21,6 +21,7 @@ import {
   Mail,
   Phone,
   Users,
+  DollarSign,
 } from "lucide-react";
 import {
   SidebarHeader,
@@ -61,6 +62,7 @@ const navGroups = [
     {
         title: "Tools",
         items: [
+            { href: "/qsales", icon: DollarSign, label: "Qsales" },
             { href: "/qmail", icon: Mail, label: "Qmail" },
             { href: "/qcall", icon: Phone, label: "Qcall" },
             { href: "/qhub", icon: Users, label: "Qhub" },
