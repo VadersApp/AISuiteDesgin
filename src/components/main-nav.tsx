@@ -44,7 +44,6 @@ const navGroups = [
         title: "Interaktion",
         items: [
             { href: "/chat", icon: MessageSquare, label: "Chat" },
-            { href: "/qmail", icon: Mail, label: "Qmail" },
             { href: "/knowledge-base", icon: Database, label: "Wissensdatenbank", special: true },
             { href: "/meeting", icon: Video, label: "AI Meeting" },
         ]
@@ -60,6 +59,7 @@ const navGroups = [
     {
         title: "Tools",
         items: [
+            { href: "/qmail", icon: Mail, label: "Qmail" },
             { href: "/qualender", icon: Calendar, label: "Qualender" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI / Tools" },
