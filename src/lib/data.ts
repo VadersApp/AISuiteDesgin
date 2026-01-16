@@ -88,3 +88,65 @@ export const reportingStats = [
     { title: 'Effizienzsteigerung', value: '+240%', icon: 'trending-up', color: 'blue' },
     { title: 'Fehlerreduktion', value: '-85%', icon: 'shield-check', color: 'purple' }
 ];
+
+export const tasksMockByDepartment: { [key: string]: any[] } = {
+    'gf': [
+        { title: "KPI-Review vorbereiten", desc: "Quartalszahlen analysieren", prio: "Hoch", due: "Diese Woche", status: "Offen", agent: "Ava Assist", prioColor: "rose" },
+        { title: "Entscheidungsvorlage: Prioritäten Q1", desc: "Strategische Ausrichtung finalisieren", prio: "Mittel", due: "Nächste Woche", status: "In Arbeit", agent: "Ava Assist", prioColor: "amber" }
+    ],
+    'sales': [
+        { title: "Lead-Liste A anrufen: 25 Kontakte", desc: "Fokus auf Tech-Sektor", prio: "Hoch", due: "Heute", status: "Offen", agent: "Leo Sales", prioColor: "rose" },
+        { title: "Follow-ups senden: Termin-NoShows", desc: "Nachfass-Mails versenden", prio: "Mittel", due: "Morgen", status: "Offen", agent: "Leo Sales", prioColor: "amber" }
+    ],
+    'marketing': [
+        { title: "Landingpage-Text finalisieren", desc: "SEO-Optimierung prüfen", prio: "Hoch", due: "Morgen", status: "In Arbeit", agent: "Sophie Market", prioColor: "rose" },
+        { title: "Meta-Ad-Creatives briefen", desc: "Für Q1 Kampagne", prio: "Mittel", due: "Diese Woche", status: "Offen", agent: "Sophie Market", prioColor: "amber" }
+    ],
+    'social': [
+        { title: "Redaktionsplan KW erstellen", desc: "Themen: Innovation, Team", prio: "Hoch", due: "Heute", status: "Erledigt", agent: "Nova Social", prioColor: "rose" },
+        { title: "3 LinkedIn-Posts produzieren", desc: "Grafiken und Texte", prio: "Mittel", due: "Mittwoch", status: "In Arbeit", agent: "Nova Social", prioColor: "amber" }
+    ],
+    'support': [
+        { title: "Top 10 Supportfälle clustern", desc: "Für FAQ-Update", prio: "Mittel", due: "Freitag", status: "Offen", agent: "Ava Assist", prioColor: "amber" }
+    ],
+    'backoffice': [
+        { title: "Dokumentenablage: Kundenordner prüfen", desc: "Vollständigkeitscheck", prio: "Niedrig", due: "Ende Monat", status: "Offen", agent: "Ava Assist", prioColor: "slate" }
+    ],
+    'finance': [
+        { title: "OPOS prüfen: 10 offene Posten", desc: "Mahnwesen vorbereiten", prio: "Hoch", due: "Heute", status: "Offen", agent: "Sam Finance", prioColor: "rose" }
+    ],
+    'hr': [
+        { title: "Bewerber-Screening: 12 Profile", desc: "Shortlist erstellen", prio: "Mittel", due: "Morgen", status: "In Arbeit", agent: "Mila HR", prioColor: "amber" }
+    ],
+    'it': [
+        { title: "Workflow X testen & Fehler dokumentieren", desc: "Nach Deployment v2.1", prio: "Hoch", due: "Heute", status: "In Arbeit", agent: "Taro Tech", prioColor: "rose" }
+    ],
+    'pm': [
+        { title: "Projektplan aktualisieren", desc: "Meilensteine verschieben", prio: "Mittel", due: "Diese Woche", status: "Offen", agent: "Pax PM", prioColor: "amber" }
+    ],
+    'legal': [
+        { title: "DSGVO-Dokumente prüfen: AVV", desc: "Neue Vorlagen checken", prio: "Hoch", due: "Sofort", status: "Offen", agent: "Clara Compliance", prioColor: "rose" }
+    ],
+    'qa': [
+        { title: "Qualitätscheck: 10 Calls bewerten", desc: "Zufallsstichprobe Support", prio: "Mittel", due: "Freitag", status: "Offen", agent: "Ava Assist", prioColor: "amber" }
+    ],
+    'purchase': [
+        { title: "Tool-Lizenzliste aktualisieren", desc: "Ablaufdaten prüfen", prio: "Niedrig", due: "Nächste Woche", status: "Offen", agent: "Sophie Market", prioColor: "slate" }
+    ]
+};
+
+export const mockActivities = [
+    { time: 'vor 5 Min.', action: 'Monatsbericht generiert', status: 'abgeschlossen', color: 'green' },
+    { time: 'vor 12 Min.', action: 'E-Mail Analyse gestartet', status: 'läuft', color: 'blue' },
+    { time: 'vor 45 Min.', action: 'Ticket #9921 eskaliert', status: 'wartet', color: 'amber' },
+    { time: 'vor 1 Std.', action: 'Meeting-Protokoll abgelegt', status: 'abgeschlossen', color: 'green' },
+    { time: 'vor 2 Std.', action: 'Datenbank-Backup', status: 'abgeschlossen', color: 'green' }
+];
+
+export const socialMediaActivities = [
+    { time: 'vor 2 Min.', action: 'Redaktionsplan für Woche erstellt', status: 'abgeschlossen', color: 'green' },
+    { time: 'vor 15 Min.', action: 'Posting für LinkedIn vorbereitet', status: 'in prüfung', color: 'blue' },
+    { time: 'vor 32 Min.', action: 'Kommentare/DMs kategorisiert', status: 'läuft', color: 'blue' },
+    { time: 'vor 1 Std.', action: 'Hashtag-Cluster aktualisiert', status: 'abgeschlossen', color: 'green' },
+    { time: 'vor 3 Std.', action: 'Performance-Auswertung angelegt', status: 'abgeschlossen', color: 'purple' }
+];
