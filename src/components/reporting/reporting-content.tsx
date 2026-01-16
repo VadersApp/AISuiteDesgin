@@ -50,7 +50,7 @@ export function ReportingContent() {
           </h1>
           <p className="text-slate-400">Finanzielle und operative Analyse.</p>
         </div>
-        <div className="bg-slate-800/50 p-1 rounded-xl border border-slate-700/50 flex text-xs font-bold">
+        <div className="bg-black/20 border border-white/10 backdrop-blur-sm p-1 rounded-xl flex text-xs font-bold">
           <button
             onClick={() => setPeriod('monthly')}
             className={`px-4 py-2 rounded-lg transition-all ${
@@ -119,7 +119,7 @@ export function ReportingContent() {
       </div>
 
        {/* Explanation Text */}
-       <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-300 flex items-center gap-3">
+       <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-300 flex items-center gap-3 backdrop-blur-lg">
           <Info className="w-5 h-5 shrink-0" />
           <p>Die Zeitersparnis zeigt, wie viele manuelle Arbeitsstunden deine KI-Mitarbeiter pro Zeitraum übernehmen – diese Zeit kann dein Team für wertschöpfende Aufgaben nutzen.</p>
       </div>
@@ -130,7 +130,7 @@ export function ReportingContent() {
           {/* Chart */}
           <Card className="p-6">
               <h3 className="text-white font-bold mb-6 flex items-center gap-2"><BarChart2 className="w-5 h-5 text-emerald-400" /> Zeitersparnis nach Agent (Std.)</h3>
-              <div className="h-64 flex items-end justify-around gap-2 px-2 pt-4 border-b border-slate-700/30">
+              <div className="h-64 flex items-end justify-around gap-2 px-2 pt-4 border-b border-white/10">
                   {agentTimeData.map(agent => {
                       const val = agent.hours * multiplier;
                       const heightPct = maxVal > 0 ? (val / maxVal) * 100 : 0;
@@ -153,7 +153,7 @@ export function ReportingContent() {
               <h3 className="text-white font-bold mb-6 flex items-center gap-2"><TableIcon className="w-5 h-5 text-blue-400" /> Details nach KI-Mitarbeiter</h3>
               <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                      <thead className="text-xs text-slate-500 uppercase bg-slate-800/50">
+                      <thead className="text-xs text-slate-500 uppercase bg-black/20">
                           <tr>
                               <th className="px-4 py-3 rounded-l-lg">Agent</th>
                               <th className="px-4 py-3 text-right">Stunden</th>
@@ -161,7 +161,7 @@ export function ReportingContent() {
                               <th className="px-4 py-3 rounded-r-lg text-right">Jahr (Proj.)</th>
                           </tr>
                       </thead>
-                      <tbody className="text-slate-300 divide-y divide-slate-700/30">
+                      <tbody className="text-slate-300 divide-y divide-white/10">
                           {agentTimeData.map(agent => {
                               const hMonth = agent.hours;
                               const hCurrent = hMonth * multiplier;
@@ -169,7 +169,7 @@ export function ReportingContent() {
                               const hYearProj = (hMonth * 12).toLocaleString('de-DE');
 
                               return (
-                                  <tr key={agent.name} className="hover:bg-slate-800/30 transition-colors border-b border-slate-700/30 last:border-0">
+                                  <tr key={agent.name} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
                                       <td className="px-4 py-3 font-medium text-white">{agent.name}</td>
                                       <td className="px-4 py-3 text-right">{hCurrent.toLocaleString('de-DE')} Std.</td>
                                       <td className="px-4 py-3 text-right">{dCurrent} T.</td>

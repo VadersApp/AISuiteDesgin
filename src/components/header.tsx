@@ -4,10 +4,10 @@ import { Bell, Search } from "lucide-react";
 
 export function Header() {
     return (
-        <header className="h-16 border-b border-slate-800/50 flex items-center justify-between px-8 bg-[#1E293B]/90 backdrop-blur-xl sticky top-0 z-40">
+        <header className="h-16 border-b border-white/10 flex items-center justify-between px-8 bg-black/30 backdrop-blur-lg sticky top-0 z-40">
             <div className="flex items-center gap-4">
                 <SidebarTrigger className="p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700/50 md:hidden" />
-                <div className="hidden lg:flex items-center bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-1.5 gap-2 w-72 focus-within:border-blue-500/50 focus-within:bg-slate-900 transition-all">
+                <div className="hidden lg:flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-1.5 gap-2 w-72 focus-within:border-blue-500/50 focus-within:bg-slate-900 transition-all">
                     <Search className="w-3.5 h-3.5 text-slate-500" />
                     <input type="text" placeholder="Durchsuche QORE..." className="bg-transparent border-none text-xs text-white focus:outline-none w-full placeholder-slate-500" />
                 </div>

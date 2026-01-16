@@ -15,7 +15,7 @@ export default function DashboardPage() {
       </header>
       <DashboardStats />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#1E293B]/50 border border-slate-700/50 rounded-2xl p-6 shadow-xl shadow-black/20">
+        <div className="lg:col-span-2 bg-black/20 border border-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-xl shadow-black/20">
           <h2 className="text-lg font-semibold text-white mb-6">
             Live-Aktivitäten
           </h2>

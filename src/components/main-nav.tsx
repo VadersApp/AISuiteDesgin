@@ -85,7 +85,7 @@ export function MainNav() {
   return (
     <>
       <SidebarHeader className="p-4 flex items-center gap-4 overflow-hidden h-auto">
-        <Link href="/dashboard" className="flex items-center gap-3 bg-slate-800/30 rounded-2xl p-3 border border-slate-700/50 w-full">
+        <Link href="/dashboard" className="flex items-center gap-3 bg-black/20 backdrop-blur-sm rounded-2xl p-3 border border-white/10 w-full">
           <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shrink-0 shadow-lg">
               <span className="text-white font-black text-xl">Q</span>
           </div>
@@ -102,7 +102,7 @@ export function MainNav() {
       </SidebarHeader>
       <SidebarContent className="flex-1 px-4 space-y-2 mt-0 overflow-y-auto custom-scrollbar pb-10">
         {navGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className="bg-slate-800/30 rounded-2xl p-2 border border-slate-700/50">
+            <div key={groupIndex} className="bg-black/20 backdrop-blur-sm rounded-2xl p-2 border border-white/10">
                 {group.title && state === 'expanded' && (
                      <p className="px-2 pb-2 pt-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">{group.title}</p>
                 )}
@@ -115,7 +115,7 @@ export function MainNav() {
                         tooltip={{ children: item.label, side: "right" }}
                         className={cn(
                             "w-full flex items-center justify-start gap-3 p-3 rounded-lg transition-all font-semibold",
-                            pathname.startsWith(item.href) ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "text-slate-300 hover:bg-slate-700/50 hover:text-white",
+                            pathname.startsWith(item.href) ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "text-slate-300 hover:bg-white/10 hover:text-white",
                             item.special && !pathname.startsWith(item.href) && "bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20",
                             item.special && pathname.startsWith(item.href) && "bg-blue-600 text-white"
                         )}
@@ -131,8 +131,8 @@ export function MainNav() {
             </div>
         ))}
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-slate-700/50 mt-auto">
-        <div className="p-3 rounded-2xl bg-slate-800/50 border border-slate-700/50 flex items-center gap-3 overflow-hidden hover:bg-slate-700/50 transition-colors cursor-pointer">
+      <SidebarFooter className="p-4 border-t border-white/10 mt-auto">
+        <div className="p-3 rounded-2xl bg-black/20 border border-white/10 backdrop-blur-sm flex items-center gap-3 overflow-hidden hover:bg-white/10 transition-colors cursor-pointer">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-600 to-slate-400 flex-shrink-0"></div>
             <div
                 className={cn(

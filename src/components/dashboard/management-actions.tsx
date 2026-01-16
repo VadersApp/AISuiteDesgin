@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export function ManagementActions() {
     return (
-        <div className="bg-rose-500/[0.02] border border-rose-500/10 rounded-2xl p-6">
+        <div className="bg-rose-500/[0.02] border border-rose-500/10 rounded-2xl p-6 backdrop-blur-lg">
             <h2 className="text-lg font-semibold text-white mb-6">Management</h2>
             <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/10">
                 <p className="text-xs font-bold text-rose-400 uppercase mb-1">Eskalation</p>
