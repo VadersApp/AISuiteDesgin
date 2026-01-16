@@ -166,3 +166,70 @@ export const socialMediaActivities = [
     { time: 'vor 1 Std.', action: 'Hashtag-Cluster aktualisiert', status: 'abgeschlossen', color: 'green' },
     { time: 'vor 3 Std.', action: 'Performance-Auswertung angelegt', status: 'abgeschlossen', color: 'purple' }
 ];
+
+export const workflows = [
+    // Aktiv
+    {
+        id: 'wf-001',
+        name: 'Kunden-Onboarding Automation',
+        description: 'Sendet Willkommens-E-Mails und erstellt interne Aufgaben, wenn ein neuer Kunde im CRM erfasst wird.',
+        status: 'Aktiv',
+        trigger: 'Neuer Kunde im CRM',
+        lastRun: 'Vor 2 Stunden',
+        runs: 142,
+        avgTime: '45s'
+    },
+    {
+        id: 'wf-002',
+        name: 'Social Media Content Freigabe',
+        description: 'Startet einen Freigabeprozess in Slack, wenn Nova Social einen neuen Post-Entwurf erstellt.',
+        status: 'Aktiv',
+        trigger: 'Neuer Post-Entwurf',
+        lastRun: 'Vor 45 Minuten',
+        runs: 88,
+        avgTime: '5min'
+    },
+    {
+        id: 'wf-006',
+        name: 'IT Support Ticket Routing',
+        description: 'Leitet IT-Support-Tickets basierend auf Keywords an den richtigen Agenten oder das richtige Team weiter.',
+        status: 'Aktiv',
+        trigger: 'Neues IT-Ticket',
+        lastRun: 'Vor 5 Minuten',
+        runs: 291,
+        avgTime: '12s'
+    },
+    // Inaktiv
+    {
+        id: 'wf-003',
+        name: 'Rechnungserinnerung (Mahnwesen)',
+        description: 'Prüft täglich offene Posten und versendet automatisch Zahlungserinnerungen in 3 Stufen.',
+        status: 'Inaktiv',
+        trigger: 'Täglich um 08:00',
+        lastRun: 'Gestern, 08:00',
+        runs: 340,
+        avgTime: '2min'
+    },
+    // Entwurf
+    {
+        id: 'wf-004',
+        name: 'Monatliches KPI Reporting',
+        description: 'Sammelt am Monatsende alle relevanten Agenten-KPIs und erstellt einen Bericht für die Geschäftsführung.',
+        status: 'Entwurf',
+        trigger: 'Monatsende',
+        lastRun: 'Nie',
+        runs: 0,
+        avgTime: 'N/A'
+    },
+    // Archiviert
+    {
+        id: 'wf-005',
+        name: 'Q4-2023 Marketing Kampagne',
+        description: 'Automatisierte Auswertung der alten Q4-Marketing-Kampagne.',
+        status: 'Archiviert',
+        trigger: 'Manuell',
+        lastRun: '28. Dez 2023',
+        runs: 1,
+        avgTime: '15min'
+    }
+];
