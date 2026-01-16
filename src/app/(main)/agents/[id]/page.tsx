@@ -1,8 +1,11 @@
+'use client';
+
 import { bots } from '@/lib/data';
 import { notFound } from 'next/navigation';
-import { ChevronLeft, Bot as BotIcon, Star, MessageSquare, Clock, Target, TrendingUp, Zap, FileText, CheckCircle, ShieldCheck, Activity, AlertCircle, Shield, AlertTriangle, Calendar, PieChart, Plus } from 'lucide-react';
+import { ChevronLeft, Bot as BotIcon, Star, MessageSquare, Clock, Target, TrendingUp, Zap, FileText, CheckCircle, ShieldCheck, Activity, AlertCircle, Shield, AlertTriangle, Calendar, PieChart, Plus, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const iconMap: {[key: string]: React.ElementType} = {
     star: Star,
@@ -31,17 +34,25 @@ export default function BotSetcardPage({ params }: { params: { id: string } }) {
 
     return (
         <div className="space-y-8 pb-10">
-            <header className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <Link href="/agents" className="p-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                    <ChevronLeft className="w-5 h-5" />
-                </Link>
-                <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-3">
-                        <h1 className="text-3xl font-bold text-foreground tracking-tight break-words line-clamp-2">{bot.name}</h1>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">Online</span>
+            <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className='flex items-center gap-4'>
+                    <Link href="/agents" className="p-2 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                        <ChevronLeft className="w-5 h-5" />
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="text-3xl font-bold text-foreground tracking-tight break-words line-clamp-2">{bot.name}</h1>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">Online</span>
+                        </div>
+                        <p className="text-muted-foreground font-medium mt-1 break-words">{bot.role}</p>
                     </div>
-                    <p className="text-muted-foreground font-medium mt-1 break-words">{bot.role}</p>
                 </div>
+                <Link href={`/agents/${bot.id}/settings`}>
+                    <Button>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Konfiguration
+                    </Button>
+                </Link>
             </header>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="space-y-6">
