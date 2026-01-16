@@ -51,13 +51,8 @@ const navGroups = [
         title: "Management",
         items: [
             { href: "/departments", icon: Building2, label: "Abteilungen" },
+            { href: "/agents", icon: Bot, label: "KI-Mitarbeiter" },
             { href: "/tasks", icon: CheckSquare, label: "Aufgaben" },
-        ]
-    },
-    {
-        title: "Mitarbeiter",
-        items: [
-             { href: "/agents", icon: Bot, label: "KI-Mitarbeiter" },
         ]
     },
     {
