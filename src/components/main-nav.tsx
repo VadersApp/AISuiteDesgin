@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Mail,
   Phone,
+  Users,
 } from "lucide-react";
 import {
   SidebarHeader,
@@ -62,6 +63,7 @@ const navGroups = [
         items: [
             { href: "/qmail", icon: Mail, label: "Qmail" },
             { href: "/qcall", icon: Phone, label: "Qcall" },
+            { href: "/qhub", icon: Users, label: "Qhub" },
             { href: "/qualender", icon: Calendar, label: "Qualender" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI / Tools" },
