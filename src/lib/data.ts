@@ -43,6 +43,22 @@ export const kbDepartments = [
     { name: 'Einkauf & Partner', slug: 'einkauf-partner' }
 ];
 
+export const kbDocTypes = [
+    "Prozesse / SOPs", "Vorlagen", "Richtlinien", "Schulung", 
+    "Kundenfälle / Beispiele", "Verträge / Rechtliches", 
+    "Marketing Assets", "Sales Scripts", "Sonstiges"
+];
+
+export const mockKbFiles: { [key: string]: any[] } = {
+    'marketing': [
+        { name: 'Brand_Guidelines_2024.pdf', type: 'Richtlinien', date: '10.01.2024', status: 'verarbeitet' },
+        { name: 'Campaign_Q1_Assets.zip', type: 'Marketing Assets', date: '12.01.2024', status: 'in Verarbeitung' }
+    ],
+    'vertrieb-sales': [
+        { name: 'Sales_Pitch_Deck_v3.pptx', type: 'Sales Scripts', date: '05.01.2024', status: 'verarbeitet' }
+    ]
+};
+
 export const toolList = [
     { id: 'blog', title: 'Blog Studio', icon: 'globe', color: 'purple', desc: 'Content-Erstellung & SEO-Artikel.' },
     { id: 'dana', title: 'Dana Documents', icon: 'file-edit', color: 'blue', desc: 'Dokumenten-Automatisierung.' },
