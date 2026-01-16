@@ -371,3 +371,20 @@ export const qsalesLeads = [
     }
   }
 ];
+
+export const eventTypes = [
+  { id: 'et-1', name: 'Erstgespräch 30 Min', slug: 'erstgespraech-30', description: 'Ein kurzes Kennenlernen, um Ihre Anforderungen zu besprechen.', durationMinutes: 30, meetingType: 'video', active: true },
+  { id: 'et-2', name: 'Technische Demo 60 Min', slug: 'tech-demo-60', description: 'Eine detaillierte Vorführung unserer Plattform und ihrer Funktionen.', durationMinutes: 60, meetingType: 'video', active: true },
+  { id: 'et-3', name: 'Support-Call 15 Min', slug: 'support-15', description: 'Schnelle Hilfe bei technischen Fragen oder Problemen.', durationMinutes: 15, meetingType: 'phone', active: false },
+];
+
+export const qalenderTeams = [
+    { id: 'team-1', name: 'Sales Team', slug: 'sales', memberIds: ['LS', 'AM'], routingType: 'round_robin' },
+    { id: 'team-2', name: 'Support Team', slug: 'support', memberIds: ['AA', 'TS'], routingType: 'least_busy' },
+];
+
+export const qalenderBookings = [
+    { bookingId: 'bk-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
+    { bookingId: 'bk-2', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
+    { bookingId: 'bk-3', eventTypeName: 'Erstgespräch 30 Min', guestName: 'John Doe', guestEmail: 'john.d@example.com', startAt: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), assignedOwnerId: 'Anna M.', status: 'canceled' },
+];
