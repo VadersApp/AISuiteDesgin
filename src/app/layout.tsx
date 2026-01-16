@@ -26,7 +26,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased selection:bg-blue-500/30 overflow-hidden">
+      <body className="font-body antialiased selection:bg-blue-500/30">
         {children}
         <Toaster />
       </body>
