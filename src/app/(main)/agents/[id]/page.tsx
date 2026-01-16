@@ -1,7 +1,7 @@
 'use client';
 
 import { bots } from '@/lib/data';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { ChevronLeft, Bot as BotIcon, Star, MessageSquare, Clock, Target, TrendingUp, Zap, FileText, CheckCircle, ShieldCheck, Activity, AlertCircle, Shield, AlertTriangle, Calendar, PieChart, Plus, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
@@ -25,7 +25,8 @@ const iconMap: {[key: string]: React.ElementType} = {
     plus: Plus
 }
 
-export default function BotSetcardPage({ params }: { params: { id: string } }) {
+export default function BotSetcardPage() {
+    const params = useParams<{ id: string }>();
     const bot = bots.find(b => b.id === params.id);
 
     if (!bot) {

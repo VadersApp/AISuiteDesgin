@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { bots } from '@/lib/data';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,11 +27,8 @@ import {
 } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 
-export default function AgentSettingsPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function AgentSettingsPage() {
+  const params = useParams<{ id: string }>();
   const { toast } = useToast();
   const router = useRouter();
   const bot = bots.find((b) => b.id === params.id);
@@ -479,5 +476,3 @@ export default function AgentSettingsPage({
     </div>
   );
 }
-
-    
