@@ -7,12 +7,12 @@ const slots = [
   { t: "Onboarding", c: "purple" },
 ];
 
-export default function QualenderPage() {
+export default function QalenderPage() {
   return (
     <div className="space-y-8 pb-20">
       <header>
         <h1 className="text-3xl font-bold text-foreground tracking-tight">
-          Qualender
+          Qalender
         </h1>
         <p className="text-muted-foreground">Terminbuchung.</p>
       </header>
