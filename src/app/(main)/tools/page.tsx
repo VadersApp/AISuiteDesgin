@@ -13,6 +13,7 @@ import {
   Command,
   Code,
   ArrowUpRight,
+  Mail,
 } from "lucide-react";
 
 const iconMap: { [key: string]: React.ElementType } = {
@@ -27,6 +28,7 @@ const iconMap: { [key: string]: React.ElementType } = {
   workflow: Workflow,
   command: Command,
   code: Code,
+  mail: Mail,
 };
 
 export default function ToolsPage() {
@@ -50,7 +52,7 @@ export default function ToolsPage() {
                 <div
                   className={`w-12 h-12 rounded-2xl bg-${t.color}-500/10 text-${t.color}-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}
                 >
-                  <Icon className="w-6 h-6" />
+                  {Icon && <Icon className="w-6 h-6" />}
                 </div>
                 <h3
                   className="text-lg font-bold text-foreground mb-2 uppercase italic tracking-tight line-clamp-2"
