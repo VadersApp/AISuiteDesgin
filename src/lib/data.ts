@@ -233,3 +233,141 @@ export const workflows = [
         avgTime: '15min'
     }
 ];
+
+export const qsalesLeads = [
+  {
+    id: 'lead-001',
+    name: 'Dr. Eva Schmidt',
+    company: 'Innovatech GmbH',
+    status: 'Neu',
+    lastActivity: 'Gestern',
+    nextAction: 'Morgen, 10:00',
+    priority: 'Hoch',
+    agent: 'Leo Sales',
+    agentAvatar: 'LS',
+    profile: {
+      email: 'eva.schmidt@innovatech.de',
+      phone: '+49 176 12345678',
+      source: 'LinkedIn',
+    },
+    callHistory: [
+      { date: '14.01.2024', result: 'Nicht erreicht', duration: '0:32' },
+    ],
+    notes: [
+      { date: '14.01.2024', text: 'Erster Versuch. Mailbox.' },
+    ],
+    aiRecommendation: {
+      nextStatus: 'Kontaktiert',
+      bestTime: 'Morgen, 10-12 Uhr',
+      probability: 75,
+    }
+  },
+  {
+    id: 'lead-002',
+    name: 'Markus Weber',
+    company: 'Quantum Solutions',
+    status: 'Follow-up geplant',
+    lastActivity: 'Vor 3 Tagen',
+    nextAction: 'Heute, 14:30',
+    priority: 'Hoch',
+    agent: 'Leo Sales',
+    agentAvatar: 'LS',
+    profile: {
+      email: 'markus.weber@quantum.com',
+      phone: '+49 151 87654321',
+      source: 'Webinar',
+    },
+    callHistory: [
+      { date: '11.01.2024', result: 'Gespräch geführt', duration: '8:45' },
+    ],
+    notes: [
+      { date: '11.01.2024', text: 'Gutes Gespräch, Interesse an Produkt B. Follow-up mit Details senden.' },
+    ],
+    aiRecommendation: {
+      nextStatus: 'Termin gelegt',
+      bestTime: 'Jetzt',
+      probability: 85,
+    }
+  },
+  {
+    id: 'lead-003',
+    name: 'Julia Richter',
+    company: 'NextGen Robotics',
+    status: 'Kontaktiert',
+    lastActivity: 'Heute',
+    nextAction: 'In 2 Tagen',
+    priority: 'Mittel',
+    agent: 'Leo Sales',
+    agentAvatar: 'LS',
+     profile: {
+      email: 'j.richter@nextgen-robotics.io',
+      phone: '+49 162 11223344',
+      source: 'Messe',
+    },
+    callHistory: [
+       { date: '15.01.2024', result: 'Kurzes Gespräch', duration: '2:15' },
+    ],
+    notes: [
+      { date: '15.01.2024', text: 'Info-Mail ist raus, möchte sich melden.' },
+    ],
+    aiRecommendation: {
+      nextStatus: 'Follow-up geplant',
+      bestTime: 'Nachmittag',
+      probability: 60,
+    }
+  },
+    {
+    id: 'lead-004',
+    name: 'Tom Bauer',
+    company: 'Data-Sphere AG',
+    status: 'Termin gelegt',
+    lastActivity: 'Gestern',
+    nextAction: '20.01. 11:00',
+    priority: 'Mittel',
+    agent: 'Leo Sales',
+    agentAvatar: 'LS',
+     profile: {
+      email: 't.bauer@data-sphere.de',
+      phone: '+49 179 55667788',
+      source: 'Kaltakquise',
+    },
+    callHistory: [
+       { date: '14.01.2024', result: 'Termin vereinbart', duration: '5:30' },
+    ],
+    notes: [
+      { date: '14.01.2024', text: 'Demo für den 20.01. terminiert. Einladung ist raus.' },
+    ],
+    aiRecommendation: {
+      nextStatus: 'Abschlussbereit',
+      bestTime: 'Während des Termins',
+      probability: 90,
+    }
+  },
+   {
+    id: 'lead-005',
+    name: 'Sophie Lang',
+    company: 'Cloudnomads',
+    status: 'Verloren',
+    lastActivity: 'Vor 1 Woche',
+    nextAction: '-',
+    priority: 'Niedrig',
+    agent: 'Leo Sales',
+    agentAvatar: 'LS',
+     profile: {
+      email: 'sophie@cloudnomads.com',
+      phone: '+49 152 44332211',
+      source: 'Empfehlung',
+    },
+    callHistory: [
+       { date: '08.01.2024', result: 'Absage', duration: '3:05' },
+    ],
+    notes: [
+      { date: '08.01.2024', text: 'Kein Budget für Q1. Evtl. in Q2 erneut versuchen.' },
+    ],
+    aiRecommendation: {
+      nextStatus: '-',
+      bestTime: 'Nächstes Quartal',
+      probability: 20,
+    }
+  }
+];
