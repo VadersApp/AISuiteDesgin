@@ -85,13 +85,18 @@ const navGroups = [
 export function MainNav() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <>
       <SidebarHeader className="p-4 flex items-center gap-4 overflow-hidden h-auto">
         <Link href="/dashboard" className="flex items-center gap-3 bg-background/50 dark:bg-black/20 backdrop-blur-sm rounded-2xl p-3 border border-border dark:border-white/10 w-full">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shrink-0 shadow-lg">
-              <span className="text-white font-black text-xl">Q</span>
+          <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-lg">
+              <span className="font-black text-xl">Q</span>
           </div>
           <div
             className={cn(
@@ -100,7 +105,7 @@ export function MainNav() {
             )}
           >
             <span className="font-black text-2xl tracking-tighter text-foreground uppercase italic leading-none">QORE</span>
-            <span className="text-[9px] font-bold text-blue-500 dark:text-blue-300/80 uppercase tracking-[0.2em] mt-1 ml-0.5">Intelligent Agents</span>
+            <span className="text-[9px] font-bold text-primary/80 uppercase tracking-[0.2em] mt-1 ml-0.5">Intelligent Agents</span>
           </div>
         </Link>
       </SidebarHeader>
@@ -112,7 +117,7 @@ export function MainNav() {
                 )}
                 <SidebarMenu className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
+                    const isActive = mounted ? pathname.startsWith(item.href) : false;
                     return (
                     <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
