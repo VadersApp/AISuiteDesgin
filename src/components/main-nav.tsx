@@ -23,6 +23,7 @@ import {
   Users,
   DollarSign,
 } from "lucide-react";
+import * as React from 'react';
 import {
   SidebarHeader,
   SidebarMenu,
@@ -47,7 +48,7 @@ const navGroups = [
         title: "Interaktion",
         items: [
             { href: "/chat", icon: MessageSquare, label: "Chat" },
-            { href: "/knowledge-base", icon: Database, label: "Wissensdatenbank", special: true },
+            { href: "/knowledge-base", icon: Database, label: "Wissensdatenbank" },
             { href: "/meeting", icon: Video, label: "AI Meeting" },
         ]
     },
@@ -84,6 +85,11 @@ const navGroups = [
 export function MainNav() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const [isClient, setIsClient] = React.useState(false);
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   return (
     <>
@@ -111,7 +117,7 @@ export function MainNav() {
                 )}
                 <SidebarMenu className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
+                    const isActive = isClient ? pathname.startsWith(item.href) : false;
                     return (
                     <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
@@ -120,13 +126,11 @@ export function MainNav() {
                         tooltip={{ children: item.label, side: "right" }}
                         className={cn(
                             "w-full flex items-center justify-start gap-3 p-3 rounded-lg transition-all font-semibold",
-                            isActive ? "bg-primary text-primary-foreground shadow-md shadow-blue-900/20" : "text-secondary-foreground/70 hover:bg-accent hover:text-accent-foreground",
-                            item.special && !isActive && "bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20",
-                            item.special && isActive && "bg-primary text-primary-foreground"
+                            isActive ? "bg-primary text-primary-foreground shadow-md" : "text-secondary-foreground/70 hover:bg-accent hover:text-accent-foreground"
                         )}
                     >
                         <Link href={item.href}>
-                          <item.icon className={cn("w-5 h-5 shrink-0", item.special && !isActive && "text-purple-400", isActive && item.special && "text-primary-foreground")}/>
+                          <item.icon className="w-5 h-5 shrink-0"/>
                           <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
                         </Link>
                     </SidebarMenuButton>

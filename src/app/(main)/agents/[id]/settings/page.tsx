@@ -122,7 +122,6 @@ export default function AgentSettingsPage() {
                 id="agent-active"
                 checked={isAgentActive}
                 onCheckedChange={setIsAgentActive}
-                className="data-[state=checked]:bg-emerald-500"
               />
             </div>
             <div className="space-y-2">
@@ -290,7 +289,6 @@ export default function AgentSettingsPage() {
                 id="speaker-boost"
                 checked={speakerBoost}
                 onCheckedChange={setSpeakerBoost}
-                className="data-[state=checked]:bg-emerald-500"
               />
             </div>
             <Accordion type="single" collapsible className="w-full">
@@ -439,7 +437,6 @@ export default function AgentSettingsPage() {
                 id="benachrichtigungen-aktiviert"
                 checked={benachrichtigungenAktiviert}
                 onCheckedChange={setBenachrichtigungenAktiviert}
-                className="data-[state=checked]:bg-emerald-500"
               />
             </div>
             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
