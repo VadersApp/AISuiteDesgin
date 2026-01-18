@@ -85,11 +85,6 @@ const navGroups = [
 export function MainNav() {
   const pathname = usePathname();
   const { state } = useSidebar();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <>
@@ -117,7 +112,7 @@ export function MainNav() {
                 )}
                 <SidebarMenu className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                    const isActive = mounted ? pathname.startsWith(item.href) : false;
+                    const isActive = pathname.startsWith(item.href);
                     return (
                     <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
