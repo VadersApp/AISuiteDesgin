@@ -51,11 +51,11 @@ export const kbDocTypes = [
 
 export const mockKbFiles: { [key: string]: any[] } = {
     'marketing': [
-        { name: 'Brand_Guidelines_2024.pdf', type: 'Richtlinien', date: '10.01.2024', status: 'verarbeitet' },
-        { name: 'Campaign_Q1_Assets.zip', type: 'Marketing Assets', date: '12.01.2024', status: 'in Verarbeitung' }
+        { name: 'Brand_Guidelines_2024.pdf', type: 'Richtlinien', date: '10.01.2024', status: 'verarbeitet', size: 5.2 },
+        { name: 'Campaign_Q1_Assets.zip', type: 'Marketing Assets', date: '12.01.2024', status: 'in Verarbeitung', size: 22.7 }
     ],
     'vertrieb-sales': [
-        { name: 'Sales_Pitch_Deck_v3.pptx', type: 'Sales Scripts', date: '05.01.2024', status: 'verarbeitet' }
+        { name: 'Sales_Pitch_Deck_v3.pptx', type: 'Sales Scripts', date: '05.01.2024', status: 'verarbeitet', size: 8.9 }
     ]
 };
 
@@ -376,6 +376,12 @@ export const eventTypes = [
   { id: 'et-1', name: 'Erstgespräch 30 Min', slug: 'erstgespraech-30', description: 'Ein kurzes Kennenlernen, um Ihre Anforderungen zu besprechen.', durationMinutes: 30, meetingType: 'video', active: true },
   { id: 'et-2', name: 'Technische Demo 60 Min', slug: 'tech-demo-60', description: 'Eine detaillierte Vorführung unserer Plattform und ihrer Funktionen.', durationMinutes: 60, meetingType: 'video', active: true },
   { id: 'et-3', name: 'Support-Call 15 Min', slug: 'support-15', description: 'Schnelle Hilfe bei technischen Fragen oder Problemen.', durationMinutes: 15, meetingType: 'phone', active: false },
+];
+
+export const qalenderBookings = [
+    { bookingId: 'bk-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: '2024-02-10T10:00:00.000Z', assignedOwnerId: 'Leo Sales', status: 'booked' },
+    { bookingId: 'bk-2', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: '2024-02-11T14:30:00.000Z', assignedOwnerId: 'Leo Sales', status: 'booked' },
+    { bookingId: 'bk-3', eventTypeName: 'Erstgespräch 30 Min', guestName: 'John Doe', guestEmail: 'john.d@example.com', startAt: '2024-02-08T09:00:00.000Z', assignedOwnerId: 'Anna M.', status: 'canceled' },
 ];
 
 export const qalenderTeams = [
