@@ -67,6 +67,7 @@ const navGroups = [
             { href: "/qmail", icon: Mail, label: "Qmail" },
             { href: "/qcall", icon: Phone, label: "Qcall" },
             { href: "/qhub", icon: Users, label: "Qhub" },
+            { href: "/q-space", icon: Building2, label: "Q-Space" },
             { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI / Tools" },
@@ -85,6 +86,11 @@ const navGroups = [
 export function MainNav() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <>
@@ -112,7 +118,7 @@ export function MainNav() {
                 )}
                 <SidebarMenu className="flex flex-col gap-1">
                 {group.items.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
+                    const isActive = isClient ? pathname.startsWith(item.href) : false;
                     return (
                     <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
