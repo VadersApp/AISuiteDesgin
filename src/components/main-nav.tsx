@@ -64,11 +64,11 @@ const navGroups = [
     {
         title: "Tools",
         items: [
-            { href: "/qalender", icon: Calendar, label: "Qalender" },
-            { href: "/q-sales", icon: DollarSign, label: "Q-Sales" },
-            { href: "/q-mail", icon: Mail, label: "Q-Mail" },
-            { href: "/q-call", icon: Phone, label: "Q-Call" },
-            { href: "/q-hub", icon: Users, label: "Q-Hub" },
+            { href: "/qualender", icon: Calendar, label: "Qalender" },
+            { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
+            { href: "/qmail", icon: Mail, label: "Q-Mail" },
+            { href: "/qcall", icon: Phone, label: "Q-Call" },
+            { href: "/qhub", icon: Users, label: "Q-Hub" },
             { href: "/q-space", icon: Building2, label: "Q-Space" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
