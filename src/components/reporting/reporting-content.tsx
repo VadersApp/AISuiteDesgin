@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import {
   Coins,
@@ -34,6 +34,11 @@ const totalHoursMonthly = agentTimeData.reduce((acc, agent) => acc + agent.hours
 
 export function ReportingContent() {
   const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const multiplier = period === 'yearly' ? 12 : 1;
   const totalHours = totalHoursMonthly * multiplier;
@@ -101,7 +106,7 @@ export function ReportingContent() {
           <Card className="p-6">
               <div className="p-2 w-fit rounded-xl bg-blue-500/10 text-blue-400 mb-2"><Clock className="w-5 h-5" /></div>
               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Zeitersparnis</p>
-              <h3 className="text-2xl font-bold text-white mt-1">{totalHours.toLocaleString('de-DE')} Std.</h3>
+              <h3 className="text-2xl font-bold text-white mt-1">{isClient ? totalHours.toLocaleString('de-DE') : totalHours} Std.</h3>
               <p className="text-xs text-slate-500 mt-1">Durch KI-Automatisierung</p>
           </Card>
           <Card className="p-6">
@@ -138,7 +143,7 @@ export function ReportingContent() {
                           <div key={agent.name} className="h-full flex flex-col justify-end items-center flex-1 group relative">
                               <div className={`w-full max-w-[40px] bg-${agent.color}-500 rounded-t-lg transition-all duration-500 opacity-80 group-hover:opacity-100 relative`} style={{ height: `${heightPct}%` }}>
                                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 border border-slate-700 text-white text-[10px] rounded whitespace-nowrap hidden group-hover:block z-10 shadow-xl">
-                                      {val.toLocaleString('de-DE')} Std. ({(val/8).toFixed(1).replace('.',',')} Tage)
+                                      {isClient ? val.toLocaleString('de-DE') : val} Std. ({(val/8).toFixed(1).replace('.',',')} Tage)
                                   </div>
                               </div>
                               <span className="text-[10px] text-slate-400 mt-2 font-medium truncate w-full text-center" title={agent.name}>{agent.name.split(' ')[0]}</span>
@@ -166,14 +171,14 @@ export function ReportingContent() {
                               const hMonth = agent.hours;
                               const hCurrent = hMonth * multiplier;
                               const dCurrent = (hCurrent / 8).toFixed(1).replace('.', ',');
-                              const hYearProj = (hMonth * 12).toLocaleString('de-DE');
+                              const hYearProj = hMonth * 12;
 
                               return (
                                   <tr key={agent.name} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
                                       <td className="px-4 py-3 font-medium text-white">{agent.name}</td>
-                                      <td className="px-4 py-3 text-right">{hCurrent.toLocaleString('de-DE')} Std.</td>
+                                      <td className="px-4 py-3 text-right">{isClient ? hCurrent.toLocaleString('de-DE') : hCurrent} Std.</td>
                                       <td className="px-4 py-3 text-right">{dCurrent} T.</td>
-                                      <td className="px-4 py-3 text-right text-slate-400">{hYearProj} Std.</td>
+                                      <td className="px-4 py-3 text-right text-slate-400">{isClient ? hYearProj.toLocaleString('de-DE') : hYearProj} Std.</td>
                                   </tr>
                               );
                           })}
