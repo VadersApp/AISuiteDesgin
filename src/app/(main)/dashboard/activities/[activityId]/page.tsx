@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Bot, Activity, Shield, FileText, ExternalLink, PlusSquare, MessageSquare, Calendar as CalendarIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -42,6 +42,13 @@ export default function ActivityDetailPage() {
     const activity = liveActivities.find(act => act.id === activityId);
 
     const [dueDate, setDueDate] = useState<Date | undefined>();
+    const [formattedCreatedAt, setFormattedCreatedAt] = useState('');
+
+    useEffect(() => {
+        if (activity) {
+            setFormattedCreatedAt(new Date(activity.createdAt).toLocaleString('de-DE'));
+        }
+    }, [activity]);
 
     if (!activity) {
         notFound();
@@ -101,7 +108,7 @@ export default function ActivityDetailPage() {
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">{activity.title}</h1>
                         <p className="text-sm text-muted-foreground">
-                            Ausgeführt von <span className="font-semibold text-foreground">{activity.agent.name}</span> • {new Date(activity.createdAt).toLocaleString('de-DE')}
+                            Ausgeführt von <span className="font-semibold text-foreground">{activity.agent.name}</span> • {formattedCreatedAt}
                         </p>
                     </div>
                 </div>
