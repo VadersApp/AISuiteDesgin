@@ -112,9 +112,9 @@ export function ReportingContent() {
           </Card>
           <Card className="p-6">
               <div className="p-2 w-fit rounded-xl bg-purple-500/10 text-purple-400 mb-2"><Users className="w-5 h-5" /></div>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Eingesparte Mitarbeiter (Vollzeitäquivalent)</p>
-              <h3 className="text-2xl font-bold text-white mt-1">{fte} Vollzeitstellen</h3>
-              <p className="text-xs text-slate-500 mt-1">Entspricht der Arbeitsleistung von {fte} Vollzeit-Mitarbeitern.</p>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Mitarbeiter-Äquivalent</p>
+              <h3 className="text-2xl font-bold text-white mt-1">{fte} FTE</h3>
+              <p className="text-xs text-slate-500 mt-1">Full-Time Equivalent</p>
           </Card>
       </div>
 
