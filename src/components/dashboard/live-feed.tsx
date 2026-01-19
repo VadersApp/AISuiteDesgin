@@ -1,7 +1,15 @@
+'use client';
 import { liveActivities, formatTimeSince } from "@/lib/data";
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export function LiveFeed() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     return (
         <div className="space-y-4">
             {liveActivities.slice(0, 5).map((item) => (
@@ -11,7 +19,7 @@ export function LiveFeed() {
                             <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-primary font-bold border border-border">{item.agent.avatar}</div>
                             <div><p className="text-sm font-semibold text-foreground">{item.agent.name}</p><p className="text-xs text-muted-foreground">{item.title}</p></div>
                         </div>
-                        <span className="text-[10px] text-muted-foreground font-mono">{formatTimeSince(item.createdAt)}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">{isClient ? formatTimeSince(item.createdAt) : ''}</span>
                     </div>
                 </Link>
             ))}

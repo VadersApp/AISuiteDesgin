@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { liveActivities, bots, formatTimeSince } from '@/lib/data';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
@@ -15,6 +15,11 @@ export default function ActivitiesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedAgent, setSelectedAgent] = useState('all');
     const [selectedType, setSelectedType] = useState('all');
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const activityTypes = useMemo(() => [...new Set(liveActivities.map(a => a.type))], []);
 
@@ -100,7 +105,7 @@ export default function ActivitiesPage() {
                                             <p className="text-xs text-muted-foreground">{item.agent.name} • <span className="capitalize">{item.type.replace(/_/g, ' ')}</span></p>
                                         </div>
                                     </div>
-                                    <span className="text-xs text-muted-foreground font-mono hidden sm:block">{formatTimeSince(item.createdAt)}</span>
+                                    <span className="text-xs text-muted-foreground font-mono hidden sm:block">{isClient ? formatTimeSince(item.createdAt) : ''}</span>
                                 </div>
                             </Link>
                         )

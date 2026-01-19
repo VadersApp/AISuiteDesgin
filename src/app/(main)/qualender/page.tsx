@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  Calendar,
+  Calendar as CalendarIcon,
   Link as LinkIcon,
   Power,
   Plus,
@@ -19,10 +19,12 @@ import {
   Pencil,
   Copy,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { eventTypes, qalenderBookings, qalenderTeams } from '@/lib/data';
+import { eventTypes, getDynamicQalenderBookings, qalenderTeams } from '@/lib/data';
 import {
   Table,
   TableBody,
@@ -33,16 +35,444 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  format,
+  startOfMonth,
+  eachDayOfInterval,
+  isSameDay,
+  addMonths,
+  subMonths,
+  isToday,
+  isSameMonth,
+  startOfWeek,
+  addDays,
+  addWeeks,
+  subWeeks,
+  subDays,
+  endOfWeek,
+} from 'date-fns';
+import { de } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import React from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 const tabs = [
+  'Kalender',
+  'Kalender verbinden',
   'Terminarten',
   'Verfügbarkeit',
   'Team & Routing',
   'Formulare',
   'Benachrichtigungen',
-  'Integrationen',
   'Buchungen',
 ];
+
+const MonthView = ({ currentDate, bookings, onBookingClick, statusColors, onDayClick }: any) => {
+    const calendarStart = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
+    const days = Array.from({ length: 42 }, (_, i) => addDays(calendarStart, i));
+
+    return (
+        <div className="grid grid-cols-7 border-l border-t border-border">
+          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day) => (
+            <div
+              key={day}
+              className="text-center font-bold text-muted-foreground text-xs py-2 border-b border-r border-border bg-muted/50"
+            >
+              {day}
+            </div>
+          ))}
+          {days.map((day) => {
+            const dayBookings = bookings.filter((b: any) => isSameDay(b.startAtDate, day));
+            return (
+              <div
+                key={day.toString()}
+                onClick={() => onDayClick(day)}
+                className={cn(
+                  'relative border-b border-r h-32 p-2 flex flex-col hover:bg-accent/50 transition-colors cursor-pointer',
+                  !isSameMonth(day, currentDate) && 'bg-muted/20'
+                )}
+              >
+                <span
+                  className={cn(
+                    'font-bold text-xs',
+                    isToday(day) &&
+                      'bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center',
+                    !isSameMonth(day, currentDate) && 'text-muted-foreground/50'
+                  )}
+                >
+                  {format(day, 'd')}
+                </span>
+                <div className="mt-1 space-y-1 overflow-y-auto custom-scrollbar flex-1">
+                  {dayBookings.map((booking: any) => (
+                      <button
+                        key={booking.bookingId}
+                        onClick={(e) => { e.stopPropagation(); onBookingClick(booking); }}
+                        className={cn(
+                          'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary',
+                          statusColors[booking.status] || statusColors.booked
+                        )}
+                      >
+                        {format(booking.startAtDate, 'HH:mm')} {booking.guestName}
+                      </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+    );
+}
+
+const WeekView = ({ currentDate, bookings, onBookingClick, onSlotClick, statusColors }: any) => {
+    const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm (19:00)
+
+    return (
+        <div className="border-l border-t border-border">
+            <div className="grid grid-cols-[60px_repeat(7,1fr)]">
+                {/* Header */}
+                <div className="border-r border-b p-2"></div>
+                {weekDays.map(day => (
+                    <div key={day.toString()} className="text-center font-bold text-muted-foreground text-xs py-2 border-r border-b bg-muted/50">
+                        <p>{format(day, 'EEE', { locale: de })}</p>
+                        <p className={cn("text-lg", isToday(day) && 'text-primary')}>{format(day, 'd')}</p>
+                    </div>
+                ))}
+                
+                {/* Body */}
+                {timeSlots.map(hour => (
+                    <React.Fragment key={hour}>
+                        <div className="text-center text-xs font-mono text-muted-foreground p-2 border-r border-b h-20 flex items-center justify-center">
+                            {`${hour}:00`}
+                        </div>
+                        {weekDays.map(day => (
+                            <div 
+                                key={day.toString()} 
+                                className="relative border-r border-b h-20 p-1 space-y-1 overflow-y-auto custom-scrollbar hover:bg-accent/50 transition-colors cursor-pointer"
+                                onClick={() => onSlotClick(day, hour)}
+                            >
+                               {bookings
+                                .filter((b: any) => isSameDay(b.startAtDate, day) && b.startAtDate.getHours() === hour)
+                                .map((booking:any) => (
+                                     <button
+                                        key={booking.bookingId}
+                                        onClick={(e) => { e.stopPropagation(); onBookingClick(booking); }}
+                                        className={cn(
+                                            'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary z-10',
+                                            statusColors[booking.status] || statusColors.booked
+                                        )}
+                                     >
+                                        {format(booking.startAtDate, 'HH:mm')} {booking.guestName}
+                                    </button>
+                                ))}
+                            </div>
+                        ))}
+                    </React.Fragment>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+const DayView = ({ currentDate, bookings, onBookingClick, onSlotClick, statusColors }: any) => {
+    const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm (19:00)
+
+    return (
+        <div className="border-l border-t border-border">
+            <div className="text-center font-bold text-muted-foreground text-xs py-2 border-r border-b bg-muted/50">
+                <p>{format(currentDate, 'eeee', { locale: de })}</p>
+                <p className={cn("text-lg", isToday(currentDate) && 'text-primary')}>{format(currentDate, 'd. MMMM')}</p>
+            </div>
+            <div className="grid grid-cols-[60px_1fr]">
+                 {timeSlots.map(hour => (
+                    <React.Fragment key={hour}>
+                        <div className="text-center text-xs font-mono text-muted-foreground p-2 border-r border-b h-20 flex items-center justify-center">
+                            {`${hour}:00`}
+                        </div>
+                        <div 
+                            className="relative border-r border-b h-20 p-1 space-y-1 overflow-y-auto custom-scrollbar hover:bg-accent/50 transition-colors cursor-pointer"
+                            onClick={() => onSlotClick(currentDate, hour)}
+                        >
+                            {bookings
+                            .filter((b: any) => isSameDay(b.startAtDate, currentDate) && b.startAtDate.getHours() === hour)
+                            .map((booking:any) => (
+                                    <button
+                                    key={booking.bookingId}
+                                    onClick={(e) => { e.stopPropagation(); onBookingClick(booking); }}
+                                    className={cn(
+                                        'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary z-10',
+                                        statusColors[booking.status] || statusColors.booked
+                                    )}
+                                    >
+                                    {format(booking.startAtDate, 'HH:mm')} {booking.guestName}
+                                </button>
+                            ))}
+                        </div>
+                    </React.Fragment>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+const CalendarView = () => {
+  const { toast } = useToast();
+  const [currentDate, setCurrentDate] = useState<Date>();
+  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentDate(new Date());
+    const dynamicBookings = getDynamicQalenderBookings().map((b) => ({
+      ...b,
+      startAtDate: new Date(b.startAt),
+    }));
+    setBookings(dynamicBookings);
+  }, []);
+
+  const statusColors: { [key: string]: string } = {
+    booked: 'bg-primary/20 text-primary-foreground border-primary/30',
+    canceled: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    rescheduled: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  };
+
+  if (!currentDate) {
+    return <Card className="p-6"><div className="h-[75vh] animate-pulse bg-muted/50 rounded-xl"></div></Card>;
+  }
+
+  const goToNext = () => {
+    if (view === 'month') setCurrentDate(addMonths(currentDate, 1));
+    if (view === 'week') setCurrentDate(addWeeks(currentDate, 1));
+    if (view === 'day') setCurrentDate(addDays(currentDate, 1));
+  };
+
+  const goToPrev = () => {
+    if (view === 'month') setCurrentDate(subMonths(currentDate, 1));
+    if (view === 'week') setCurrentDate(subWeeks(currentDate, 1));
+    if (view === 'day') setCurrentDate(subDays(currentDate, 1));
+  };
+
+  const goToToday = () => setCurrentDate(new Date());
+
+  const handleBookingClick = (booking: any) => {
+    setSelectedBooking(booking);
+  };
+  
+  const handleDayClick = (day: Date) => {
+    setCurrentDate(day);
+    setView('day');
+  };
+  
+  const handleSlotClick = (day: Date, hour: number) => {
+    const newDate = new Date(day);
+    newDate.setHours(hour, 0, 0, 0);
+    setSelectedSlot(newDate);
+    setIsCreateSheetOpen(true);
+  };
+
+  const handleCreateBooking = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!selectedSlot) return;
+
+    const formData = new FormData(event.currentTarget);
+    const guestName = formData.get('guestName') as string;
+    const guestEmail = formData.get('guestEmail') as string;
+    const eventTypeName = formData.get('eventType') as string;
+
+    if (!guestName || !guestEmail || !eventTypeName) {
+        toast({
+            variant: "destructive",
+            title: "Fehler",
+            description: "Bitte füllen Sie alle Felder aus.",
+        });
+        return;
+    }
+    
+    const newBooking = {
+        bookingId: `bk-${Date.now()}`,
+        eventTypeName: eventTypeName,
+        guestName,
+        guestEmail,
+        startAt: selectedSlot.toISOString(),
+        startAtDate: selectedSlot,
+        assignedOwnerId: 'Mein Kalender',
+        status: 'booked',
+    };
+
+    setBookings(prev => [...prev, newBooking]);
+    setIsCreateSheetOpen(false);
+    toast({
+        title: "Termin erstellt",
+        description: `${eventTypeName} für ${guestName} wurde gebucht.`,
+    });
+  };
+
+  const calendarTitle = () => {
+    if (view === 'month') {
+      return format(currentDate, 'MMMM yyyy', { locale: de });
+    }
+    if (view === 'week') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      return `${format(start, 'd. MMM', { locale: de })} - ${format(end, 'd. MMM yyyy', { locale: de })}`;
+    }
+    if (view === 'day') {
+      return format(currentDate, 'eeee, d. MMMM yyyy', { locale: de });
+    }
+    return '';
+  };
+
+  return (
+    <Card>
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={goToPrev}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={goToNext}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={goToToday}>
+              Heute
+            </Button>
+            <h2 className="text-xl font-bold text-foreground capitalize ml-2">
+              {calendarTitle()}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select
+              value={view}
+              onValueChange={(v) => setView(v as 'month' | 'week' | 'day')}
+            >
+              <SelectTrigger className="w-[120px] bg-input">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Monat</SelectItem>
+                <SelectItem value="week">Woche</SelectItem>
+                <SelectItem value="day">Tag</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {view === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onBookingClick={handleBookingClick} statusColors={statusColors} onDayClick={handleDayClick} />}
+        {view === 'week' && <WeekView currentDate={currentDate} bookings={bookings} onBookingClick={handleBookingClick} statusColors={statusColors} onSlotClick={handleSlotClick} />}
+        {view === 'day' && <DayView currentDate={currentDate} bookings={bookings} onBookingClick={handleBookingClick} statusColors={statusColors} onSlotClick={handleSlotClick} />}
+      </div>
+      <Sheet
+        open={!!selectedBooking}
+        onOpenChange={(open) => !open && setSelectedBooking(null)}
+      >
+        <SheetContent>
+          {selectedBooking && (
+            <>
+              <SheetHeader>
+                <SheetTitle>{selectedBooking.eventTypeName}</SheetTitle>
+                <SheetDescription>
+                  Buchungsdetails für {selectedBooking.guestName}.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="py-4 space-y-4">
+                <p>
+                  <strong>Gast:</strong> {selectedBooking.guestName} (
+                  {selectedBooking.guestEmail})
+                </p>
+                <p>
+                  <strong>Datum:</strong>{' '}
+                  {format(new Date(selectedBooking.startAt), 'dd. MMMM yyyy, HH:mm', {
+                    locale: de,
+                  })}{' '}
+                  Uhr
+                </p>
+                <p>
+                  <strong>Status:</strong>{' '}
+                  <Badge variant="outline" className="capitalize">
+                    {selectedBooking.status}
+                  </Badge>
+                </p>
+                <p>
+                  <strong>Zuständig:</strong> {selectedBooking.assignedOwnerId}
+                </p>
+              </div>
+              <div className="mt-6 flex gap-2">
+                <Button variant="outline">Stornieren</Button>
+                <Button>Umplanen</Button>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+      <Sheet
+        open={isCreateSheetOpen}
+        onOpenChange={(open) => {
+          if (!open) setSelectedSlot(null);
+          setIsCreateSheetOpen(open);
+        }}
+      >
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Neuen Termin erstellen</SheetTitle>
+            <SheetDescription>
+              {selectedSlot ? `Für ${format(selectedSlot, "eeee, d. MMMM yyyy 'um' HH:mm 'Uhr'", { locale: de })}` : 'Bitte Zeitfenster im Kalender auswählen.'}
+            </SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleCreateBooking} className="py-4 space-y-4">
+            <div>
+              <Label htmlFor="guestName">Name des Gasts</Label>
+              <Input id="guestName" name="guestName" required className="bg-input" />
+            </div>
+            <div>
+              <Label htmlFor="guestEmail">E-Mail des Gasts</Label>
+              <Input id="guestEmail" name="guestEmail" type="email" required className="bg-input" />
+            </div>
+            <div>
+              <Label htmlFor="eventType">Terminart</Label>
+              <Select required name="eventType">
+                <SelectTrigger className="bg-input">
+                  <SelectValue placeholder="Terminart wählen..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {eventTypes.map((et) => (
+                    <SelectItem key={et.id} value={et.name}>
+                      {et.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="mt-6 flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsCreateSheetOpen(false)}>
+                Abbrechen
+              </Button>
+              <Button type="submit" disabled={!selectedSlot}>Termin erstellen</Button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
+    </Card>
+  );
+};
 
 const EventTypesView = () => (
   <div className="space-y-6">
@@ -63,7 +493,7 @@ const EventTypesView = () => (
         <Card key={et.id} className="p-5 flex flex-col">
           <div className="flex justify-between items-start">
             <h3 className="font-bold text-foreground mb-1">{et.name}</h3>
-            <Badge variant={et.active ? 'default' : 'outline'} className={`text-xs ${et.active ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20' : ''}`}>
+            <Badge variant={et.active ? 'default' : 'outline'} className={`text-xs ${et.active ? 'bg-primary/20 text-primary border-primary/20' : ''}`}>
               {et.active ? 'Aktiv' : 'Inaktiv'}
             </Badge>
           </div>
@@ -193,17 +623,17 @@ const NotificationsView = () => (
   </Card>
 );
 
-const IntegrationsView = () => (
+const ConnectView = () => (
   <div className="space-y-8">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <Card className="p-6 flex flex-col">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
-              <Calendar className="w-6 h-6" />
+              <CalendarIcon className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">Qalender</h2>
+              <h2 className="text-xl font-bold text-foreground">Qalender nutzen</h2>
               <p className="text-sm text-muted-foreground">
                 Integrierte Kalender-Lösung
               </p>
@@ -220,7 +650,7 @@ const IntegrationsView = () => (
         </p>
         <div className="mt-auto pt-6 border-t border-border">
           <Button className="w-full" disabled>
-            <Calendar className="mr-2 h-4 w-4" />
+            <CalendarIcon className="mr-2 h-4 w-4" />
             Qalender öffnen (bald verfügbar)
           </Button>
         </div>
@@ -234,20 +664,20 @@ const IntegrationsView = () => (
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">
-                Kalender verbinden
+                Externen Kalender verbinden
               </h2>
               <p className="text-sm text-muted-foreground">
                 Bestehende Kalender-Konten
               </p>
             </div>
           </div>
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/20 text-primary border-primary/20 shrink-0">
             Empfohlen
           </span>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1">
           Verbinden Sie Ihren bestehenden Kalender (z.B. Google oder Outlook),
-          um die volle Kraft der QORE-KI zu nutzen.
+          um die volle Kraft der QORE-KI für die Terminplanung zu nutzen.
         </p>
         <div className="mt-auto pt-6 border-t border-border">
           <Button className="w-full">
@@ -266,7 +696,7 @@ const IntegrationsView = () => (
         <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-background border border-border">
-              <Calendar className="w-5 h-5 text-muted-foreground" />
+              <CalendarIcon className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
               <p className="font-bold text-foreground">ceo@aisuite.de</p>
@@ -276,7 +706,7 @@ const IntegrationsView = () => (
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold px-2 py-1 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/50 flex items-center gap-1.5">
+            <span className="text-xs font-bold px-2 py-1 rounded bg-primary/20 text-primary border border-primary/20 flex items-center gap-1.5">
               <Power className="w-3.5 h-3.5" />
               Aktiv
             </span>
@@ -296,47 +726,59 @@ const IntegrationsView = () => (
   </div>
 );
 
-const BookingsView = () => (
-    <Card>
-        <div className="p-6">
-            <h2 className="text-lg font-bold text-foreground">Buchungen</h2>
-            <p className="text-sm text-muted-foreground">Eine Liste aller über Qalender gebuchten Termine.</p>
-        </div>
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Terminart</TableHead>
-                    <TableHead>Gast</TableHead>
-                    <TableHead>Datum & Uhrzeit</TableHead>
-                    <TableHead>Zuständig</TableHead>
-                    <TableHead>Status</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {qalenderBookings.map(b => (
-                    <TableRow key={b.bookingId}>
-                        <TableCell className="font-medium">{b.eventTypeName}</TableCell>
-                        <TableCell>
-                            <div className="font-medium">{b.guestName}</div>
-                            <div className="text-xs text-muted-foreground">{b.guestEmail}</div>
-                        </TableCell>
-                        <TableCell>{new Date(b.startAt).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
-                        <TableCell>{b.assignedOwnerId}</TableCell>
-                        <TableCell>
-                           <Badge variant="outline" className="capitalize text-xs">{b.status}</Badge>
-                        </TableCell>
+const BookingsView = () => {
+    const [bookings, setBookings] = useState<any[]>([]);
+  
+    useEffect(() => {
+        setBookings(getDynamicQalenderBookings());
+    }, []);
+
+    return (
+        <Card>
+            <div className="p-6">
+                <h2 className="text-lg font-bold text-foreground">Buchungen</h2>
+                <p className="text-sm text-muted-foreground">Eine Liste aller über Qalender gebuchten Termine.</p>
+            </div>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Terminart</TableHead>
+                        <TableHead>Gast</TableHead>
+                        <TableHead>Datum & Uhrzeit</TableHead>
+                        <TableHead>Zuständig</TableHead>
+                        <TableHead>Status</TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-    </Card>
-);
+                </TableHeader>
+                <TableBody>
+                    {bookings.map(b => (
+                        <TableRow key={b.bookingId}>
+                            <TableCell className="font-medium">{b.eventTypeName}</TableCell>
+                            <TableCell>
+                                <div className="font-medium">{b.guestName}</div>
+                                <div className="text-xs text-muted-foreground">{b.guestEmail}</div>
+                            </TableCell>
+                            <TableCell>{new Date(b.startAt).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
+                            <TableCell>{b.assignedOwnerId}</TableCell>
+                            <TableCell>
+                               <Badge variant="outline" className="capitalize text-xs">{b.status}</Badge>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </Card>
+    );
+}
 
 export default function QalenderPage() {
   const [activeTab, setActiveTab] = useState(tabs[0]);
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'Kalender':
+        return <CalendarView />;
+      case 'Kalender verbinden':
+        return <ConnectView />;
       case 'Terminarten':
         return <EventTypesView />;
       case 'Verfügbarkeit':
@@ -347,12 +789,10 @@ export default function QalenderPage() {
         return <FormsQuestionsView />;
       case 'Benachrichtigungen':
         return <NotificationsView />;
-      case 'Integrationen':
-        return <IntegrationsView />;
        case 'Buchungen':
         return <BookingsView />;
       default:
-        return <EventTypesView />;
+        return <CalendarView />;
     }
   };
 
