@@ -64,7 +64,7 @@ const navGroups = [
     {
         title: "Tools",
         items: [
-            { href: "/qualender", icon: Calendar, label: "Qalender" },
+            { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
             { href: "/qmail", icon: Mail, label: "Q-Mail" },
             { href: "/qcall", icon: Phone, label: "Q-Call" },
