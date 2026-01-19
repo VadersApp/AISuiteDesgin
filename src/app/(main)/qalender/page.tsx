@@ -63,7 +63,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 
 const tabs = [
@@ -167,8 +166,8 @@ const CalendarView = () => {
                 </span>
                 <div className="mt-1 space-y-1 overflow-y-auto custom-scrollbar flex-1">
                   {dayBookings.map((booking) => (
-                    <SheetTrigger asChild key={booking.bookingId}>
                       <button
+                        key={booking.bookingId}
                         onClick={() => setSelectedBooking(booking)}
                         className={cn(
                           'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary',
@@ -177,7 +176,6 @@ const CalendarView = () => {
                       >
                         {format(booking.startAtDate, 'HH:mm')} {booking.guestName}
                       </button>
-                    </SheetTrigger>
                   ))}
                 </div>
               </div>
