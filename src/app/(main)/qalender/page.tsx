@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-  Calendar,
+  Calendar as CalendarIcon,
   Link as LinkIcon,
   Power,
   Plus,
@@ -19,6 +19,8 @@ import {
   Pencil,
   Copy,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -33,8 +35,39 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameDay,
+  addMonths,
+  subMonths,
+  isToday,
+  isSameMonth,
+  startOfWeek,
+  addDays,
+} from 'date-fns';
+import { de } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 const tabs = [
+  'Kalender',
   'Kalender verbinden',
   'Terminarten',
   'Verfügbarkeit',
@@ -43,6 +76,142 @@ const tabs = [
   'Benachrichtigungen',
   'Buchungen',
 ];
+
+const CalendarView = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedBooking, setSelectedBooking] =
+    useState<(typeof qalenderBookings)[0] | null>(null);
+
+  const calendarStart = startOfWeek(startOfMonth(currentDate), {
+    weekStartsOn: 1,
+  });
+  const days = Array.from({ length: 42 }, (_, i) => addDays(calendarStart, i));
+
+  const goToNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const goToPrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const goToToday = () => setCurrentDate(new Date());
+
+  const bookings = qalenderBookings.map((b) => ({
+    ...b,
+    startAtDate: new Date(b.startAt),
+  }));
+
+  const statusColors: { [key: string]: string } = {
+    booked: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    canceled: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    rescheduled: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  };
+
+  return (
+    <Card>
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={goToPrevMonth}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={goToNextMonth}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={goToToday}>
+              Heute
+            </Button>
+            <h2 className="text-xl font-bold text-foreground capitalize ml-2">
+              {format(currentDate, 'MMMM yyyy', { locale: de })}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select defaultValue="month">
+              <SelectTrigger className="w-[120px] bg-input">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Monat</SelectItem>
+                <SelectItem value="week">Woche</SelectItem>
+                <SelectItem value="day">Tag</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 border-l border-t border-border">
+          {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day) => (
+            <div
+              key={day}
+              className="text-center font-bold text-muted-foreground text-xs py-2 border-b border-r border-border bg-muted/50"
+            >
+              {day}
+            </div>
+          ))}
+          {days.map((day) => {
+            const dayBookings = bookings.filter((b) =>
+              isSameDay(b.startAtDate, day)
+            );
+            return (
+              <div
+                key={day.toString()}
+                className={cn(
+                  'relative border-b border-r h-32 p-2 flex flex-col',
+                  !isSameMonth(day, currentDate) && 'bg-muted/20'
+                )}
+              >
+                <span
+                  className={cn(
+                    'font-bold text-xs',
+                    isToday(day) &&
+                      'bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center',
+                    !isSameMonth(day, currentDate) && 'text-muted-foreground/50'
+                  )}
+                >
+                  {format(day, 'd')}
+                </span>
+                <div className="mt-1 space-y-1 overflow-y-auto custom-scrollbar flex-1">
+                  {dayBookings.map((booking) => (
+                    <SheetTrigger asChild key={booking.bookingId}>
+                      <button
+                        onClick={() => setSelectedBooking(booking)}
+                        className={cn(
+                          'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary',
+                          statusColors[booking.status] || statusColors.booked
+                        )}
+                      >
+                        {format(booking.startAtDate, 'HH:mm')} {booking.guestName}
+                      </button>
+                    </SheetTrigger>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+       <Sheet open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+        <SheetContent>
+            {selectedBooking && (
+                <>
+                <SheetHeader>
+                    <SheetTitle>{selectedBooking.eventTypeName}</SheetTitle>
+                    <SheetDescription>
+                        Buchungsdetails für {selectedBooking.guestName}.
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="py-4 space-y-4">
+                    <p><strong>Gast:</strong> {selectedBooking.guestName} ({selectedBooking.guestEmail})</p>
+                    <p><strong>Datum:</strong> {format(new Date(selectedBooking.startAt), 'dd. MMMM yyyy, HH:mm', { locale: de })} Uhr</p>
+                    <p><strong>Status:</strong> <Badge variant="outline" className="capitalize">{selectedBooking.status}</Badge></p>
+                    <p><strong>Zuständig:</strong> {selectedBooking.assignedOwnerId}</p>
+                </div>
+                 <div className="mt-6 flex gap-2">
+                    <Button variant="outline">Stornieren</Button>
+                    <Button>Umplanen</Button>
+                </div>
+                </>
+            )}
+        </SheetContent>
+      </Sheet>
+    </Card>
+  );
+};
 
 const EventTypesView = () => (
   <div className="space-y-6">
@@ -200,7 +369,7 @@ const ConnectView = () => (
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
-              <Calendar className="w-6 h-6" />
+              <CalendarIcon className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">Qalender nutzen</h2>
@@ -220,7 +389,7 @@ const ConnectView = () => (
         </p>
         <div className="mt-auto pt-6 border-t border-border">
           <Button className="w-full" disabled>
-            <Calendar className="mr-2 h-4 w-4" />
+            <CalendarIcon className="mr-2 h-4 w-4" />
             Qalender öffnen (bald verfügbar)
           </Button>
         </div>
@@ -266,7 +435,7 @@ const ConnectView = () => (
         <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-background border border-border">
-              <Calendar className="w-5 h-5 text-muted-foreground" />
+              <CalendarIcon className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
               <p className="font-bold text-foreground">ceo@aisuite.de</p>
@@ -337,6 +506,8 @@ export default function QalenderPage() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'Kalender':
+        return <CalendarView />;
       case 'Kalender verbinden':
         return <ConnectView />;
       case 'Terminarten':
@@ -352,7 +523,7 @@ export default function QalenderPage() {
        case 'Buchungen':
         return <BookingsView />;
       default:
-        return <ConnectView />;
+        return <CalendarView />;
     }
   };
 
