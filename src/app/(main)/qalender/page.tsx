@@ -45,7 +45,6 @@ import {
 import {
   format,
   startOfMonth,
-  endOfMonth,
   eachDayOfInterval,
   isSameDay,
   addMonths,
@@ -54,6 +53,10 @@ import {
   isSameMonth,
   startOfWeek,
   addDays,
+  addWeeks,
+  subWeeks,
+  subDays,
+  endOfWeek,
 } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -64,6 +67,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
+import React from 'react';
 
 const tabs = [
   'Kalender',
@@ -76,63 +80,11 @@ const tabs = [
   'Buchungen',
 ];
 
-const CalendarView = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedBooking, setSelectedBooking] =
-    useState<(typeof qalenderBookings)[0] | null>(null);
+const MonthView = ({ currentDate, bookings, onBookingClick, statusColors }: any) => {
+    const calendarStart = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
+    const days = Array.from({ length: 42 }, (_, i) => addDays(calendarStart, i));
 
-  const calendarStart = startOfWeek(startOfMonth(currentDate), {
-    weekStartsOn: 1,
-  });
-  const days = Array.from({ length: 42 }, (_, i) => addDays(calendarStart, i));
-
-  const goToNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const goToPrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-  const goToToday = () => setCurrentDate(new Date());
-
-  const bookings = qalenderBookings.map((b) => ({
-    ...b,
-    startAtDate: new Date(b.startAt),
-  }));
-
-  const statusColors: { [key: string]: string } = {
-    booked: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-    canceled: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-    rescheduled: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
-  };
-
-  return (
-    <Card>
-      <div className="p-6">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={goToPrevMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={goToNextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" onClick={goToToday}>
-              Heute
-            </Button>
-            <h2 className="text-xl font-bold text-foreground capitalize ml-2">
-              {format(currentDate, 'MMMM yyyy', { locale: de })}
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select defaultValue="month">
-              <SelectTrigger className="w-[120px] bg-input">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="month">Monat</SelectItem>
-                <SelectItem value="week">Woche</SelectItem>
-                <SelectItem value="day">Tag</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
+    return (
         <div className="grid grid-cols-7 border-l border-t border-border">
           {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((day) => (
             <div
@@ -143,9 +95,7 @@ const CalendarView = () => {
             </div>
           ))}
           {days.map((day) => {
-            const dayBookings = bookings.filter((b) =>
-              isSameDay(b.startAtDate, day)
-            );
+            const dayBookings = bookings.filter((b: any) => isSameDay(b.startAtDate, day));
             return (
               <div
                 key={day.toString()}
@@ -165,10 +115,10 @@ const CalendarView = () => {
                   {format(day, 'd')}
                 </span>
                 <div className="mt-1 space-y-1 overflow-y-auto custom-scrollbar flex-1">
-                  {dayBookings.map((booking) => (
+                  {dayBookings.map((booking: any) => (
                       <button
                         key={booking.bookingId}
-                        onClick={() => setSelectedBooking(booking)}
+                        onClick={() => onBookingClick(booking)}
                         className={cn(
                           'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary',
                           statusColors[booking.status] || statusColors.booked
@@ -182,29 +132,225 @@ const CalendarView = () => {
             );
           })}
         </div>
+    );
+}
+
+const WeekView = ({ currentDate, bookings, onBookingClick, statusColors }: any) => {
+    const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm (19:00)
+
+    return (
+        <div className="border-l border-t border-border">
+            <div className="grid grid-cols-[60px_repeat(7,1fr)]">
+                {/* Header */}
+                <div className="border-r border-b p-2"></div>
+                {weekDays.map(day => (
+                    <div key={day.toString()} className="text-center font-bold text-muted-foreground text-xs py-2 border-r border-b bg-muted/50">
+                        <p>{format(day, 'EEE', { locale: de })}</p>
+                        <p className={cn("text-lg", isToday(day) && 'text-primary')}>{format(day, 'd')}</p>
+                    </div>
+                ))}
+                
+                {/* Body */}
+                {timeSlots.map(hour => (
+                    <React.Fragment key={hour}>
+                        <div className="text-center text-xs font-mono text-muted-foreground p-2 border-r border-b h-20 flex items-center justify-center">
+                            {`${hour}:00`}
+                        </div>
+                        {weekDays.map(day => (
+                            <div key={day.toString()} className="relative border-r border-b h-20 p-1 space-y-1 overflow-y-auto custom-scrollbar">
+                               {bookings
+                                .filter((b: any) => isSameDay(b.startAtDate, day) && b.startAtDate.getHours() === hour)
+                                .map((booking:any) => (
+                                     <button
+                                        key={booking.bookingId}
+                                        onClick={() => onBookingClick(booking)}
+                                        className={cn(
+                                            'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary z-10',
+                                            statusColors[booking.status] || statusColors.booked
+                                        )}
+                                     >
+                                        {format(booking.startAtDate, 'HH:mm')} {booking.guestName}
+                                    </button>
+                                ))}
+                            </div>
+                        ))}
+                    </React.Fragment>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+const DayView = ({ currentDate, bookings, onBookingClick, statusColors }: any) => {
+    const timeSlots = Array.from({ length: 12 }, (_, i) => i + 8); // 8am to 7pm (19:00)
+
+    return (
+        <div className="border-l border-t border-border">
+            <div className="text-center font-bold text-muted-foreground text-xs py-2 border-r border-b bg-muted/50">
+                <p>{format(currentDate, 'eeee', { locale: de })}</p>
+                <p className={cn("text-lg", isToday(currentDate) && 'text-primary')}>{format(currentDate, 'd. MMMM')}</p>
+            </div>
+            <div className="grid grid-cols-[60px_1fr]">
+                 {timeSlots.map(hour => (
+                    <React.Fragment key={hour}>
+                        <div className="text-center text-xs font-mono text-muted-foreground p-2 border-r border-b h-20 flex items-center justify-center">
+                            {`${hour}:00`}
+                        </div>
+                        <div className="relative border-r border-b h-20 p-1 space-y-1 overflow-y-auto custom-scrollbar">
+                            {bookings
+                            .filter((b: any) => isSameDay(b.startAtDate, currentDate) && b.startAtDate.getHours() === hour)
+                            .map((booking:any) => (
+                                    <button
+                                    key={booking.bookingId}
+                                    onClick={() => onBookingClick(booking)}
+                                    className={cn(
+                                        'w-full text-left p-1 rounded-md text-[10px] font-bold truncate transition-colors hover:ring-2 ring-primary z-10',
+                                        statusColors[booking.status] || statusColors.booked
+                                    )}
+                                    >
+                                    {format(booking.startAtDate, 'HH:mm')} {booking.guestName}
+                                </button>
+                            ))}
+                        </div>
+                    </React.Fragment>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+const CalendarView = () => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  const [selectedBooking, setSelectedBooking] =
+    useState<(typeof qalenderBookings)[0] | null>(null);
+
+  const bookings = qalenderBookings.map((b) => ({
+    ...b,
+    startAtDate: new Date(b.startAt),
+  }));
+
+  const statusColors: { [key: string]: string } = {
+    booked: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    canceled: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    rescheduled: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  };
+
+  const goToNext = () => {
+    if (view === 'month') setCurrentDate(addMonths(currentDate, 1));
+    if (view === 'week') setCurrentDate(addWeeks(currentDate, 1));
+    if (view === 'day') setCurrentDate(addDays(currentDate, 1));
+  };
+
+  const goToPrev = () => {
+    if (view === 'month') setCurrentDate(subMonths(currentDate, 1));
+    if (view === 'week') setCurrentDate(subWeeks(currentDate, 1));
+    if (view === 'day') setCurrentDate(subDays(currentDate, 1));
+  };
+
+  const goToToday = () => setCurrentDate(new Date());
+
+  const handleBookingClick = (booking: (typeof qalenderBookings)[0]) => {
+    setSelectedBooking(booking);
+  };
+
+  const calendarTitle = () => {
+    if (view === 'month') {
+      return format(currentDate, 'MMMM yyyy', { locale: de });
+    }
+    if (view === 'week') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+      const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+      return `${format(start, 'd. MMM', { locale: de })} - ${format(end, 'd. MMM yyyy', { locale: de })}`;
+    }
+    if (view === 'day') {
+      return format(currentDate, 'eeee, d. MMMM yyyy', { locale: de });
+    }
+    return '';
+  };
+
+  return (
+    <Card>
+      <div className="p-6">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={goToPrev}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={goToNext}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" onClick={goToToday}>
+              Heute
+            </Button>
+            <h2 className="text-xl font-bold text-foreground capitalize ml-2">
+              {calendarTitle()}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select
+              value={view}
+              onValueChange={(v) => setView(v as 'month' | 'week' | 'day')}
+            >
+              <SelectTrigger className="w-[120px] bg-input">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Monat</SelectItem>
+                <SelectItem value="week">Woche</SelectItem>
+                <SelectItem value="day">Tag</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {view === 'month' && <MonthView currentDate={currentDate} bookings={bookings} onBookingClick={handleBookingClick} statusColors={statusColors} />}
+        {view === 'week' && <WeekView currentDate={currentDate} bookings={bookings} onBookingClick={handleBookingClick} statusColors={statusColors} />}
+        {view === 'day' && <DayView currentDate={currentDate} bookings={bookings} onBookingClick={handleBookingClick} statusColors={statusColors} />}
       </div>
-       <Sheet open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+      <Sheet
+        open={!!selectedBooking}
+        onOpenChange={(open) => !open && setSelectedBooking(null)}
+      >
         <SheetContent>
-            {selectedBooking && (
-                <>
-                <SheetHeader>
-                    <SheetTitle>{selectedBooking.eventTypeName}</SheetTitle>
-                    <SheetDescription>
-                        Buchungsdetails für {selectedBooking.guestName}.
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="py-4 space-y-4">
-                    <p><strong>Gast:</strong> {selectedBooking.guestName} ({selectedBooking.guestEmail})</p>
-                    <p><strong>Datum:</strong> {format(new Date(selectedBooking.startAt), 'dd. MMMM yyyy, HH:mm', { locale: de })} Uhr</p>
-                    <p><strong>Status:</strong> <Badge variant="outline" className="capitalize">{selectedBooking.status}</Badge></p>
-                    <p><strong>Zuständig:</strong> {selectedBooking.assignedOwnerId}</p>
-                </div>
-                 <div className="mt-6 flex gap-2">
-                    <Button variant="outline">Stornieren</Button>
-                    <Button>Umplanen</Button>
-                </div>
-                </>
-            )}
+          {selectedBooking && (
+            <>
+              <SheetHeader>
+                <SheetTitle>{selectedBooking.eventTypeName}</SheetTitle>
+                <SheetDescription>
+                  Buchungsdetails für {selectedBooking.guestName}.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="py-4 space-y-4">
+                <p>
+                  <strong>Gast:</strong> {selectedBooking.guestName} (
+                  {selectedBooking.guestEmail})
+                </p>
+                <p>
+                  <strong>Datum:</strong>{' '}
+                  {format(new Date(selectedBooking.startAt), 'dd. MMMM yyyy, HH:mm', {
+                    locale: de,
+                  })}{' '}
+                  Uhr
+                </p>
+                <p>
+                  <strong>Status:</strong>{' '}
+                  <Badge variant="outline" className="capitalize">
+                    {selectedBooking.status}
+                  </Badge>
+                </p>
+                <p>
+                  <strong>Zuständig:</strong> {selectedBooking.assignedOwnerId}
+                </p>
+              </div>
+              <div className="mt-6 flex gap-2">
+                <Button variant="outline">Stornieren</Button>
+                <Button>Umplanen</Button>
+              </div>
+            </>
+          )}
         </SheetContent>
       </Sheet>
     </Card>
