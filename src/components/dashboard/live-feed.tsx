@@ -1,16 +1,19 @@
-import { liveFeed } from "@/lib/data";
+import { liveActivities, formatTimeSince } from "@/lib/data";
+import Link from 'next/link';
 
 export function LiveFeed() {
     return (
         <div className="space-y-4">
-            {liveFeed.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border hover:border-border/80 transition-colors">
-                    <div className="flex items-center gap-4">
-                        <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-primary font-bold border border-border">{item.name[0]}</div>
-                        <div><p className="text-sm font-semibold text-foreground">{item.name}</p><p className="text-xs text-muted-foreground">{item.action}</p></div>
+            {liveActivities.slice(0, 5).map((item) => (
+                <Link href={`/dashboard/activities/${item.id}`} key={item.id}>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border hover:bg-accent/80 hover:border-primary/50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-4">
+                            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center text-primary font-bold border border-border">{item.agent.avatar}</div>
+                            <div><p className="text-sm font-semibold text-foreground">{item.agent.name}</p><p className="text-xs text-muted-foreground">{item.title}</p></div>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground font-mono">{formatTimeSince(item.createdAt)}</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground font-mono">{item.time}</span>
-                </div>
+                </Link>
             ))}
         </div>
     )

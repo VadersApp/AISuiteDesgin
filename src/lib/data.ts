@@ -1,3 +1,6 @@
+import { formatDistanceToNow } from 'date-fns';
+import { de } from 'date-fns/locale';
+
 export const bots = [
     { name: 'Ava Assist', id: 'ava', role: 'Support-Spezialistin', desc: 'Beantwortet Kundenanfragen und managt Tickets basierend auf der FAQ.', tasksCount: 14, timeSaved: '142h', kpis: [{ label: 'Zufriedenh.', value: '98%', icon: 'star' }, { label: 'Tickets', value: '1.2k', icon: 'message-square' }, { label: 'Response', value: '0.8s', icon: 'clock' }], currentActivity: 'Analysiert aktuell 14 offene Tickets in der Warteschlange.', lastAction: { desc: 'Beschwerde #8291 erfolgreich gelöst.', time: 'Vor 12 Minuten' }, complianceNote: 'DSGVO konform. Datenanonymisierung aktiv.', focusReports: [{ date: 'HEUTE', title: 'Sentiment Q1', content: 'Kundenzufriedenheit um 14% gestiegen.', type: 'Performance' }] },
     { name: 'Leo Sales', id: 'leo', role: 'Vertriebs-Lead', desc: 'Qualifiziert Leads und bereitet CRM-Einträge für den Vertrieb vor.', tasksCount: 42, timeSaved: '98h', kpis: [{ label: 'Conv. Rate', value: '32%', icon: 'target' }, { label: 'Pipeline', value: '250k€', icon: 'trending-up' }, { label: 'Leads/Tag', value: '150', icon: 'zap' }], currentActivity: 'Scannt LinkedIn-Profile von Target-Accounts.', lastAction: { desc: 'Meeting-Zusage erhalten.', time: 'Vor 4 Stunden' }, complianceNote: 'Anti-Spam Richtlinien aktiv.', focusReports: [{ date: '05. JAN', title: 'Qualitätsbericht', content: 'Wahrscheinlichkeit erhöht.', type: 'Performance' }] },
@@ -92,11 +95,52 @@ export const dashboardStats = [
     { title: 'ROI', value: '3.4x', icon: 'trending-up', color: 'emerald' }
 ];
 
-export const liveFeed = [
-    { name: "Ava Assist", action: "Ticket #8291 gelöst", time: "10:42" },
-    { name: "Leo Sales", action: "Lead qualifiziert", time: "10:38" },
-    { name: "Mila HR", action: "Eskalation gefiltert", time: "10:25" }
+export const liveActivities = [
+    { 
+        id: 'act_001',
+        agent: { name: 'Ava Assist', id: 'ava', avatar: 'AA' },
+        title: 'Ticket #8291 gelöst', 
+        description: 'Die Kundenanfrage bezüglich der Rechnung wurde erfolgreich abgeschlossen und der Status auf "geschlossen" gesetzt.',
+        type: 'ticket_resolved',
+        reference: { type: 'Ticket', id: '#8291', context: { Kunde: 'Max Mustermann', Priorität: 'Mittel' } },
+        createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
+        severity: 'info'
+    },
+    { 
+        id: 'act_002',
+        agent: { name: 'Leo Sales', id: 'leo', avatar: 'LS' },
+        title: 'Lead "Innovatech" qualifiziert', 
+        description: 'Der Lead wurde als "Hot" eingestuft und ein Termin wurde zur Vereinbarung vorgeschlagen. Nächster Schritt: Anruf.',
+        type: 'lead_qualified',
+        reference: { type: 'Lead', id: 'lead-001', context: { Phase: 'Qualifiziert', Wert: '25.000€' } },
+        createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(), // 12 minutes ago
+        severity: 'info'
+    },
+    { 
+        id: 'act_003',
+        agent: { name: 'Mila HR', id: 'mila', avatar: 'MH' },
+        title: 'Eskalation gefiltert', 
+        description: 'Eine dringende Bewerbung für die "Senior Developer" Position wurde zur manuellen Prüfung weitergeleitet.',
+        type: 'escalation',
+        reference: { type: 'Bewerbung', id: 'app-582', context: { Position: 'Senior Developer', Kandidat: 'John Doe' } },
+        createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 minutes ago
+        severity: 'warning'
+    },
+    { 
+        id: 'act_004',
+        agent: { name: 'Taro Tech', id: 'taro', avatar: 'TT' },
+        title: 'System-Backup erfolgreich', 
+        description: 'Das tägliche Backup der Hauptdatenbank wurde ohne Fehler abgeschlossen.',
+        type: 'system_backup',
+        reference: { type: 'System', id: 'DB_MAIN', context: { Größe: '25.4 GB', Dauer: '12 min' } },
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        severity: 'info'
+    }
 ];
+
+export const formatTimeSince = (dateString: string) => {
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: de });
+};
 
 export const reportingStats = [
     { title: 'Umsatz durch AI', value: '€42.5k', icon: 'coins', color: 'emerald' },

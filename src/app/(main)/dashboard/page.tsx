@@ -2,6 +2,7 @@ import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { LiveFeed } from "@/components/dashboard/live-feed";
 import { ManagementActions } from "@/components/dashboard/management-actions";
 import { Card } from "@/components/ui/card";
+import Link from 'next/link';
 
 export default function DashboardPage() {
   return (
@@ -17,9 +18,14 @@ export default function DashboardPage() {
       <DashboardStats />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-6">
-            Live-Aktivitäten
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-foreground">
+              Live-Aktivitäten
+            </h2>
+            <Link href="/dashboard/activities" className="text-sm font-bold text-primary hover:underline">
+              Alle anzeigen
+            </Link>
+          </div>
           <LiveFeed />
         </Card>
         <ManagementActions />
