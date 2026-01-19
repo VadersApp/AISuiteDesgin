@@ -13,8 +13,36 @@ const statusMap: {[key: string]: {color: string, icon: React.ElementType}} = {
     'Archiviert': {color: 'slate', icon: Archive}
 }
 
+const WorkflowCanvaView = () => {
+    const [isLoading, setIsLoading] = useState(true);
+    // In a real application, this URL should come from a config file, environment variable, or Firestore.
+    const iframeUrl = "https://n8n.io/";
+
+    return (
+        <Card className="h-[calc(100vh-22rem)] p-0 overflow-hidden relative">
+            {isLoading && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-card">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <p>Lade Workflow Canva…</p>
+                    </div>
+                </div>
+            )}
+            <iframe
+                src={iframeUrl}
+                className="w-full h-full border-0 absolute inset-0"
+                title="Workflow Canva"
+                onLoad={() => setIsLoading(false)}
+                allow="clipboard-read; clipboard-write; fullscreen; microphone; camera"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            ></iframe>
+        </Card>
+    );
+};
+
+
 export default function WorkflowStudioPage() {
-    const tabs = ["Alle Workflows", "Aktiv", "Inaktiv", "Entwurf", "Archiviert"];
+    const tabs = ["Alle Workflows", "Workflow Canva", "Aktiv", "Inaktiv", "Entwurf", "Archiviert"];
     const [activeTab, setActiveTab] = useState(tabs[0]);
 
     const filteredWorkflows = workflows.filter(wf => {
@@ -22,37 +50,26 @@ export default function WorkflowStudioPage() {
         return wf.status === activeTab;
     });
 
-    return (
-        <div className="space-y-8 pb-20">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground tracking-tight">Workflow Studio</h1>
-                    <p className="text-muted-foreground">Automatisierungscenter.</p>
-                </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Neuer Workflow
-                </Button>
-            </header>
-            
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                {tabs.map((t) => (
-                    <button
-                        key={t}
-                        onClick={() => setActiveTab(t)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
-                            activeTab === t
-                                ? "bg-primary border-primary/50 text-primary-foreground shadow-lg"
-                                : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-accent"
-                        }`}
-                    >
-                        {t}
-                    </button>
-                ))}
-            </div>
+    const renderContent = () => {
+        if (activeTab === 'Workflow Canva') {
+            return <WorkflowCanvaView />;
+        }
 
+        const workflowsToRender = activeTab === 'Alle Workflows' ? workflows : filteredWorkflows;
+
+        if (workflowsToRender.length === 0) {
+            return (
+                <Card className="md:col-span-2 lg:col-span-3 p-12 flex flex-col items-center justify-center text-center border-dashed">
+                    <Archive className="w-10 h-10 text-muted-foreground/50 mb-4"/>
+                    <h3 className="text-foreground font-bold">Keine Workflows in dieser Ansicht</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Erstelle einen neuen Workflow oder wähle eine andere Ansicht.</p>
+                </Card>
+            );
+        }
+
+        return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
-                {filteredWorkflows.map(wf => {
+                {workflowsToRender.map(wf => {
                     const StatusIcon = statusMap[wf.status]?.icon || FileText;
                     const statusColor = statusMap[wf.status]?.color || 'slate';
 
@@ -90,14 +107,41 @@ export default function WorkflowStudioPage() {
                         </Card>
                     );
                 })}
+            </div>
+        );
+    };
 
-                {filteredWorkflows.length === 0 && (
-                     <Card className="md:col-span-2 lg:col-span-3 p-12 flex flex-col items-center justify-center text-center border-dashed">
-                        <Archive className="w-10 h-10 text-muted-foreground/50 mb-4"/>
-                        <h3 className="text-foreground font-bold">Keine Workflows in dieser Ansicht</h3>
-                        <p className="text-sm text-muted-foreground mt-1">Erstelle einen neuen Workflow oder wähle eine andere Ansicht.</p>
-                    </Card>
-                )}
+    return (
+        <div className="space-y-8 pb-20">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight">Workflow Studio</h1>
+                    <p className="text-muted-foreground">Automatisierungscenter.</p>
+                </div>
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Neuer Workflow
+                </Button>
+            </header>
+            
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                {tabs.map((t) => (
+                    <button
+                        key={t}
+                        onClick={() => setActiveTab(t)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+                            activeTab === t
+                                ? "bg-primary border-primary/50 text-primary-foreground shadow-lg"
+                                : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-accent"
+                        }`}
+                    >
+                        {t}
+                    </button>
+                ))}
+            </div>
+
+            <div className="mt-8">
+                {renderContent()}
             </div>
         </div>
     );
