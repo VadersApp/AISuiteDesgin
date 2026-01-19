@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { eventTypes, qalenderBookings, qalenderTeams } from '@/lib/data';
+import { eventTypes, getDynamicQalenderBookings, qalenderTeams } from '@/lib/data';
 import {
   Table,
   TableBody,
@@ -224,13 +224,16 @@ const DayView = ({ currentDate, bookings, onBookingClick, statusColors }: any) =
 const CalendarView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-  const [selectedBooking, setSelectedBooking] =
-    useState<(typeof qalenderBookings)[0] | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [bookings, setBookings] = useState<any[]>([]);
 
-  const bookings = qalenderBookings.map((b) => ({
-    ...b,
-    startAtDate: new Date(b.startAt),
-  }));
+  useEffect(() => {
+    const dynamicBookings = getDynamicQalenderBookings().map((b) => ({
+      ...b,
+      startAtDate: new Date(b.startAt),
+    }));
+    setBookings(dynamicBookings);
+  }, []);
 
   const statusColors: { [key: string]: string } = {
     booked: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
@@ -252,7 +255,7 @@ const CalendarView = () => {
 
   const goToToday = () => setCurrentDate(new Date());
 
-  const handleBookingClick = (booking: (typeof qalenderBookings)[0]) => {
+  const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking);
   };
 
@@ -609,41 +612,49 @@ const ConnectView = () => (
   </div>
 );
 
-const BookingsView = () => (
-    <Card>
-        <div className="p-6">
-            <h2 className="text-lg font-bold text-foreground">Buchungen</h2>
-            <p className="text-sm text-muted-foreground">Eine Liste aller über Qalender gebuchten Termine.</p>
-        </div>
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Terminart</TableHead>
-                    <TableHead>Gast</TableHead>
-                    <TableHead>Datum & Uhrzeit</TableHead>
-                    <TableHead>Zuständig</TableHead>
-                    <TableHead>Status</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {qalenderBookings.map(b => (
-                    <TableRow key={b.bookingId}>
-                        <TableCell className="font-medium">{b.eventTypeName}</TableCell>
-                        <TableCell>
-                            <div className="font-medium">{b.guestName}</div>
-                            <div className="text-xs text-muted-foreground">{b.guestEmail}</div>
-                        </TableCell>
-                        <TableCell>{new Date(b.startAt).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
-                        <TableCell>{b.assignedOwnerId}</TableCell>
-                        <TableCell>
-                           <Badge variant="outline" className="capitalize text-xs">{b.status}</Badge>
-                        </TableCell>
+const BookingsView = () => {
+    const [bookings, setBookings] = useState<any[]>([]);
+  
+    useEffect(() => {
+        setBookings(getDynamicQalenderBookings());
+    }, []);
+
+    return (
+        <Card>
+            <div className="p-6">
+                <h2 className="text-lg font-bold text-foreground">Buchungen</h2>
+                <p className="text-sm text-muted-foreground">Eine Liste aller über Qalender gebuchten Termine.</p>
+            </div>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Terminart</TableHead>
+                        <TableHead>Gast</TableHead>
+                        <TableHead>Datum & Uhrzeit</TableHead>
+                        <TableHead>Zuständig</TableHead>
+                        <TableHead>Status</TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
-    </Card>
-);
+                </TableHeader>
+                <TableBody>
+                    {bookings.map(b => (
+                        <TableRow key={b.bookingId}>
+                            <TableCell className="font-medium">{b.eventTypeName}</TableCell>
+                            <TableCell>
+                                <div className="font-medium">{b.guestName}</div>
+                                <div className="text-xs text-muted-foreground">{b.guestEmail}</div>
+                            </TableCell>
+                            <TableCell>{new Date(b.startAt).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}</TableCell>
+                            <TableCell>{b.assignedOwnerId}</TableCell>
+                            <TableCell>
+                               <Badge variant="outline" className="capitalize text-xs">{b.status}</Badge>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </Card>
+    );
+}
 
 export default function QalenderPage() {
   const [activeTab, setActiveTab] = useState(tabs[0]);

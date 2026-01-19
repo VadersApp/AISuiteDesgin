@@ -383,8 +383,23 @@ export const qalenderTeams = [
     { id: 'team-2', name: 'Support Team', slug: 'support', memberIds: ['AA', 'TS'], routingType: 'least_busy' },
 ];
 
-export const qalenderBookings = [
-    { bookingId: 'bk-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
-    { bookingId: 'bk-2', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
-    { bookingId: 'bk-3', eventTypeName: 'Erstgespräch 30 Min', guestName: 'John Doe', guestEmail: 'john.d@example.com', startAt: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(), assignedOwnerId: 'Anna M.', status: 'canceled' },
-];
+export function getDynamicQalenderBookings() {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    tomorrow.setHours(7, 31, 0, 0);
+
+    const dayAfter = new Date(today);
+    dayAfter.setDate(today.getDate() + 2);
+    dayAfter.setHours(10, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    yesterday.setHours(14, 0, 0, 0);
+
+    return [
+        { bookingId: 'bk-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: tomorrow.toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
+        { bookingId: 'bk-2', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: dayAfter.toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
+        { bookingId: 'bk-3', eventTypeName: 'Erstgespräch 30 Min', guestName: 'John Doe', guestEmail: 'john.d@example.com', startAt: yesterday.toISOString(), assignedOwnerId: 'Anna M.', status: 'canceled' },
+    ];
+}
