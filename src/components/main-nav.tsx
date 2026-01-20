@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -92,19 +93,24 @@ export function MainNav() {
   return (
     <>
       <SidebarHeader className="p-4 flex items-center gap-4 overflow-hidden h-auto">
-        <Link href="/dashboard" className="flex items-center gap-3 w-full">
-          <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
-              <span className="font-black text-xl">Q</span>
-          </div>
-          <div
-            className={cn(
-              "flex flex-col whitespace-nowrap transition-opacity duration-200",
-              state === "collapsed" && "opacity-0 hidden"
-            )}
-          >
-            <span className="font-bold text-lg tracking-wider text-white uppercase">AISUITE</span>
-            <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-widest -mt-1">Intelligent Agents</span>
-          </div>
+        <Link href="/dashboard" className={cn(
+              "flex items-center w-full h-10",
+              state === "expanded" ? "justify-start" : "justify-center"
+            )}>
+            <Image
+              src="/ki-consulting-logo.png"
+              alt="KI.CONSULTING Logo"
+              width={190}
+              height={30}
+              className={cn(state === 'collapsed' ? 'hidden' : 'block')}
+            />
+            <Image
+              src="/ki-consulting-q.png"
+              alt="Q Logo"
+              width={32}
+              height={32}
+              className={cn(state === 'expanded' ? 'hidden' : 'block')}
+            />
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 overflow-y-auto custom-scrollbar pb-10">
