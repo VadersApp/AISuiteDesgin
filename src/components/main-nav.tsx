@@ -108,11 +108,11 @@ export function MainNav() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 mt-4 overflow-y-auto custom-scrollbar pb-10">
-        <div className="px-4 space-y-4">
+        <div className="px-4 space-y-6">
             {navGroups.map((group, groupIndex) => (
-                <div key={groupIndex} className="space-y-1 border border-sidebar-border/20 rounded-xl p-2">
+                <div key={groupIndex} className="space-y-1">
                     {group.title && state === 'expanded' && (
-                        <p className="px-1 pb-2 pt-1 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">{group.title}</p>
+                        <p className="px-1 pb-2 pt-1 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">{group.title}</p>
                     )}
                     <SidebarMenu className="flex flex-col gap-1">
                     {group.items.map((item) => {
