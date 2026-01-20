@@ -108,35 +108,37 @@ export function MainNav() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 mt-4 overflow-y-auto custom-scrollbar pb-10">
-        {navGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className="space-y-1">
-                {group.title && state === 'expanded' && (
-                     <p className="px-3 pb-1 pt-3 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">{group.title}</p>
-                )}
-                <SidebarMenu className="flex flex-col gap-1 px-2">
-                {group.items.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
-                    return (
-                    <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={{ children: item.label, side: "right" }}
-                        className={cn(
-                            "w-full flex items-center justify-start gap-3 p-2.5 rounded-lg transition-all font-medium",
-                            isActive ? "bg-accent text-accent-foreground" : "text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground"
-                        )}
-                    >
-                        <Link href={item.href}>
-                          <item.icon className="w-4 h-4 shrink-0"/>
-                          <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
-                        </Link>
-                    </SidebarMenuButton>
-                    </SidebarMenuItem>
-                )})}
-                </SidebarMenu>
-            </div>
-        ))}
+        <div className="px-4 space-y-4">
+            {navGroups.map((group, groupIndex) => (
+                <div key={groupIndex} className="space-y-1 border border-sidebar-border/20 rounded-xl p-2">
+                    {group.title && state === 'expanded' && (
+                        <p className="px-1 pb-2 pt-1 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">{group.title}</p>
+                    )}
+                    <SidebarMenu className="flex flex-col gap-1">
+                    {group.items.map((item) => {
+                        const isActive = pathname.startsWith(item.href);
+                        return (
+                        <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                            asChild
+                            isActive={isActive}
+                            tooltip={{ children: item.label, side: "right" }}
+                            className={cn(
+                                "w-full flex items-center justify-start gap-3 p-2.5 rounded-lg transition-all font-medium",
+                                isActive ? "bg-accent text-accent-foreground" : "text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                            )}
+                        >
+                            <Link href={item.href}>
+                            <item.icon className="w-4 h-4 shrink-0"/>
+                            <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )})}
+                    </SidebarMenu>
+                </div>
+            ))}
+        </div>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t border-border/10 mt-auto">
         <div className="p-2 rounded-lg flex items-center gap-3 overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer">
