@@ -42,7 +42,7 @@ const navGroups = [
         items: [
             { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
             { href: "/news", icon: Bell, label: "Neuigkeiten" },
-            { href: "/reporting", icon: BarChart3, label: "Reporting" },
+            { href: "/reporting", icon: BarChart3, label: "Reporting & ROI" },
         ]
     },
     {
@@ -64,7 +64,7 @@ const navGroups = [
     {
         title: "Tools",
         items: [
-            { href: "/qalender", icon: Calendar, label: "Qalender" },
+            { href: "/qalender", icon: Calendar, label: "Qualender" },
             { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
             { href: "/qmail", icon: Mail, label: "Q-Mail" },
             { href: "/qcall", icon: Phone, label: "Q-Call" },
@@ -72,7 +72,7 @@ const navGroups = [
             { href: "/q-space", icon: Building2, label: "Q-Space" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
-            { href: "/tools", icon: Zap, label: "AI / Tools" },
+            { href: "/tools", icon: Zap, label: "AI Tools" },
         ]
     },
     {
@@ -92,8 +92,8 @@ export function MainNav() {
   return (
     <>
       <SidebarHeader className="p-4 flex items-center gap-4 overflow-hidden h-auto">
-        <Link href="/dashboard" className="flex items-center gap-3 bg-background/50 dark:bg-black/20 backdrop-blur-sm rounded-2xl p-3 border border-border dark:border-white/10 w-full">
-          <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-lg">
+        <Link href="/dashboard" className="flex items-center gap-3 w-full">
+          <div className="w-10 h-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
               <span className="font-black text-xl">Q</span>
           </div>
           <div
@@ -102,18 +102,18 @@ export function MainNav() {
               state === "collapsed" && "opacity-0 hidden"
             )}
           >
-            <span className="font-black text-2xl tracking-tighter text-foreground uppercase italic leading-none">QORE</span>
-            <span className="text-[9px] font-bold text-primary/80 uppercase tracking-[0.2em] mt-1 ml-0.5">Intelligent Agents</span>
+            <span className="font-bold text-lg tracking-wider text-white uppercase">AISUITE</span>
+            <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-widest -mt-1">Intelligent Agents</span>
           </div>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="flex-1 px-4 space-y-2 mt-0 overflow-y-auto custom-scrollbar pb-10">
+      <SidebarContent className="flex-1 mt-4 overflow-y-auto custom-scrollbar pb-10">
         {navGroups.map((group, groupIndex) => (
-            <div key={groupIndex} className="bg-background/50 dark:bg-black/20 backdrop-blur-sm rounded-2xl p-2 border border-border dark:border-white/10">
+            <div key={groupIndex} className="space-y-1">
                 {group.title && state === 'expanded' && (
-                     <p className="px-2 pb-2 pt-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{group.title}</p>
+                     <p className="px-3 pb-1 pt-3 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">{group.title}</p>
                 )}
-                <SidebarMenu className="flex flex-col gap-1">
+                <SidebarMenu className="flex flex-col gap-1 px-2">
                 {group.items.map((item) => {
                     const isActive = pathname.startsWith(item.href);
                     return (
@@ -123,12 +123,12 @@ export function MainNav() {
                         isActive={isActive}
                         tooltip={{ children: item.label, side: "right" }}
                         className={cn(
-                            "w-full flex items-center justify-start gap-3 p-3 rounded-lg transition-all font-semibold",
-                            isActive ? "bg-primary text-primary-foreground shadow-md" : "text-secondary-foreground/70 hover:bg-accent hover:text-accent-foreground"
+                            "w-full flex items-center justify-start gap-3 p-2.5 rounded-lg transition-all font-medium",
+                            isActive ? "bg-accent text-accent-foreground" : "text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground"
                         )}
                     >
                         <Link href={item.href}>
-                          <item.icon className="w-5 h-5 shrink-0"/>
+                          <item.icon className="w-4 h-4 shrink-0"/>
                           <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
                         </Link>
                     </SidebarMenuButton>
@@ -138,8 +138,8 @@ export function MainNav() {
             </div>
         ))}
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-border/50 mt-auto">
-        <div className="p-3 rounded-2xl bg-background/50 dark:bg-black/20 border border-border dark:border-white/10 backdrop-blur-sm flex items-center gap-3 overflow-hidden hover:bg-accent transition-colors cursor-pointer">
+      <SidebarFooter className="p-4 border-t border-border/10 mt-auto">
+        <div className="p-2 rounded-lg flex items-center gap-3 overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-600 to-slate-400 flex-shrink-0"></div>
             <div
                 className={cn(
@@ -147,8 +147,8 @@ export function MainNav() {
                   state === "collapsed" && "hidden"
                 )}
               >
-                <p className="text-xs font-bold text-foreground truncate">Dr. Müller</p>
-                <p className="text-[10px] text-muted-foreground truncate font-bold uppercase tracking-widest">CEO</p>
+                <p className="text-sm font-bold text-foreground truncate">Dr. Müller</p>
+                <p className="text-xs text-muted-foreground truncate font-medium">CEO</p>
             </div>
         </div>
       </SidebarFooter>
