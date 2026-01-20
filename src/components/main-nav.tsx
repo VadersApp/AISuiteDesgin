@@ -97,20 +97,8 @@ export function MainNav() {
               "flex items-center w-full h-10",
               state === "expanded" ? "justify-start" : "justify-center"
             )}>
-            <Image
-              src="/ki-consulting-logo.png"
-              alt="KI.CONSULTING Logo"
-              width={190}
-              height={30}
-              className={cn(state === 'collapsed' ? 'hidden' : 'block')}
-            />
-            <Image
-              src="/ki-consulting-q.png"
-              alt="Q Logo"
-              width={32}
-              height={32}
-              className={cn(state === 'expanded' ? 'hidden' : 'block')}
-            />
+            <div className={cn("text-2xl font-bold text-white", state === 'collapsed' ? 'hidden' : 'block')}>QORE</div>
+            <div className={cn("text-2xl font-bold text-white", state === 'expanded' ? 'hidden' : 'block')}>Q</div>
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 overflow-y-auto custom-scrollbar pb-10">
