@@ -65,10 +65,10 @@ const navGroups = [
         title: "Tools",
         items: [
             { href: "/qalender", icon: Calendar, label: "Qalender" },
-            { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
-            { href: "/qmail", icon: Mail, label: "Q-Mail" },
-            { href: "/qcall", icon: Phone, label: "Q-Call" },
-            { href: "/qhub", icon: Users, label: "Q-Hub" },
+            { href: "/qsales", icon: DollarSign, label: "QSales" },
+            { href: "/qmail", icon: Mail, label: "QMail" },
+            { href: "/qcall", icon: Phone, label: "QCall" },
+            { href: "/qhub", icon: Users, label: "QHub" },
             { href: "/q-space", icon: Building2, label: "Q-Space" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
@@ -107,12 +107,12 @@ export function MainNav() {
           </div>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="flex-1 mt-4 overflow-y-auto custom-scrollbar pb-10">
-        <div className="px-4 space-y-3">
+      <SidebarContent className="flex-1 overflow-y-auto custom-scrollbar pb-10">
+        <div className="px-2 space-y-2">
             {navGroups.map((group, groupIndex) => (
-                <div key={groupIndex} className="space-y-1 p-2 border border-sidebar-border/20 rounded-xl bg-black/10">
+                <div key={groupIndex} className="space-y-1">
                     {group.title && state === 'expanded' && (
-                        <p className="px-1 pb-2 pt-1 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">{group.title}</p>
+                        <p className="px-2.5 pb-2 pt-4 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
                     )}
                     <SidebarMenu className="flex flex-col gap-1">
                     {group.items.map((item) => {
@@ -124,8 +124,10 @@ export function MainNav() {
                             isActive={isActive}
                             tooltip={{ children: item.label, side: "right" }}
                             className={cn(
-                                "w-full flex items-center justify-start gap-3 p-2.5 rounded-lg transition-all font-medium",
-                                isActive ? "bg-accent text-accent-foreground" : "text-sidebar-foreground hover:bg-accent/50 hover:text-accent-foreground"
+                                "w-full flex items-center justify-start gap-3 p-2.5 transition-colors font-medium rounded-[14px]",
+                                isActive
+                                    ? "bg-gradient-to-r from-[#1E3A5F] to-[#2E5B8C] text-white border border-[rgba(90,140,200,0.35)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
+                                    : "text-[#9FB1C9] hover:bg-transparent [&_svg]:opacity-75"
                             )}
                         >
                             <Link href={item.href}>
@@ -140,8 +142,8 @@ export function MainNav() {
             ))}
         </div>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-border/10 mt-auto">
-        <div className="p-2 rounded-lg flex items-center gap-3 overflow-hidden hover:bg-accent/50 transition-colors cursor-pointer">
+      <SidebarFooter className="p-4 border-t border-transparent mt-auto">
+        <div className="p-2 rounded-lg flex items-center gap-3 overflow-hidden hover:bg-white/5 transition-colors cursor-pointer">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-slate-600 to-slate-400 flex-shrink-0"></div>
             <div
                 className={cn(
