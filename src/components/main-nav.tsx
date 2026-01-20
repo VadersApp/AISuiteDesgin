@@ -64,7 +64,7 @@ const navGroups = [
     {
         title: "Tools",
         items: [
-            { href: "/qalender", icon: Calendar, label: "Qualender" },
+            { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
             { href: "/qmail", icon: Mail, label: "Q-Mail" },
             { href: "/qcall", icon: Phone, label: "Q-Call" },
@@ -108,9 +108,9 @@ export function MainNav() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 mt-4 overflow-y-auto custom-scrollbar pb-10">
-        <div className="px-4 space-y-6">
+        <div className="px-4 space-y-3">
             {navGroups.map((group, groupIndex) => (
-                <div key={groupIndex} className="space-y-1">
+                <div key={groupIndex} className="space-y-1 p-2 border border-sidebar-border/20 rounded-xl bg-black/10">
                     {group.title && state === 'expanded' && (
                         <p className="px-1 pb-2 pt-1 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">{group.title}</p>
                     )}
