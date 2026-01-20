@@ -108,36 +108,38 @@ export function MainNav() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 overflow-y-auto custom-scrollbar pb-10">
-        <div className="px-2 space-y-2">
+        <div className="px-2 space-y-4">
             {navGroups.map((group, groupIndex) => (
-                <div key={groupIndex} className="space-y-1">
+                <div key={groupIndex}>
                     {group.title && state === 'expanded' && (
-                        <p className="px-2.5 pb-2 pt-4 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
+                        <p className="px-2.5 pb-2 pt-2 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
                     )}
-                    <SidebarMenu className="flex flex-col gap-1">
-                    {group.items.map((item) => {
-                        const isActive = pathname.startsWith(item.href);
-                        return (
-                        <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                            asChild
-                            isActive={isActive}
-                            tooltip={{ children: item.label, side: "right" }}
-                            className={cn(
-                                "w-full flex items-center justify-start gap-3 p-2.5 transition-colors font-medium rounded-[14px]",
-                                isActive
-                                    ? "bg-gradient-to-r from-[#1E3A5F] to-[#2E5B8C] text-white border border-[rgba(90,140,200,0.35)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
-                                    : "text-[#9FB1C9] hover:bg-transparent [&_svg]:opacity-75"
-                            )}
-                        >
-                            <Link href={item.href}>
-                            <item.icon className="w-4 h-4 shrink-0"/>
-                            <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
-                            </Link>
-                        </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    )})}
-                    </SidebarMenu>
+                    <div className="border border-white/5 rounded-2xl p-1 bg-white/[.03]">
+                        <SidebarMenu className="flex flex-col gap-1">
+                        {group.items.map((item) => {
+                            const isActive = pathname.startsWith(item.href);
+                            return (
+                            <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton
+                                asChild
+                                isActive={isActive}
+                                tooltip={{ children: item.label, side: "right" }}
+                                className={cn(
+                                    "w-full flex items-center justify-start gap-3 p-2.5 transition-colors font-medium rounded-[14px]",
+                                    isActive
+                                        ? "bg-gradient-to-r from-[#1E3A5F] to-[#2E5B8C] text-white border border-[rgba(90,140,200,0.35)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
+                                        : "text-[#9FB1C9] hover:bg-transparent [&_svg]:opacity-75"
+                                )}
+                            >
+                                <Link href={item.href}>
+                                <item.icon className="w-4 h-4 shrink-0"/>
+                                <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )})}
+                        </SidebarMenu>
+                    </div>
                 </div>
             ))}
         </div>
