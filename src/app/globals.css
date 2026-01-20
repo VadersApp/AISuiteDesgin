@@ -36,19 +36,19 @@
   }
 
   .dark {
-    --background: 222 83% 5%;
+    --background: 224 71% 4%;
     --foreground: 210 40% 98%;
     --card: 215 28% 12%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 83% 5%;
+    --popover: 224 71% 4%;
     --popover-foreground: 210 40% 98%;
-    --primary: 221 83% 53%; /* Bright Blue for Logo etc. */
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
     --secondary: 215 28% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 215 28% 17%;
-    --muted-foreground: 215 16% 57%; /* Muted text for headers */
-    --accent: 217 33% 32%; /* Darker blue for active item */
+    --muted-foreground: 215 16% 57%;
+    --accent: 217 33% 25%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
@@ -56,13 +56,13 @@
     --input: 215 28% 17%;
     --ring: 221 83% 53%;
     
-    --sidebar-background: 220 24% 12%; /* Solid dark blue for sidebar */
+    --sidebar-background: 220 24% 8%;
     --sidebar-foreground: 220 14% 71%;
     --sidebar-primary: 217 33% 32%;
     --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 42%;
+    --sidebar-accent: 217 33% 25%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 28% 25%;
+    --sidebar-border: 215 28% 15%;
     --sidebar-ring: 221 83% 53%;
   }
 }
