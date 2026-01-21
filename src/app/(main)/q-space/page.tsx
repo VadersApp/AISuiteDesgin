@@ -35,12 +35,14 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowRight,
+  BarChart3,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 const modules = [
+    { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'Dateien & Dokumente', icon: FileText },
     { name: 'Ordnerstruktur', icon: Kanban },
@@ -181,10 +183,6 @@ const KpiDashboard = () => {
 
 const OverviewView = () => (
     <div className="space-y-8">
-        <KpiDashboard />
-        
-        <Separator className="my-8" />
-
         <div>
             <h2 className="text-xl font-bold text-foreground">Workspace</h2>
             <p className="text-sm text-muted-foreground">Q-Space ist dein zentraler Arbeitsbereich für Dokumente, Nutzer und Zusammenarbeit.</p>
@@ -329,6 +327,7 @@ export default function QSpacePage() {
 
     const renderModule = () => {
         switch (activeModule) {
+            case 'KPI-Dashboard': return <KpiDashboard />;
             case 'Übersicht': return <OverviewView />;
             case 'Dateien & Dokumente': return <FilesView />;
             case 'Nutzer': return <UsersView />;
@@ -338,7 +337,7 @@ export default function QSpacePage() {
             case 'Geteilt mit mir': return <GenericView title="Geteilt mit mir" />;
             case 'Berechtigungen': return <GenericView title="Berechtigungen" />;
             case 'Einstellungen': return <GenericView title="Einstellungen" />;
-            default: return <OverviewView />;
+            default: return <KpiDashboard />;
         }
     };
 
