@@ -116,7 +116,7 @@ export function MainNav() {
                     <div className="border border-white/5 rounded-2xl p-1 bg-white/[.03]">
                         <SidebarMenu className="flex flex-col gap-1">
                         {group.items.map((item) => {
-                            const isActive = isClient ? pathname.startsWith(item.href) : false;
+                            const isActive = isClient ? (item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href)) : false;
                             return (
                             <SidebarMenuItem key={item.href}>
                             <SidebarMenuButton
