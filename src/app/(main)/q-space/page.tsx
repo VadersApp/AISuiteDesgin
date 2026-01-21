@@ -74,10 +74,10 @@ const mockActivity = [
 
 // NEW KPI DATA
 const kpiMitarbeiter = [
-    { name: 'Ben Weber', abteilung: 'IT', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72 },
-    { name: 'Anna Schmidt', abteilung: 'Vertrieb', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81 },
-    { name: 'Sophie Lang', abteilung: 'Marketing', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83 },
-    { name: 'Dr. Müller', abteilung: 'Geschäftsführung', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95 },
+    { name: 'Ben Weber', abteilung: 'IT', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72 },
+    { name: 'Anna Schmidt', abteilung: 'Vertrieb', mitarbeitertyp: 'Mensch', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81 },
+    { name: 'Sophie Lang', abteilung: 'Marketing', mitarbeitertyp: 'Mensch', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83 },
+    { name: 'Dr. Müller', abteilung: 'Geschäftsführung', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95 },
 ].sort((a, b) => a.zWert - b.zWert);
 
 const gesamtZufriedenheit = Math.round(kpiMitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / kpiMitarbeiter.length);
@@ -149,6 +149,7 @@ const KpiDashboard = () => {
                             <TableRow>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Abteilung</TableHead>
+                                <TableHead>Mitarbeitertyp</TableHead>
                                 <TableHead>Aktueller Z-Wert</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Trend</TableHead>
@@ -161,6 +162,7 @@ const KpiDashboard = () => {
                                 <TableRow key={index}>
                                     <TableCell className="font-medium">{m.name}</TableCell>
                                     <TableCell>{m.abteilung}</TableCell>
+                                    <TableCell>{m.mitarbeitertyp}</TableCell>
                                     <TableCell className="font-mono font-bold">{m.zWert}%</TableCell>
                                     <TableCell>
                                         <Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge>
