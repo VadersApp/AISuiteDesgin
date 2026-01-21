@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +30,7 @@ import {
   Plus,
   Kanban,
   HeartPulse,
-  UserCheck as UserCheckIcon,
+  UserCheck,
   AlertTriangle,
   Flame,
   ArrowUp,
@@ -40,6 +41,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { kpiMitarbeiter, topKennzahlen } from '@/lib/data';
 
 const modules = [
     { name: 'KPI-Dashboard', icon: BarChart3 },
@@ -54,7 +56,6 @@ const modules = [
     { name: 'Einstellungen', icon: Settings },
 ];
 
-// Mock Data for views
 const mockFiles = [
     { id: 1, name: 'Quartalsbericht Q4.docx', type: 'Dokument', owner: 'Dr. Müller', modified: 'Heute', shareStatus: 'Privat' },
     { id: 2, name: 'Marketing-Planung Q1.xlsx', type: 'Tabelle', owner: 'Sophie Market', modified: 'Gestern', shareStatus: 'Team' },
@@ -70,26 +71,6 @@ const mockGroups = [
 const mockActivity = [
     { id: 1, user: 'Dr. Müller', action: 'hat die Datei "Quartalsbericht Q4.docx" hochgeladen.', target: 'Quartalsbericht Q4.docx', time: 'vor 5 Minuten' },
     { id: 2, user: 'Sophie Market', action: 'hat den Ordner "Q1 Kampagnen" erstellt.', target: 'Q1 Kampagnen', time: 'vor 1 Stunde' },
-];
-
-// NEW KPI DATA
-const kpiMitarbeiter = [
-    { name: 'Ben Weber', abteilung: 'IT', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72 },
-    { name: 'Anna Schmidt', abteilung: 'Vertrieb', mitarbeitertyp: 'Mensch', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81 },
-    { name: 'Sophie Lang', abteilung: 'Marketing', mitarbeitertyp: 'Mensch', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83 },
-    { name: 'Dr. Müller', abteilung: 'Geschäftsführung', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95 },
-].sort((a, b) => a.zWert - b.zWert);
-
-const gesamtZufriedenheit = Math.round(kpiMitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / kpiMitarbeiter.length);
-const gruenerBereich = kpiMitarbeiter.filter(m => m.zWert >= 90).length;
-const aktiveWarnungen = kpiMitarbeiter.filter(m => m.zWert >= 70 && m.zWert < 80).length;
-const aktiveEskalationen = kpiMitarbeiter.filter(m => m.zWert < 70).length;
-
-const topKennzahlen = [
-    { title: 'Ø Zufriedenheit gesamt', value: `${gesamtZufriedenheit}%`, icon: HeartPulse, color: 'blue' },
-    { title: 'Mitarbeiter im grünen Bereich', value: gruenerBereich, icon: UserCheckIcon, color: 'emerald' },
-    { title: 'Aktive Warnungen', value: aktiveWarnungen, icon: AlertTriangle, color: 'amber' },
-    { title: 'Aktive Eskalationen', value: aktiveEskalationen, icon: Flame, color: 'rose' }
 ];
 
 const KpiDashboard = () => {
@@ -112,29 +93,40 @@ const KpiDashboard = () => {
             default: return null;
         }
     };
+    
+    const iconMap: { [key: string]: React.ElementType } = {
+        HeartPulse, UserCheck, AlertTriangle, Flame
+    }
 
     return (
         <div className="space-y-6">
             <header>
                 <h2 className="text-xl font-bold text-foreground">KPI-Übersicht – Organisation & Leistung</h2>
                 <p className="text-sm text-muted-foreground">Systembasierte Leistungsbewertung. Automatisiert. Objektiv.</p>
+                <div className="mt-2">
+                    <Link href="/q-space/kpi-dashboard/formeln" className="text-sm text-primary hover:underline">
+                        Formeln ansehen
+                    </Link>
+                </div>
             </header>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {topKennzahlen.map((kpi, index) => {
-                    const Icon = kpi.icon;
+                    const Icon = iconMap[kpi.icon];
                     return (
-                        <Card key={index} className="p-4">
-                            <div className="flex items-center gap-4">
-                                <div className={cn("p-3 rounded-lg", `bg-${kpi.color}-500/10 text-${kpi.color}-400`)}>
-                                    <Icon className="w-5 h-5" />
+                        <Link href={kpi.href} key={index}>
+                            <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors h-full">
+                                <div className="flex items-center gap-4">
+                                    <div className={cn("p-3 rounded-lg", `bg-${kpi.color}-500/10 text-${kpi.color}-400`)}>
+                                        <Icon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground font-bold uppercase">{kpi.title}</p>
+                                        <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground font-bold uppercase">{kpi.title}</p>
-                                    <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
-                                </div>
-                            </div>
-                        </Card>
+                            </Card>
+                        </Link>
                     );
                 })}
             </div>
@@ -158,19 +150,27 @@ const KpiDashboard = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {kpiMitarbeiter.map((m, index) => (
-                                <TableRow key={index}>
-                                    <TableCell className="font-medium">{m.name}</TableCell>
+                            {kpiMitarbeiter.map((m) => (
+                                <TableRow key={m.id} className="cursor-pointer hover:bg-accent/50">
+                                    <TableCell className="font-medium">
+                                        <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`} className="hover:underline">{m.name}</Link>
+                                    </TableCell>
                                     <TableCell>{m.abteilung}</TableCell>
                                     <TableCell>{m.mitarbeitertyp}</TableCell>
-                                    <TableCell className="font-mono font-bold">{m.zWert}%</TableCell>
+                                    <TableCell className="font-mono font-bold">
+                                         <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`} className="hover:underline">{m.zWert}%</Link>
+                                    </TableCell>
                                     <TableCell>
-                                        <Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge>
+                                        <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`}>
+                                            <Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge>
+                                        </Link>
                                     </TableCell>
                                     <TableCell>{getTrendIcon(m.trend as any)}</TableCell>
                                     <TableCell>{m.letzteAbweichung}</TableCell>
                                     <TableCell>
-                                         <Badge variant={m.eskalation === 'Ja' ? 'destructive' : 'secondary'}>{m.eskalation}</Badge>
+                                        <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`}>
+                                            <Badge variant={m.eskalation === 'Ja' ? 'destructive' : 'secondary'}>{m.eskalation}</Badge>
+                                        </Link>
                                     </TableCell>
                                 </TableRow>
                             ))}

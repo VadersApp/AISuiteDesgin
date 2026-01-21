@@ -453,3 +453,24 @@ export function getDynamicQalenderBookings() {
         { bookingId: 'bk-3', eventTypeName: 'Erstgespräch 30 Min', guestName: 'John Doe', guestEmail: 'john.d@example.com', startAt: yesterday.toISOString(), assignedOwnerId: 'Anna M.', status: 'canceled' },
     ];
 }
+
+
+export const kpiMitarbeiter = [
+    { id: 'ben-weber', role: 'Developer', name: 'Ben Weber', abteilung: 'IT', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72 },
+    { id: 'anna-schmidt', role: 'Sales Manager', name: 'Anna Schmidt', abteilung: 'Vertrieb', mitarbeitertyp: 'Mensch', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81 },
+    { id: 'sophie-lang', role: 'Marketing Manager', name: 'Sophie Lang', abteilung: 'Marketing', mitarbeitertyp: 'Mensch', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83 },
+    { id: 'dr-mueller', role: 'CEO', name: 'Dr. Müller', abteilung: 'Geschäftsführung', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95 },
+].sort((a, b) => a.zWert - b.zWert);
+
+export const gesamtZufriedenheit = Math.round(kpiMitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / kpiMitarbeiter.length);
+export const gruenerBereichCount = kpiMitarbeiter.filter(m => m.zWert >= 90).length;
+export const aktiveWarnungenCount = kpiMitarbeiter.filter(m => m.zWert >= 70 && m.zWert < 80).length;
+export const beobachtungCount = kpiMitarbeiter.filter(m => m.zWert >= 80 && m.zWert < 90).length;
+export const aktiveEskalationenCount = kpiMitarbeiter.filter(m => m.zWert < 70).length;
+
+export const topKennzahlen = [
+    { title: 'Ø Zufriedenheit gesamt', value: `${gesamtZufriedenheit}%`, icon: 'HeartPulse', color: 'blue', href: '/q-space/kpi-dashboard/zufriedenheit' },
+    { title: 'Mitarbeiter im grünen Bereich', value: gruenerBereichCount, icon: 'UserCheck', color: 'emerald', href: '/q-space/kpi-dashboard/gruen' },
+    { title: 'Aktive Warnungen', value: aktiveWarnungenCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
+    { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
+];
