@@ -28,8 +28,17 @@ import {
   Search,
   Plus,
   Kanban,
+  HeartPulse,
+  UserCheck as UserCheckIcon,
+  AlertTriangle,
+  Flame,
+  ArrowUp,
+  ArrowDown,
+  ArrowRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 const modules = [
     { name: 'Übersicht', icon: LayoutDashboard },
@@ -61,11 +70,124 @@ const mockActivity = [
     { id: 2, user: 'Sophie Market', action: 'hat den Ordner "Q1 Kampagnen" erstellt.', target: 'Q1 Kampagnen', time: 'vor 1 Stunde' },
 ];
 
+// NEW KPI DATA
+const kpiMitarbeiter = [
+    { name: 'Ben Weber', abteilung: 'IT', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72 },
+    { name: 'Anna Schmidt', abteilung: 'Vertrieb', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81 },
+    { name: 'Sophie Lang', abteilung: 'Marketing', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83 },
+    { name: 'Dr. Müller', abteilung: 'Geschäftsführung', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95 },
+].sort((a, b) => a.zWert - b.zWert);
+
+const gesamtZufriedenheit = Math.round(kpiMitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / kpiMitarbeiter.length);
+const gruenerBereich = kpiMitarbeiter.filter(m => m.zWert >= 90).length;
+const aktiveWarnungen = kpiMitarbeiter.filter(m => m.zWert >= 70 && m.zWert < 80).length;
+const aktiveEskalationen = kpiMitarbeiter.filter(m => m.zWert < 70).length;
+
+const topKennzahlen = [
+    { title: 'Ø Zufriedenheit gesamt', value: `${gesamtZufriedenheit}%`, icon: HeartPulse, color: 'blue' },
+    { title: 'Mitarbeiter im grünen Bereich', value: gruenerBereich, icon: UserCheckIcon, color: 'emerald' },
+    { title: 'Aktive Warnungen', value: aktiveWarnungen, icon: AlertTriangle, color: 'amber' },
+    { title: 'Aktive Eskalationen', value: aktiveEskalationen, icon: Flame, color: 'rose' }
+];
+
+const KpiDashboard = () => {
+    
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Stabil': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            case 'Beobachtung': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            case 'Warnung': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+            case 'Eskalation': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            default: return 'bg-slate-500/10 text-slate-400';
+        }
+    };
+    
+    const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
+        switch (trend) {
+            case 'up': return <ArrowUp className="w-4 h-4 text-emerald-400" />;
+            case 'down': return <ArrowDown className="w-4 h-4 text-rose-400" />;
+            case 'stable': return <ArrowRight className="w-4 h-4 text-slate-400" />;
+            default: return null;
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <header>
+                <h2 className="text-xl font-bold text-foreground">KPI-Übersicht – Organisation & Leistung</h2>
+                <p className="text-sm text-muted-foreground">Systembasierte Leistungsbewertung. Automatisiert. Objektiv.</p>
+            </header>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {topKennzahlen.map((kpi, index) => {
+                    const Icon = kpi.icon;
+                    return (
+                        <Card key={index} className="p-4">
+                            <div className="flex items-center gap-4">
+                                <div className={cn("p-3 rounded-lg", `bg-${kpi.color}-500/10 text-${kpi.color}-400`)}>
+                                    <Icon className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground font-bold uppercase">{kpi.title}</p>
+                                    <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
+                                </div>
+                            </div>
+                        </Card>
+                    );
+                })}
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Mitarbeiter-Leistung</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Abteilung</TableHead>
+                                <TableHead>Aktueller Z-Wert</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Trend</TableHead>
+                                <TableHead>Letzte Abweichung</TableHead>
+                                <TableHead>Eskalationsstatus</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {kpiMitarbeiter.map((m, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="font-medium">{m.name}</TableCell>
+                                    <TableCell>{m.abteilung}</TableCell>
+                                    <TableCell className="font-mono font-bold">{m.zWert}%</TableCell>
+                                    <TableCell>
+                                        <Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge>
+                                    </TableCell>
+                                    <TableCell>{getTrendIcon(m.trend as any)}</TableCell>
+                                    <TableCell>{m.letzteAbweichung}</TableCell>
+                                    <TableCell>
+                                         <Badge variant={m.eskalation === 'Ja' ? 'destructive' : 'secondary'}>{m.eskalation}</Badge>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+
 const OverviewView = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
+        <KpiDashboard />
+        
+        <Separator className="my-8" />
+
         <div>
-            <h2 className="text-2xl font-bold text-foreground">Übersicht</h2>
-            <p className="text-muted-foreground">Q-Space ist dein zentraler Arbeitsbereich für Dokumente, Nutzer und Zusammenarbeit.</p>
+            <h2 className="text-xl font-bold text-foreground">Workspace</h2>
+            <p className="text-sm text-muted-foreground">Q-Space ist dein zentraler Arbeitsbereich für Dokumente, Nutzer und Zusammenarbeit.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
