@@ -114,10 +114,7 @@ export function MainNav() {
                         <p className="px-2.5 pb-2 pt-2 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
                     )}
                     <div className={cn(
-                        "rounded-2xl p-1 transition-colors",
-                        group.title === 'Tools' 
-                            ? "border border-primary/20 bg-primary/5"
-                            : "border border-white/5 bg-white/[.03]"
+                        "rounded-2xl p-1 transition-colors border border-white/5 bg-white/[.03]"
                     )}>
                         <SidebarMenu className="flex flex-col gap-1">
                         {group.items.map((item) => {
@@ -131,7 +128,7 @@ export function MainNav() {
                                 className={cn(
                                     "w-full flex items-center justify-start gap-3 p-2.5 transition-colors font-medium rounded-[14px]",
                                     isActive
-                                        ? "bg-gradient-to-r from-[#1E3A5F] to-[#2E5B8C] text-white border border-[rgba(90,140,200,0.35)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
+                                        ? "bg-gradient-to-r from-blue-900/50 via-blue-800/40 to-blue-900/50 text-white border border-blue-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
                                         : "text-[#9FB1C9] hover:bg-transparent [&_svg]:opacity-75"
                                 )}
                             >

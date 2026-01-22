@@ -17,13 +17,13 @@ export function DashboardStats() {
             {dashboardStats.map(s => {
                 const Icon = iconMap[s.icon];
                 return (
-                    <Card key={s.title} className="p-6 flex flex-col gap-2 group hover:bg-slate-800/60 transition-colors">
+                    <Card key={s.title} className="p-6 flex flex-col gap-2 group hover:bg-card/80 transition-colors">
                         <div className={`p-2 w-fit rounded-xl bg-${s.color}-500/10 text-${s.color}-400 group-hover:scale-110 transition-transform`}>
                             <Icon className="w-4 h-4" />
                         </div>
                         <div className="mt-2">
-                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{s.title}</p>
-                            <h3 className="text-xl font-bold text-white mt-0.5">{s.value}</h3>
+                            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">{s.title}</p>
+                            <h3 className="text-xl font-bold text-foreground mt-0.5">{s.value}</h3>
                         </div>
                     </Card>
                 )
