@@ -88,7 +88,7 @@ export default function ActivitiesPage() {
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                     {filteredActivities.length > 0 ? filteredActivities.map(item => {
                         const severity = severityMap[item.severity] || severityMap.info;
                         const SeverityIcon = severity.icon;
