@@ -114,7 +114,7 @@ export function MainNav() {
                     )}
                     <div className={cn(
                         "rounded-2xl p-1 transition-colors border border-white/5 bg-white/[.03]",
-                        group.title === "Tools" && "bg-blue-900/30 border-blue-500/30"
+                        group.title === "Tools" && "bg-slate-700/20 border-slate-600/30"
                     )}>
                         <SidebarMenu className="flex flex-col gap-1">
                         {group.items.map((item) => {
