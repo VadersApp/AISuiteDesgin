@@ -97,13 +97,12 @@ export function MainNav() {
 
   return (
     <>
-      <SidebarHeader className="p-4 flex items-center gap-4 overflow-hidden h-auto">
+      <SidebarHeader className="p-4 flex items-center justify-center gap-4 overflow-hidden h-auto">
         <Link href="/dashboard" className={cn(
-              "flex items-center w-full h-10",
-              state === "expanded" ? "justify-start" : "justify-center"
+              "flex items-center w-full h-10 justify-center"
             )}>
-            <div className={cn("text-2xl font-bold text-white", state === 'collapsed' ? 'hidden' : 'block')}>QORE</div>
-            <div className={cn("text-2xl font-bold text-white", state === 'expanded' ? 'hidden' : 'block')}>Q</div>
+            <div className={cn("text-3xl font-bold text-white", state === 'collapsed' ? 'hidden' : 'block')}>QORE</div>
+            <div className={cn("text-3xl font-bold text-white", state === 'expanded' ? 'hidden' : 'block')}>Q</div>
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 overflow-y-auto custom-scrollbar pb-10">
@@ -114,7 +113,8 @@ export function MainNav() {
                         <p className="px-2.5 pb-2 pt-2 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
                     )}
                     <div className={cn(
-                        "rounded-2xl p-1 transition-colors border border-white/5 bg-white/[.03]"
+                        "rounded-2xl p-1 transition-colors border border-white/5 bg-white/[.03]",
+                        group.title === "Tools" && "bg-blue-900/30 border-blue-500/30"
                     )}>
                         <SidebarMenu className="flex flex-col gap-1">
                         {group.items.map((item) => {
