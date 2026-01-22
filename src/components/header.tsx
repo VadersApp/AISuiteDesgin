@@ -1,10 +1,12 @@
 'use client';
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Bell, Search, Sun, Moon } from "lucide-react";
+import { Bell, Search, Sun, Moon, Clock } from "lucide-react";
 import { useState, useEffect } from 'react';
+import { dashboardStats } from '@/lib/data';
 
 export function Header() {
     const [theme, setTheme] = useState('dark');
+    const [savedHours, setSavedHours] = useState(0);
 
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme') || 'dark';
@@ -13,6 +15,24 @@ export function Header() {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
+        }
+
+        const savingsStat = dashboardStats.find(s => s.title === 'Ersparnis');
+        const targetHours = savingsStat ? parseInt(savingsStat.value.replace('h', ''), 10) : 0;
+
+        if (targetHours > 0) {
+            let currentHours = 0;
+            const step = Math.ceil(targetHours / 100); // Animate in 100 steps
+            const timer = setInterval(() => {
+                currentHours += step;
+                if (currentHours >= targetHours) {
+                    setSavedHours(targetHours);
+                    clearInterval(timer);
+                } else {
+                    setSavedHours(currentHours);
+                }
+            }, 20); // 100 * 20ms = 2 seconds
+            return () => clearInterval(timer);
         }
     }, []);
 
@@ -47,6 +67,17 @@ export function Header() {
                     <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-background shadow-[0_0_8px_rgba(244,63,94,0.4)]"></span>
                 </button>
                 <div className="h-6 w-[1px] bg-border/50 mx-2"></div>
+                
+                <div className="flex items-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg px-3 py-1.5">
+                    <Clock className="w-4 h-4" />
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-sm font-bold text-white">{savedHours}h</span>
+                        <span className="text-[10px] font-bold uppercase">Ersparnis</span>
+                    </div>
+                </div>
+
+                <div className="h-6 w-[1px] bg-border/50 mx-2"></div>
+
                 <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Connected</span>
