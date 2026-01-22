@@ -7,7 +7,7 @@ import { Header } from '@/components/header';
 export default function MainLayout({ children }: PropsWithChildren) {
   return (
     <SidebarProvider>
-      <Sidebar className="w-72 border-r-0 bg-[#12233A] [background:linear-gradient(to_bottom,_#12233A,_#030406)] flex flex-col transition-all duration-300 z-50 flex-shrink-0">
+      <Sidebar className="w-72 border-r-0 bg-[#1E293B] [background:linear-gradient(to_bottom,_#1E293B,_#0F172A)] flex flex-col transition-all duration-300 z-50 flex-shrink-0">
         <MainNav />
       </Sidebar>
       <SidebarInset className="relative bg-slate-50 dark:bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] dark:from-[#12233A] dark:to-[#080E1A] flex flex-col flex-1">
