@@ -474,3 +474,4 @@ export const topKennzahlen = [
     { title: 'Aktive Warnungen', value: aktiveWarnungenCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
     { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
 ];
+
