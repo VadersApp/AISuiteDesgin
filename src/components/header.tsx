@@ -1,12 +1,13 @@
 'use client';
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Bell, Search, Sun, Moon, Clock } from "lucide-react";
+import { Bell, Search, Sun, Moon, Clock, TrendingUp } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { dashboardStats } from '@/lib/data';
 
 export function Header() {
     const [theme, setTheme] = useState('dark');
     const [savedHours, setSavedHours] = useState(0);
+    const [roi, setRoi] = useState('');
 
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme') || 'dark';
@@ -19,6 +20,11 @@ export function Header() {
 
         const savingsStat = dashboardStats.find(s => s.title === 'Ersparnis');
         const targetHours = savingsStat ? parseInt(savingsStat.value.replace('h', ''), 10) : 0;
+        
+        const roiStat = dashboardStats.find(s => s.title === 'ROI');
+        if (roiStat) {
+            setRoi(roiStat.value);
+        }
 
         if (targetHours > 0) {
             let currentHours = 0;
@@ -73,6 +79,14 @@ export function Header() {
                     <div className="flex items-baseline gap-1">
                         <span className="text-sm font-bold text-white">{savedHours}h</span>
                         <span className="text-[10px] font-bold uppercase">Ersparnis</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg px-3 py-1.5">
+                    <TrendingUp className="w-4 h-4" />
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-sm font-bold text-white">{roi}</span>
+                        <span className="text-[10px] font-bold uppercase">ROI</span>
                     </div>
                 </div>
 
