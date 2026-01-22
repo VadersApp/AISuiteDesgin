@@ -67,10 +67,10 @@ const navGroups = [
         items: [
             { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/q-space", icon: Building2, label: "Q-Space" },
-            { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
-            { href: "/qmail", icon: Mail, label: "Q-Mail" },
-            { href: "/qcall", icon: Phone, label: "Q-Call" },
-            { href: "/qhub", icon: Users, label: "Q-Hub" },
+            { href: "/qsales", icon: DollarSign, label: "QSales" },
+            { href: "/qmail", icon: Mail, label: "Qmail" },
+            { href: "/qcall", icon: Phone, label: "Qcall" },
+            { href: "/qhub", icon: Users, label: "QHub" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI Tools" },
@@ -113,7 +113,12 @@ export function MainNav() {
                     {group.title && state === 'expanded' && (
                         <p className="px-2.5 pb-2 pt-2 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
                     )}
-                    <div className="border border-white/5 rounded-2xl p-1 bg-white/[.03]">
+                    <div className={cn(
+                        "rounded-2xl p-1 transition-colors",
+                        group.title === 'Tools' 
+                            ? "border border-primary/20 bg-primary/5"
+                            : "border border-white/5 bg-white/[.03]"
+                    )}>
                         <SidebarMenu className="flex flex-col gap-1">
                         {group.items.map((item) => {
                             const isActive = isClient ? (item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href)) : false;
