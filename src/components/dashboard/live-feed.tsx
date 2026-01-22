@@ -11,7 +11,7 @@ export function LiveFeed() {
     }, []);
 
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
             {liveActivities.slice(0, 5).map((item) => (
                 <Link href={`/dashboard/activities/${item.id}`} key={item.id}>
                     <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border hover:bg-accent/80 hover:border-primary/50 transition-colors cursor-pointer">
