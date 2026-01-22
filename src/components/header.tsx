@@ -1,13 +1,14 @@
 'use client';
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Bell, Search, Sun, Moon, Clock, TrendingUp } from "lucide-react";
+import { Bell, Search, Sun, Moon, Clock, TrendingUp, Flame } from "lucide-react";
 import { useState, useEffect } from 'react';
-import { dashboardStats } from '@/lib/data';
+import { dashboardStats, aktiveEskalationenCount } from '@/lib/data';
 
 export function Header() {
     const [theme, setTheme] = useState('dark');
     const [savedHours, setSavedHours] = useState(0);
     const [roi, setRoi] = useState('');
+    const [escalations, setEscalations] = useState(0);
 
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme') || 'dark';
@@ -18,14 +19,16 @@ export function Header() {
             document.documentElement.classList.remove('dark');
         }
 
-        const savingsStat = dashboardStats.find(s => s.title === 'Ersparnis');
-        const targetHours = savingsStat ? parseInt(savingsStat.value.replace('h', ''), 10) : 0;
-        
         const roiStat = dashboardStats.find(s => s.title === 'ROI');
         if (roiStat) {
             setRoi(roiStat.value);
         }
+    }, []);
 
+    useEffect(() => {
+        const savingsStat = dashboardStats.find(s => s.title === 'Ersparnis');
+        const targetHours = savingsStat ? parseInt(savingsStat.value.replace('h', ''), 10) : 0;
+        
         if (targetHours > 0) {
             let currentHours = 0;
             const step = Math.ceil(targetHours / 100); // Animate in 100 steps
@@ -37,8 +40,28 @@ export function Header() {
                 } else {
                     setSavedHours(currentHours);
                 }
-            }, 20); // 100 * 20ms = 2 seconds
+            }, 20);
             return () => clearInterval(timer);
+        }
+    }, []);
+
+    useEffect(() => {
+        const targetEscalations = aktiveEskalationenCount;
+        if (targetEscalations > 0) {
+            let currentEscalations = 0;
+            const step = 1;
+            const timer = setInterval(() => {
+                currentEscalations += step;
+                if (currentEscalations >= targetEscalations) {
+                    setEscalations(targetEscalations);
+                    clearInterval(timer);
+                } else {
+                    setEscalations(currentEscalations);
+                }
+            }, 100);
+            return () => clearInterval(timer);
+        } else {
+            setEscalations(0);
         }
     }, []);
 
@@ -87,6 +110,14 @@ export function Header() {
                     <div className="flex items-baseline gap-1">
                         <span className="text-sm font-bold text-white">{roi}</span>
                         <span className="text-[10px] font-bold uppercase">ROI</span>
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg px-3 py-1.5">
+                    <Flame className="w-4 h-4" />
+                    <div className="flex items-baseline gap-1">
+                        <span className="text-sm font-bold text-white">{escalations}</span>
+                        <span className="text-[10px] font-bold uppercase">Eskalationen</span>
                     </div>
                 </div>
 
