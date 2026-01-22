@@ -16,7 +16,7 @@ export default function DashboardPage() {
         </p>
       </header>
       <DashboardStats />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-foreground">
