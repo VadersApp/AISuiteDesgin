@@ -149,7 +149,7 @@ export default function KnowledgeBasePage() {
                 className="bg-card/80 border border-border rounded-xl overflow-hidden"
               >
                 <AccordionTrigger className="w-full p-4 bg-muted/50 hover:bg-accent/80 text-left transition-colors hover:no-underline">
-                  <div className="flex items-center justify-between w-full gap-4">
+                  <div className="flex items-center justify-between w-full mr-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <Folder className="w-5 h-5 text-blue-400 shrink-0" />
                       <div className="min-w-0">
@@ -163,7 +163,7 @@ export default function KnowledgeBasePage() {
                           </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center">
                       <span
                         className={cn(
                           'px-2 py-0.5 rounded text-[10px] font-bold uppercase border',
