@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Folder, Upload, FileText, Download, Package, FolderCheck, FolderX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 export default function KnowledgeBasePage() {
   const { toast } = useToast();
@@ -138,7 +139,6 @@ export default function KnowledgeBasePage() {
           {kbDepartments.map((dept) => {
             const files = mockKbFiles[dept.slug] || [];
             const hasFiles = files.length > 0;
-            const badgeColor = hasFiles ? 'emerald' : 'amber';
             const badgeText = hasFiles ? 'Vorhanden' : 'Fehlt';
             const deptStorage = files.reduce((acc, file) => acc + (file.size || 0), 0);
             
@@ -164,7 +164,12 @@ export default function KnowledgeBasePage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-${badgeColor}-500/10 text-${badgeColor}-400 border border-${badgeColor}-500/20`}
+                      className={cn(
+                        'px-2 py-0.5 rounded text-[10px] font-bold uppercase border',
+                        hasFiles
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      )}
                     >
                       {badgeText}
                     </span>
