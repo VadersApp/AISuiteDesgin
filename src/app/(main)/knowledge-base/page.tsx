@@ -148,31 +148,33 @@ export default function KnowledgeBasePage() {
                 key={dept.slug}
                 className="bg-card/80 border border-border rounded-xl overflow-hidden"
               >
-                <AccordionTrigger className="w-full flex items-center justify-between p-4 bg-muted/50 hover:bg-accent/80 text-left transition-colors hover:no-underline">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Folder className="w-5 h-5 text-blue-400 shrink-0" />
-                    <div className="min-w-0">
-                        <span className="text-sm font-bold text-foreground truncate">
-                          {dept.name}
-                        </span>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                            <span>{files.length} Dateien</span>
-                            <span>•</span>
-                            <span>{deptStorage.toFixed(1)} MB</span>
-                        </div>
+                <AccordionTrigger className="w-full p-4 bg-muted/50 hover:bg-accent/80 text-left transition-colors hover:no-underline">
+                  <div className="flex items-center justify-between w-full gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Folder className="w-5 h-5 text-blue-400 shrink-0" />
+                      <div className="min-w-0">
+                          <span className="text-sm font-bold text-foreground truncate">
+                            {dept.name}
+                          </span>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                              <span>{files.length} Dateien</span>
+                              <span>•</span>
+                              <span>{deptStorage.toFixed(1)} MB</span>
+                          </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={cn(
-                        'px-2 py-0.5 rounded text-[10px] font-bold uppercase border',
-                        hasFiles
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                      )}
-                    >
-                      {badgeText}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={cn(
+                          'px-2 py-0.5 rounded text-[10px] font-bold uppercase border',
+                           hasFiles
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        )}
+                      >
+                        {badgeText}
+                      </span>
+                    </div>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
