@@ -67,10 +67,10 @@ const navGroups = [
         items: [
             { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/q-space", icon: Building2, label: "Q-Space" },
-            { href: "/qsales", icon: DollarSign, label: "QSales" },
-            { href: "/qmail", icon: Mail, label: "Qmail" },
-            { href: "/qcall", icon: Phone, label: "Qcall" },
-            { href: "/qhub", icon: Users, label: "QHub" },
+            { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
+            { href: "/qmail", icon: Mail, label: "Q-Mail" },
+            { href: "/qcall", icon: Phone, label: "Q-Call" },
+            { href: "/qhub", icon: Users, label: "Q-Hub" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI Tools" },
@@ -113,8 +113,8 @@ export function MainNav() {
                         <p className="px-2.5 pb-2 pt-2 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
                     )}
                     <div className={cn(
-                        "rounded-2xl p-1 transition-colors border border-white/5 bg-white/[.03]",
-                        group.title === "Tools" && "bg-slate-700/20 border-slate-600/30"
+                        "rounded-2xl p-1 transition-colors border border-white/5",
+                        group.title === "Tools" ? "bg-slate-700/20 border-slate-600/30" : "bg-white/[.03]"
                     )}>
                         <SidebarMenu className="flex flex-col gap-1">
                         {group.items.map((item) => {
