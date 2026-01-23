@@ -15,19 +15,13 @@ import {
   Table as TableIcon,
 } from 'lucide-react';
 import { FinancialRoiAnalysis } from './financial-roi-analysis';
+import { agentTimeData } from '@/lib/data';
 
 const reportingStatsData = [
   { title: 'Umsatz durch AI', value: '€42.5k', icon: Coins, color: 'emerald' },
   { title: 'Kostenersparnis', value: '€12.8k', icon: PiggyBank, color: 'rose' },
   { title: 'Effizienzsteigerung', value: '+240%', icon: TrendingUp, color: 'blue' },
   { title: 'Fehlerreduktion', value: '-85%', icon: ShieldCheck, color: 'purple' },
-];
-
-const agentTimeData = [
-    { name: 'Ava Assist', hours: 110, color: 'blue' },
-    { name: 'Leo Sales', hours: 80, color: 'emerald' },
-    { name: 'Nova Social', hours: 40, color: 'purple' },
-    { name: 'Sam Finance', hours: 30, color: 'amber' }
 ];
 
 const totalHoursMonthly = agentTimeData.reduce((acc, agent) => acc + agent.hours, 0);

@@ -149,6 +149,13 @@ export const reportingStats = [
     { title: 'Fehlerreduktion', value: '-85%', icon: 'shield-check', color: 'purple' }
 ];
 
+export const agentTimeData = [
+    { name: 'Ava Assist', hours: 110, color: 'blue' },
+    { name: 'Leo Sales', hours: 80, color: 'emerald' },
+    { name: 'Nova Social', hours: 40, color: 'purple' },
+    { name: 'Sam Finance', hours: 30, color: 'amber' }
+];
+
 export const tasksMockByDepartment: { [key: string]: any[] } = {
     'gf': [
         { title: "KPI-Review vorbereiten", desc: "Quartalszahlen analysieren", prio: "Hoch", due: "Diese Woche", status: "Offen", agent: "Ava Assist", prioColor: "rose" },
@@ -474,4 +481,3 @@ export const topKennzahlen = [
     { title: 'Aktive Warnungen', value: aktiveWarnungenCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
     { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
 ];
-
