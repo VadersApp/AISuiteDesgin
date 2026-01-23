@@ -99,24 +99,26 @@ export function MainNav() {
     <>
       <SidebarHeader className="p-4 flex items-center justify-center gap-4 overflow-hidden h-auto">
         <Link href="/dashboard" className={cn(
-              "flex items-center w-full h-10 justify-center"
+              "flex items-center w-full h-10",
+              state === 'expanded' ? 'justify-start' : 'justify-center'
             )}>
             <div className={cn("text-3xl font-bold text-white", state === 'collapsed' ? 'hidden' : 'block')}>QORE</div>
             <div className={cn("text-3xl font-bold text-white", state === 'expanded' ? 'hidden' : 'block')}>Q</div>
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 overflow-y-auto custom-scrollbar pb-10">
-        <div className="px-2 space-y-4">
+        <div className={cn("space-y-4", state === 'expanded' ? "px-2" : "px-1")}>
             {navGroups.map((group, groupIndex) => (
                 <div key={groupIndex}>
                     {group.title && state === 'expanded' && (
                         <p className="px-2.5 pb-2 pt-2 text-[10px] font-semibold text-[#8FA3BF]/60 uppercase tracking-[0.18em]">{group.title}</p>
                     )}
                     <div className={cn(
-                        "rounded-2xl p-1 transition-colors border border-white/5",
+                        "rounded-2xl transition-colors border border-white/5",
+                        state === 'expanded' ? 'p-1' : 'p-0',
                         group.title === "Tools" ? "bg-slate-700/20 border-slate-600/30" : "bg-white/[.03]"
                     )}>
-                        <SidebarMenu className="flex flex-col gap-1">
+                        <SidebarMenu className={cn("flex flex-col gap-1", state === 'collapsed' && 'items-center')}>
                         {group.items.map((item) => {
                             const isActive = isClient ? (item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href)) : false;
                             return (
