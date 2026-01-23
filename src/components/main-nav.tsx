@@ -67,10 +67,10 @@ const navGroups = [
         items: [
             { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/q-space", icon: Building2, label: "Q-Space" },
-            { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
-            { href: "/qmail", icon: Mail, label: "Q-Mail" },
-            { href: "/qcall", icon: Phone, label: "Q-Call" },
-            { href: "/qhub", icon: Users, label: "Q-Hub" },
+            { href: "/q-sales", icon: DollarSign, label: "Q-Sales" },
+            { href: "/q-mail", icon: Mail, label: "Q-Mail" },
+            { href: "/q-call", icon: Phone, label: "Q-Call" },
+            { href: "/q-hub", icon: Users, label: "Q-Hub" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI Tools" },
@@ -115,7 +115,7 @@ export function MainNav() {
                     )}
                     <div className={cn(
                         "rounded-2xl transition-colors border border-white/5",
-                        group.title === "Tools" ? "bg-slate-700/20 border-slate-600/30" : "bg-white/[.03]",
+                        "bg-white/[.03]",
                         state === 'expanded' ? 'p-1' : 'p-0.5'
                     )}>
                         <SidebarMenu>
@@ -132,8 +132,8 @@ export function MainNav() {
                                         "w-full flex items-center justify-start transition-colors font-medium rounded-[14px]",
                                         state === 'collapsed' ? 'justify-center p-2' : 'p-2.5 gap-3',
                                         isActive
-                                            ? "bg-gradient-to-r from-blue-900/50 via-blue-800/40 to-blue-900/50 text-white border border-blue-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
-                                            : "text-[#9FB1C9] hover:bg-transparent [&_svg]:opacity-75"
+                                            ? "bg-primary text-primary-foreground"
+                                            : "text-sidebar-foreground/70 hover:bg-primary/20 hover:text-primary-foreground"
                                     )}
                                 >
                                     <item.icon className="w-4 h-4 shrink-0"/>

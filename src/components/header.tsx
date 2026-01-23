@@ -97,27 +97,27 @@ export function Header() {
                 </button>
                 <div className="h-6 w-[1px] bg-border/50 mx-2"></div>
                 
-                <div className="flex items-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg px-3 py-1.5">
-                    <Clock className="w-4 h-4" />
+                <div className="flex items-center gap-2 bg-card border rounded-lg px-3 py-1.5">
+                    <Clock className="w-4 h-4 text-blue-400" />
                     <div className="flex items-baseline gap-1">
-                        <span className="text-sm font-bold text-white">{savedHours}h</span>
-                        <span className="text-[10px] font-bold uppercase">Ersparnis</span>
+                        <span className="text-sm font-bold text-foreground">{savedHours}h</span>
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Ersparnis</span>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg px-3 py-1.5">
-                    <TrendingUp className="w-4 h-4" />
+                <div className="flex items-center gap-2 bg-card border rounded-lg px-3 py-1.5">
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
                     <div className="flex items-baseline gap-1">
-                        <span className="text-sm font-bold text-white">{roi}</span>
-                        <span className="text-[10px] font-bold uppercase">ROI</span>
+                        <span className="text-sm font-bold text-foreground">{roi}</span>
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground">ROI</span>
                     </div>
                 </div>
                 
-                <div className="flex items-center gap-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-lg px-3 py-1.5">
-                    <Flame className="w-4 h-4" />
+                <div className="flex items-center gap-2 bg-card border rounded-lg px-3 py-1.5">
+                    <Flame className="w-4 h-4 text-rose-400" />
                     <div className="flex items-baseline gap-1">
-                        <span className="text-sm font-bold text-white">{escalations}</span>
-                        <span className="text-[10px] font-bold uppercase">Eskalationen</span>
+                        <span className="text-sm font-bold text-foreground">{escalations}</span>
+                        <span className="text-[10px] font-bold uppercase text-muted-foreground">Eskalationen</span>
                     </div>
                 </div>
 
