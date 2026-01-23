@@ -67,10 +67,10 @@ const navGroups = [
         items: [
             { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/q-space", icon: Building2, label: "Q-Space" },
-            { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
-            { href: "/qmail", icon: Mail, label: "Q-Mail" },
-            { href: "/qcall", icon: Phone, label: "Q-Call" },
-            { href: "/qhub", icon: Users, label: "Q-Hub" },
+            { href: "/q-sales", icon: DollarSign, label: "Q-Sales" },
+            { href: "/q-mail", icon: Mail, label: "Q-Mail" },
+            { href: "/q-call", icon: Phone, label: "Q-Call" },
+            { href: "/q-hub", icon: Users, label: "Q-Hub" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI Tools" },
@@ -126,7 +126,8 @@ export function MainNav() {
                                 isActive={isActive}
                                 tooltip={{ children: item.label, side: "right" }}
                                 className={cn(
-                                    "w-full flex items-center justify-start gap-3 p-2.5 transition-colors font-medium rounded-[14px]",
+                                    "w-full flex items-center transition-colors font-medium rounded-[14px]",
+                                    state === 'expanded' ? 'justify-start gap-3 p-2.5' : 'justify-center p-2',
                                     isActive
                                         ? "bg-gradient-to-r from-blue-900/50 via-blue-800/40 to-blue-900/50 text-white border border-blue-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
                                         : "text-[#9FB1C9] hover:bg-transparent [&_svg]:opacity-75"
