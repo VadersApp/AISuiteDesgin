@@ -14,6 +14,7 @@ import {
   BarChart2,
   Table as TableIcon,
 } from 'lucide-react';
+import { FinancialRoiAnalysis } from './financial-roi-analysis';
 
 const reportingStatsData = [
   { title: 'Umsatz durch AI', value: '€42.5k', icon: Coins, color: 'emerald' },
@@ -188,11 +189,7 @@ export function ReportingContent() {
           </Card>
       </div>
       
-      {/* Placeholder */}
-       <Card className="p-10 flex flex-col items-center justify-center min-h-[200px] mt-8">
-          <TrendingUp className="w-12 h-12 text-slate-700 mb-4" />
-          <p className="text-slate-500 italic">Detaillierte Finanz-ROI-Visualisierung wird initialisiert...</p>
-      </Card>
+      <FinancialRoiAnalysis />
     </div>
   );
 }
