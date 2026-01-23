@@ -12,7 +12,7 @@ export default function MainLayout({ children }: PropsWithChildren) {
       </Sidebar>
       <SidebarInset className="relative bg-slate-50 dark:bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] dark:from-background dark:to-[#030712] flex flex-col flex-1">
         <Header />
-        <div className="flex-1 overflow-y-auto py-16 px-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto py-16 px-4 custom-scrollbar">
             <div className="max-w-7xl mx-auto pb-20">
                 {children}
             </div>
