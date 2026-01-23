@@ -67,10 +67,10 @@ const navGroups = [
         items: [
             { href: "/qalender", icon: Calendar, label: "Qalender" },
             { href: "/q-space", icon: Building2, label: "Q-Space" },
-            { href: "/q-sales", icon: DollarSign, label: "Q-Sales" },
-            { href: "/q-mail", icon: Mail, label: "Q-Mail" },
-            { href: "/q-call", icon: Phone, label: "Q-Call" },
-            { href: "/q-hub", icon: Users, label: "Q-Hub" },
+            { href: "/qsales", icon: DollarSign, label: "Q-Sales" },
+            { href: "/qmail", icon: Mail, label: "Q-Mail" },
+            { href: "/qcall", icon: Phone, label: "Q-Call" },
+            { href: "/qhub", icon: Users, label: "Q-Hub" },
             { href: "/q-akademie", icon: BookOpen, label: "Q-Akademie" },
             { href: "/workflow-studio", icon: Workflow, label: "Workflow Studio" },
             { href: "/tools", icon: Zap, label: "AI Tools" },
@@ -123,23 +123,23 @@ export function MainNav() {
                             const isActive = isClient ? (item.href === '/dashboard' ? pathname === item.href : pathname.startsWith(item.href)) : false;
                             return (
                             <SidebarMenuItem key={item.href}>
-                            <Link href={item.href} passHref>
                                 <SidebarMenuButton
-                                    as="a"
+                                    asChild
                                     isActive={isActive}
                                     tooltip={{ children: item.label, side: "right" }}
                                     className={cn(
-                                        "w-full flex items-center justify-start transition-colors font-medium rounded-[14px]",
-                                        state === 'collapsed' ? 'justify-center p-2' : 'p-2.5 gap-3',
+                                        "w-full flex items-center transition-colors font-medium rounded-[14px]",
+                                        state === 'collapsed' ? 'justify-center p-2' : 'justify-start p-2.5 gap-3',
                                         isActive
                                             ? "bg-primary text-primary-foreground"
                                             : "text-sidebar-foreground/70 hover:bg-primary/20 hover:text-primary-foreground"
                                     )}
                                 >
-                                    <item.icon className="w-4 h-4 shrink-0"/>
-                                    <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
+                                  <Link href={item.href}>
+                                      <item.icon className="w-4 h-4 shrink-0"/>
+                                      <span className={cn("text-sm whitespace-nowrap", state === 'collapsed' && 'hidden')}>{item.label}</span>
+                                  </Link>
                                 </SidebarMenuButton>
-                            </Link>
                             </SidebarMenuItem>
                         )})}
                         </SidebarMenu>
