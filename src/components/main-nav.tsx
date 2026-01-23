@@ -127,8 +127,8 @@ export function MainNav() {
                                 isActive={isActive}
                                 tooltip={{ children: item.label, side: "right" }}
                                 className={cn(
-                                "w-full flex items-center justify-start gap-3 transition-colors font-medium rounded-[14px]",
-                                state === 'collapsed' ? 'justify-center p-2' : 'p-2.5',
+                                "w-full flex items-center justify-start transition-colors font-medium rounded-[14px]",
+                                state === 'collapsed' ? 'justify-center p-2 gap-0' : 'p-2.5 gap-3',
                                 isActive
                                     ? "bg-gradient-to-r from-blue-900/50 via-blue-800/40 to-blue-900/50 text-white border border-blue-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]"
                                     : "text-[#9FB1C9] hover:bg-transparent [&_svg]:opacity-75"
