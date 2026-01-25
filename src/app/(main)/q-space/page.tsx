@@ -806,8 +806,8 @@ export default function QSpacePage() {
           setIsChatOpen(true);
         }}
         className={cn(
-            "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-200 ease-in-out",
-             isMobile ? "left-6" : state === "collapsed" ? "left-[calc(var(--sidebar-width-icon)_-_1.25rem)]" : "left-[calc(var(--sidebar-width)_-_1.25rem)]"
+            "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-300 ease-in-out",
+            isMobile ? "left-6" : state === "collapsed" ? "left-[calc(3rem+16rem+1.5rem)]" : "left-[calc(18rem+16rem+1.5rem)]"
         )}
       >
         <MessageSquare />
