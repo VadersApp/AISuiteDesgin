@@ -481,3 +481,53 @@ export const topKennzahlen = [
     { title: 'Aktive Warnungen', value: aktiveWarnungenCount + beobachtungCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
     { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
 ];
+
+export const chatThreads = [
+    {
+        id: 'esc-2910-chat',
+        contextType: 'escalation',
+        contextId: 'esc-2910',
+        title: 'Eskalation: Vertragskündigung erkannt',
+        participants: ['dr-mueller', 'ben-weber'], // User IDs
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        lastMessageSnippet: 'Verstanden, danke für die Info.',
+        unreadCount: 1,
+    },
+    {
+        id: 'task-ben-1-chat',
+        contextType: 'task',
+        contextId: 'task-ben-1',
+        title: 'Deployment-Verzug (+3 Tage)',
+        participants: ['dr-mueller', 'ben-weber'],
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        lastMessageSnippet: 'Ein unvorhergesehenes Problem mit der Testumgebung. Ich arbeite daran.',
+        unreadCount: 0,
+    },
+    {
+        id: 'proj-1-chat',
+        contextType: 'project',
+        contextId: 'proj-1',
+        title: 'Core-Backend Refactoring',
+        participants: ['ben-weber'],
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+        lastMessageSnippet: 'Meilenstein 2 ist abgeschlossen.',
+        unreadCount: 0,
+    }
+];
+
+export const chatMessages: { [key: string]: any[] } = {
+    'esc-2910-chat': [
+        { id: 1, type: 'system', text: 'Eskalation automatisch durch KPI-Engine ausgelöst', createdAt: 'vor 2 Stunden', sender: { name: 'System', avatar: 'Bot' } },
+        { id: 2, type: 'user', text: 'Hallo Ben, ich habe die Eskalation gesehen. Lass uns die Woche einen Termin finden, um über die KPIs und die Gründe zu sprechen. Die KI wird einen Terminvorschlag senden.', createdAt: 'vor 1 Stunde', sender: { name: 'Dr. Müller', avatar: 'DM' } },
+        { id: 3, type: 'user', text: 'Verstanden, danke für die Info.', createdAt: 'vor 55 Minuten', sender: { name: 'Ben Weber', avatar: 'BW' } },
+        { id: 4, type: 'ai_summary', text: 'Gespräch wurde zur Kenntnis genommen. Terminplanung wird eingeleitet.', createdAt: 'vor 50 Minuten', sender: { name: 'KI-Zusammenfassung', avatar: 'Bot' } }
+    ],
+    'task-ben-1-chat': [
+        { id: 1, type: 'system', text: 'Aufgabe "Deployment-Verzug (+3 Tage)" wurde als blockiert markiert.', createdAt: 'vor 1 Tag', sender: { name: 'System', avatar: 'Bot' } },
+        { id: 2, type: 'user', text: 'Ben, was ist der Grund für den Blocker beim Deployment?', createdAt: 'vor 45 Minuten', sender: { name: 'Dr. Müller', avatar: 'DM' } },
+        { id: 3, type: 'user', text: 'Ein unvorhergesehenes Problem mit der Testumgebung. Ich arbeite daran.', createdAt: 'vor 30 Minuten', sender: { name: 'Ben Weber', avatar: 'BW' } },
+    ],
+    'proj-1-chat': [
+         { id: 1, type: 'user', text: 'Meilenstein 2 ist abgeschlossen.', createdAt: 'vor 5 Stunden', sender: { name: 'Ben Weber', avatar: 'BW' } },
+    ]
+};

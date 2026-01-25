@@ -36,14 +36,22 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowRight,
+  MessageSquare,
+  ArrowLeft,
+  Search as SearchIcon,
+  Bot as BotIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, chatMessages } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 
 const modules = [
@@ -67,6 +75,161 @@ const mockDocuments = [
 const mockSops = [
     { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
 ];
+
+const ChatInbox = ({
+  isOpen,
+  onOpenChange,
+  activeThreadId,
+  onThreadSelect,
+}: {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  activeThreadId: string | null;
+  onThreadSelect: (threadId: string | null) => void;
+}) => {
+  const threads = chatThreads;
+  const messages = activeThreadId ? chatMessages[activeThreadId] || [] : [];
+  const activeThread = threads.find((t) => t.id === activeThreadId);
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="p-0 w-full md:w-[500px] sm:max-w-none flex flex-col">
+        {activeThread ? (
+          <>
+            <div className="p-4 border-b border-border flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onThreadSelect(null)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h3 className="font-bold text-foreground leading-tight">
+                  {activeThread.title}
+                </h3>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {activeThread.contextType}
+                </p>
+              </div>
+            </div>
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.map((msg: any) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      'flex items-start gap-3',
+                      msg.sender.name === 'Dr. Müller' && 'justify-end'
+                    )}
+                  >
+                    {msg.sender.name !== 'Dr. Müller' && (
+                      <Avatar className="w-8 h-8 border">
+                        <AvatarFallback>
+                          {msg.sender.avatar === 'Bot' ? (
+                            <BotIcon className="w-4 h-4" />
+                          ) : (
+                            msg.sender.avatar
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div
+                      className={cn(
+                        'max-w-xs p-3 rounded-xl text-sm',
+                        msg.type === 'system' &&
+                          'text-center w-full text-xs text-muted-foreground italic',
+                        msg.type === 'ai_summary' &&
+                          'bg-blue-500/10 border border-blue-500/20 text-blue-300',
+                        msg.type === 'user' &&
+                          (msg.sender.name === 'Dr. Müller'
+                            ? 'bg-primary text-primary-foreground rounded-br-none'
+                            : 'bg-muted rounded-bl-none')
+                      )}
+                    >
+                      <p
+                        className={cn(
+                          'text-xs font-bold mb-1',
+                          msg.sender.name === 'Dr. Müller'
+                            ? 'text-primary-foreground/80'
+                            : 'text-foreground/80'
+                        )}
+                      >
+                        {msg.sender.name}
+                      </p>
+                      <p>{msg.text}</p>
+                    </div>
+                    {msg.sender.name === 'Dr. Müller' && (
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback>DM</AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            <div className="p-4 border-t border-border">
+              <div className="relative">
+                <Textarea
+                  placeholder="Nachricht..."
+                  className="bg-input pr-12"
+                  rows={1}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="p-4 border-b border-border">
+              <h2 className="font-bold text-lg text-foreground">Inbox</h2>
+              <div className="relative mt-2">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Suchen..." className="pl-9 bg-input" />
+              </div>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {threads.map((thread) => (
+                  <div
+                    key={thread.id}
+                    onClick={() => onThreadSelect(thread.id)}
+                    className="p-3 rounded-lg hover:bg-muted cursor-pointer"
+                  >
+                    <div className="flex justify-between items-start">
+                      <p className="font-bold text-sm text-foreground line-clamp-1">
+                        {thread.title}
+                      </p>
+                      {thread.unreadCount > 0 && (
+                        <Badge className="bg-primary">{thread.unreadCount}</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {thread.lastMessageSnippet}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            <div className="p-4 border-t border-border">
+              <Button className="w-full">
+                <Plus className="w-4 h-4 mr-2" /> Neue Nachricht
+              </Button>
+            </div>
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+};
+
 
 const OverviewView = () => (
     <div className="space-y-6">
@@ -475,6 +638,9 @@ const SystemAdminView = () => {
 export default function QSpacePage() {
     const [activeModule, setActiveModule] = useState(modules[0].name);
 
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [activeChatThread, setActiveChatThread] = useState<string | null>(null);
+
     const renderModule = () => {
         switch (activeModule) {
             case 'Übersicht': return <OverviewView />;
@@ -487,6 +653,7 @@ export default function QSpacePage() {
     };
 
   return (
+    <>
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
         {/* Left Sidebar for Modules */}
         <aside className="w-64 border-r border-border pr-4 space-y-1">
@@ -536,5 +703,22 @@ export default function QSpacePage() {
             </div>
         </main>
     </div>
+      <Button
+        size="icon"
+        onClick={() => {
+          setActiveChatThread(null);
+          setIsChatOpen(true);
+        }}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl z-50"
+      >
+        <MessageSquare />
+      </Button>
+      <ChatInbox
+        isOpen={isChatOpen}
+        onOpenChange={setIsChatOpen}
+        activeThreadId={activeChatThread}
+        onThreadSelect={setActiveChatThread}
+      />
+    </>
   );
 }

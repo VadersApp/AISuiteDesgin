@@ -2,7 +2,7 @@
 
 import { useParams, notFound, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { kpiMitarbeiter } from '@/lib/data';
+import { kpiMitarbeiter, chatThreads, chatMessages } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,99 +27,200 @@ import {
   HeartPulse,
   Send,
   Bot as BotIcon,
+  MessageSquare,
+  ArrowLeft,
+  Search as SearchIcon,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { useState } from 'react';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const TaskChat = () => (
+const ChatInbox = ({
+  isOpen,
+  onOpenChange,
+  activeThreadId,
+  onThreadSelect,
+}: {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  activeThreadId: string | null;
+  onThreadSelect: (threadId: string | null) => void;
+}) => {
+  const threads = chatThreads;
+  const messages = activeThreadId ? chatMessages[activeThreadId] || [] : [];
+  const activeThread = threads.find((t) => t.id === activeThreadId);
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
+      <SheetContent className="p-0 w-full md:w-[500px] sm:max-w-none flex flex-col">
+        {activeThread ? (
+          <>
+            <div className="p-4 border-b border-border flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onThreadSelect(null)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h3 className="font-bold text-foreground leading-tight">
+                  {activeThread.title}
+                </h3>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {activeThread.contextType}
+                </p>
+              </div>
+            </div>
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.map((msg: any) => (
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      'flex items-start gap-3',
+                      msg.sender.name === 'Dr. Müller' && 'justify-end'
+                    )}
+                  >
+                    {msg.sender.name !== 'Dr. Müller' && (
+                      <Avatar className="w-8 h-8 border">
+                        <AvatarFallback>
+                          {msg.sender.avatar === 'Bot' ? (
+                            <BotIcon className="w-4 h-4" />
+                          ) : (
+                            msg.sender.avatar
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div
+                      className={cn(
+                        'max-w-xs p-3 rounded-xl text-sm',
+                        msg.type === 'system' &&
+                          'text-center w-full text-xs text-muted-foreground italic',
+                        msg.type === 'ai_summary' &&
+                          'bg-blue-500/10 border border-blue-500/20 text-blue-300',
+                        msg.type === 'user' &&
+                          (msg.sender.name === 'Dr. Müller'
+                            ? 'bg-primary text-primary-foreground rounded-br-none'
+                            : 'bg-muted rounded-bl-none')
+                      )}
+                    >
+                      <p
+                        className={cn(
+                          'text-xs font-bold mb-1',
+                          msg.sender.name === 'Dr. Müller'
+                            ? 'text-primary-foreground/80'
+                            : 'text-foreground/80'
+                        )}
+                      >
+                        {msg.sender.name}
+                      </p>
+                      <p>{msg.text}</p>
+                    </div>
+                    {msg.sender.name === 'Dr. Müller' && (
+                      <Avatar className="w-8 h-8">
+                        <AvatarFallback>DM</AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            <div className="p-4 border-t border-border">
+              <div className="relative">
+                <Textarea
+                  placeholder="Nachricht..."
+                  className="bg-input pr-12"
+                  rows={1}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="p-4 border-b border-border">
+              <h2 className="font-bold text-lg text-foreground">Inbox</h2>
+              <div className="relative mt-2">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Suchen..." className="pl-9 bg-input" />
+              </div>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {threads.map((thread) => (
+                  <div
+                    key={thread.id}
+                    onClick={() => onThreadSelect(thread.id)}
+                    className="p-3 rounded-lg hover:bg-muted cursor-pointer"
+                  >
+                    <div className="flex justify-between items-start">
+                      <p className="font-bold text-sm text-foreground line-clamp-1">
+                        {thread.title}
+                      </p>
+                      {thread.unreadCount > 0 && (
+                        <Badge className="bg-primary">{thread.unreadCount}</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {thread.lastMessageSnippet}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+            <div className="p-4 border-t border-border">
+              <Button className="w-full">
+                <Plus className="w-4 h-4 mr-2" /> Neue Nachricht
+              </Button>
+            </div>
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+
+const TaskChat = ({ onOpenChat }: { onOpenChat: (threadId: string) => void }) => (
   <Card>
-    <CardContent className="p-0">
-      <div className="h-[400px] overflow-y-auto p-4 space-y-4">
-        <div className="text-center text-xs text-muted-foreground py-1">
-          Aufgabe &quot;Deployment-Verzug (+3 Tage)&quot;
-        </div>
-        <div className="flex items-start gap-3 justify-end">
-          <div className="p-3 rounded-lg bg-primary text-primary-foreground max-w-xs">
-            <p className="text-xs font-bold mb-1">Dr. Müller</p>
-            <p className="text-sm">
-              Ben, was ist der Grund für den Blocker beim Deployment?
-            </p>
-          </div>
-          <Avatar>
-            <AvatarFallback>DM</AvatarFallback>
-          </Avatar>
-        </div>
-        <div className="flex items-start gap-3">
-          <Avatar>
-            <AvatarFallback>BW</AvatarFallback>
-          </Avatar>
-          <div className="p-3 rounded-lg bg-muted max-w-xs">
-            <p className="text-xs font-bold mb-1 text-foreground">Ben Weber</p>
-            <p className="text-sm text-muted-foreground">
-              Ein unvorhergesehenes Problem mit der Testumgebung. Ich arbeite
-              daran.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="p-3 border-t border-border">
-        <div className="relative">
-          <Textarea
-            placeholder="Nachricht..."
-            className="bg-input pr-12"
-            rows={1}
-          />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute right-2 top-1/2 -translate-y-1/2"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+    <CardContent className="p-6 text-center">
+      <p className="text-sm text-muted-foreground mb-4">
+        Der Chat zu dieser Aufgabe ist jetzt im Chat-Drawer verfügbar.
+      </p>
+      <Button onClick={() => onOpenChat('task-ben-1-chat')}>
+        <MessageSquare className="w-4 h-4 mr-2" />
+        Chat öffnen
+      </Button>
     </CardContent>
   </Card>
 );
 
-const ProjectChat = () => (
-  <Card>
-    <CardContent className="p-0">
-      <div className="h-[200px] overflow-y-auto p-4 space-y-4">
-        <div className="text-center text-xs text-muted-foreground py-1">
-          Projekt &quot;Core-Backend Refactoring&quot;
-        </div>
-        <div className="flex items-start gap-3">
-          <Avatar>
-            <AvatarFallback>BW</AvatarFallback>
-          </Avatar>
-          <div className="p-3 rounded-lg bg-muted max-w-xs">
-            <p className="text-xs font-bold mb-1 text-foreground">Ben Weber</p>
-            <p className="text-sm text-muted-foreground">
-              Meilenstein 2 ist abgeschlossen.
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="p-3 border-t border-border">
-        <div className="relative">
-          <Textarea
-            placeholder="Nachricht zum Projekt..."
-            className="bg-input pr-12"
-            rows={1}
-          />
-          <Button
-            size="icon"
-            variant="ghost"
-            className="absolute right-2 top-1/2 -translate-y-1/2"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+const ProjectChat = ({ onOpenChat }: { onOpenChat: (threadId: string) => void }) => (
+    <Card>
+    <CardContent className="p-6 text-center">
+      <p className="text-sm text-muted-foreground mb-4">
+        Der Chat zu diesem Projekt ist jetzt im Chat-Drawer verfügbar.
+      </p>
+      <Button onClick={() => onOpenChat('proj-1-chat')}>
+        <MessageSquare className="w-4 h-4 mr-2" />
+        Chat öffnen
+      </Button>
     </CardContent>
   </Card>
 );
@@ -129,6 +230,15 @@ export default function MitarbeiterDetailPage() {
   const userId = params.userId as string;
   const employee = kpiMitarbeiter.find((m) => m.id === userId);
   const router = useRouter();
+
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [activeChatThread, setActiveChatThread] = useState<string | null>(null);
+
+  const handleOpenChat = (threadId: string | null) => {
+    setActiveChatThread(threadId);
+    setIsChatOpen(true);
+  };
+
 
   if (!employee) {
     notFound();
@@ -163,6 +273,7 @@ export default function MitarbeiterDetailPage() {
   };
 
   return (
+    <>
     <div className="space-y-6">
       <header>
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -304,7 +415,7 @@ export default function MitarbeiterDetailPage() {
               </TabsContent>
               <TabsContent value="kommunikation">
                 <CardContent>
-                  <ProjectChat />
+                  <ProjectChat onOpenChat={handleOpenChat} />
                 </CardContent>
               </TabsContent>
             </Tabs>
@@ -354,7 +465,7 @@ export default function MitarbeiterDetailPage() {
               </TabsContent>
               <TabsContent value="kommunikation">
                 <CardContent>
-                  <TaskChat />
+                  <TaskChat onOpenChat={handleOpenChat} />
                 </CardContent>
               </TabsContent>
             </Tabs>
@@ -390,5 +501,22 @@ export default function MitarbeiterDetailPage() {
         </div>
       </div>
     </div>
+      <Button
+        size="icon"
+        onClick={() => {
+          setActiveChatThread(null);
+          setIsChatOpen(true);
+        }}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl"
+      >
+        <MessageSquare />
+      </Button>
+      <ChatInbox
+        isOpen={isChatOpen}
+        onOpenChange={setIsChatOpen}
+        activeThreadId={activeChatThread}
+        onThreadSelect={setActiveChatThread}
+      />
+    </>
   );
 }
