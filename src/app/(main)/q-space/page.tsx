@@ -42,10 +42,13 @@ import {
   Bot as BotIcon,
   X,
   Send,
+  Folder,
+  CheckSquare,
+  User as UserIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, chatMessages } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, chatMessages, teamChatsData } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -92,6 +95,17 @@ const ChatInbox = ({
   const threads = chatThreads;
   const messages = activeThreadId ? chatMessages[activeThreadId] || [] : [];
   const activeThread = threads.find((t) => t.id === activeThreadId);
+
+  const getContextIcon = (contextType: string) => {
+    switch (contextType) {
+      case 'task': return <CheckSquare className="w-3 h-3" />;
+      case 'project': return <Folder className="w-3 h-3" />;
+      case 'escalation': return <Flame className="w-3 h-3" />;
+      case 'team': return <Users className="w-3 h-3" />;
+      case 'dm': return <UserIcon className="w-3 h-3" />;
+      default: return <MessageSquare className="w-3 h-3" />;
+    }
+  };
 
   if (!isOpen) {
     return null;
@@ -212,39 +226,93 @@ const ChatInbox = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="p-4 border-b border-border">
-            <div className="relative mt-2">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Suchen..." className="pl-9 bg-input" />
-            </div>
-          </div>
-          <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
-              {threads.map((thread) => (
-                <div
-                  key={thread.id}
-                  onClick={() => onThreadSelect(thread.id)}
-                  className="p-3 rounded-lg hover:bg-muted cursor-pointer"
-                >
-                  <div className="flex justify-between items-start">
-                    <p className="font-bold text-sm text-foreground line-clamp-1">
-                      {thread.title}
-                    </p>
-                    {thread.unreadCount > 0 && (
-                      <Badge className="bg-primary">{thread.unreadCount}</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-1">
-                    {thread.lastMessageSnippet}
-                  </p>
+          <Tabs defaultValue="threads" className="flex-1 flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-border">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="threads">Threads</TabsTrigger>
+                    <TabsTrigger value="teams">Teams</TabsTrigger>
+                    <TabsTrigger value="direkt">Direkt</TabsTrigger>
+                </TabsList>
+                 <div className="relative mt-4">
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input placeholder="Suchen..." className="pl-9 bg-input" />
                 </div>
-              ))}
             </div>
-          </ScrollArea>
+            <ScrollArea className="flex-1">
+                <TabsContent value="threads" className="m-0">
+                    <div className="p-2 space-y-1">
+                    {threads.filter(t => ['task', 'project', 'escalation', 'thread'].includes(t.contextType) && !t.isArchived).map((thread) => (
+                        <div key={thread.id} onClick={() => onThreadSelect(thread.id)} className="p-3 rounded-lg hover:bg-muted cursor-pointer">
+                            <div className="flex justify-between items-start">
+                                <p className="font-bold text-sm text-foreground line-clamp-1 flex items-center gap-2">
+                                    {getContextIcon(thread.contextType)} {thread.title}
+                                </p>
+                                {thread.unreadCount > 0 && (<Badge className="bg-primary">{thread.unreadCount}</Badge>)}
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{thread.lastMessageSnippet}</p>
+                        </div>
+                    ))}
+                    </div>
+                </TabsContent>
+                <TabsContent value="teams" className="m-0">
+                     <div className="p-2 space-y-1">
+                        {teamChatsData.map((teamChat) => {
+                            const thread = threads.find(t => t.contextType === 'team' && t.contextId === teamChat.id);
+                            return (
+                                <div key={teamChat.id} onClick={() => thread && onThreadSelect(thread.id)} className="p-3 rounded-lg hover:bg-muted cursor-pointer">
+                                     <div className="flex justify-between items-start">
+                                        <p className="font-bold text-sm text-foreground line-clamp-1 flex items-center gap-2">
+                                            <Users className="w-3 h-3" /> {teamChat.name}
+                                        </p>
+                                        {thread && thread.unreadCount > 0 && (<Badge className="bg-primary">{thread.unreadCount}</Badge>)}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{thread ? thread.lastMessageSnippet : teamChat.description}</p>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </TabsContent>
+                <TabsContent value="direkt" className="m-0">
+                    <div className="p-2 space-y-1">
+                        {kpiMitarbeiter
+                            .slice() // Create a shallow copy to avoid mutating the original
+                            .sort((a,b) => a.name.localeCompare(b.name))
+                            .map((user) => {
+                             // Assuming current user is Dr. Müller, so filter him out
+                            if (user.id === 'dr-mueller') return null;
+                            const thread = threads.find(t => t.contextType === 'dm' && t.participants.includes(user.id));
+                            return (
+                                 <div key={user.id} onClick={() => thread && onThreadSelect(thread.id)} className="p-3 rounded-lg hover:bg-muted cursor-pointer flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="w-8 h-8">
+                                            <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-bold text-sm text-foreground">{user.name}</p>
+                                            <p className="text-xs text-muted-foreground">{user.role}</p>
+                                        </div>
+                                    </div>
+                                    {thread && thread.unreadCount > 0 && (<Badge className="bg-primary">{thread.unreadCount}</Badge>)}
+                                 </div>
+                            )
+                        })}
+                    </div>
+                </TabsContent>
+            </ScrollArea>
+          </Tabs>
           <div className="p-4 border-t border-border mt-auto">
-            <Button className="w-full">
-              <Plus className="w-4 h-4 mr-2" /> Neue Nachricht
-            </Button>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button className="w-full">
+                      <Plus className="w-4 h-4 mr-2" /> Neue Nachricht
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[385px]">
+                    <DropdownMenuItem>Neuer Arbeits-Thread</DropdownMenuItem>
+                    <DropdownMenuItem>Neuer Team-Chat</DropdownMenuItem>
+                    <DropdownMenuItem>Neue Direktnachricht</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </>
       )}
@@ -738,8 +806,8 @@ export default function QSpacePage() {
           setIsChatOpen(true);
         }}
         className={cn(
-            "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-200 ease-linear",
-            isMobile ? "left-6" : state === "collapsed" ? "left-[calc(3rem+1.5rem)]" : "left-[calc(18rem+1.5rem)]"
+            "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-200 ease-in-out",
+             isMobile ? "left-6" : state === "collapsed" ? "left-[calc(var(--sidebar-width-icon)_-_1.25rem)]" : "left-[calc(var(--sidebar-width)_-_1.25rem)]"
         )}
       >
         <MessageSquare />

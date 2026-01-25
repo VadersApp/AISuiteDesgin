@@ -482,6 +482,25 @@ export const topKennzahlen = [
     { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
 ];
 
+export const teamChatsData = [
+    {
+        id: 'tc-1',
+        name: 'Core-Backend Team',
+        description: 'Koordination für das Core-Backend Team.',
+        kind: 'team',
+        teamId: 'core-backend-team-id', // Fictional ID
+        deptId: 'it'
+    },
+    {
+        id: 'tc-2',
+        name: 'Projekt "Phoenix" Gruppe',
+        description: 'Abteilungsübergreifende Gruppe für das Projekt Phoenix.',
+        kind: 'group',
+        teamId: null,
+        deptId: 'it'
+    }
+];
+
 export const chatThreads = [
     {
         id: 'esc-2910-chat',
@@ -492,6 +511,7 @@ export const chatThreads = [
         lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
         lastMessageSnippet: 'Verstanden, danke für die Info.',
         unreadCount: 1,
+        isArchived: false,
     },
     {
         id: 'task-ben-1-chat',
@@ -502,6 +522,7 @@ export const chatThreads = [
         lastMessageAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
         lastMessageSnippet: 'Ein unvorhergesehenes Problem mit der Testumgebung. Ich arbeite daran.',
         unreadCount: 0,
+        isArchived: false,
     },
     {
         id: 'proj-1-chat',
@@ -512,6 +533,40 @@ export const chatThreads = [
         lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
         lastMessageSnippet: 'Meilenstein 2 ist abgeschlossen.',
         unreadCount: 0,
+        isArchived: true,
+    },
+    {
+        id: 'team-chat-1',
+        contextType: 'team',
+        contextId: 'tc-1',
+        title: 'Core-Backend Team',
+        participants: ['ben-weber', 'dr-mueller'],
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+        lastMessageSnippet: 'Das Staging-System ist wieder online.',
+        unreadCount: 2,
+        isArchived: false,
+    },
+    {
+        id: 'dm-mueller-schmidt',
+        contextType: 'dm',
+        contextId: 'dm-1',
+        title: 'Anna Schmidt',
+        participants: ['dr-mueller', 'anna-schmidt'],
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+        lastMessageSnippet: 'Ja, passt für mich. Bis morgen.',
+        unreadCount: 0,
+        isArchived: false,
+    },
+    {
+        id: 'dm-weber-lang',
+        contextType: 'dm',
+        contextId: 'dm-2',
+        title: 'Sophie Lang',
+        participants: ['ben-weber', 'sophie-lang'],
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+        lastMessageSnippet: 'Klar, ich schaue es mir an.',
+        unreadCount: 0,
+        isArchived: false,
     }
 ];
 
@@ -529,5 +584,19 @@ export const chatMessages: { [key: string]: any[] } = {
     ],
     'proj-1-chat': [
          { id: 1, type: 'user', text: 'Meilenstein 2 ist abgeschlossen.', createdAt: 'vor 5 Stunden', sender: { name: 'Ben Weber', avatar: 'BW' } },
+    ],
+    'team-chat-1': [
+        { id: 1, type: 'system', text: 'Dr. Müller hat den Chat erstellt.', createdAt: 'vor 2 Tagen', sender: { name: 'System', avatar: 'Bot' } },
+        { id: 2, type: 'user', text: '@Ben Weber Ist das Staging-System down? Das Deployment für Task-123 schlägt fehl.', createdAt: 'vor 15 Minuten', sender: { name: 'Dr. Müller', avatar: 'DM' } },
+        { id: 3, type: 'user', text: 'Ja, gab ein Problem mit dem letzten Build. Ich starte es gerade neu.', createdAt: 'vor 12 Minuten', sender: { name: 'Ben Weber', avatar: 'BW' } },
+        { id: 4, type: 'user', text: 'Das Staging-System ist wieder online.', createdAt: 'vor 10 Minuten', sender: { name: 'Ben Weber', avatar: 'BW' } },
+    ],
+    'dm-mueller-schmidt': [
+        { id: 1, type: 'user', text: 'Hallo Anna, können wir morgen kurz über die Q1-Vertriebsziele sprechen? Passt 10 Uhr?', createdAt: 'Gestern', sender: { name: 'Dr. Müller', avatar: 'DM' } },
+        { id: 2, type: 'user', text: 'Ja, passt für mich. Bis morgen.', createdAt: 'Gestern', sender: { name: 'Anna Schmidt', avatar: 'AS' } },
+    ],
+    'dm-weber-lang': [
+         { id: 1, type: 'user', text: 'Hey Sophie, hast du kurz Zeit für eine Frage zum Marketing-Budget?', createdAt: 'vor 2 Tagen', sender: { name: 'Ben Weber', avatar: 'BW' } },
+         { id: 2, type: 'user', text: 'Klar, ich schaue es mir an.', createdAt: 'vor 2 Tagen', sender: { name: 'Sophie Lang', avatar: 'SL' } },
     ]
 };
