@@ -478,6 +478,6 @@ export const aktiveEskalationenCount = kpiMitarbeiter.filter(m => m.zWert < 70).
 export const topKennzahlen = [
     { title: 'Ø Zufriedenheit gesamt', value: `${gesamtZufriedenheit}%`, icon: 'HeartPulse', color: 'blue', href: '/q-space/kpi-dashboard/zufriedenheit' },
     { title: 'Mitarbeiter im grünen Bereich', value: gruenerBereichCount, icon: 'UserCheck', color: 'emerald', href: '/q-space/kpi-dashboard/gruen' },
-    { title: 'Aktive Warnungen', value: aktiveWarnungenCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
+    { title: 'Aktive Warnungen', value: aktiveWarnungenCount + beobachtungCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
     { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
 ];

@@ -37,41 +37,116 @@ import {
   ArrowDown,
   ArrowRight,
   BarChart3,
+  Briefcase,
+  Bot
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { kpiMitarbeiter, topKennzahlen } from '@/lib/data';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 const modules = [
-    { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Übersicht', icon: LayoutDashboard },
-    { name: 'Dateien & Dokumente', icon: FileText },
-    { name: 'Ordnerstruktur', icon: Kanban },
-    { name: 'Geteilt mit mir', icon: Users },
-    { name: 'Nutzer', icon: Users },
-    { name: 'Gruppen', icon: Users },
-    { name: 'Berechtigungen', icon: ShieldCheck },
-    { name: 'Aktivitätsprotokoll', icon: Activity },
-    { name: 'Einstellungen', icon: Settings },
+    { name: 'Workspace', icon: Briefcase },
+    { name: 'KPI-Dashboard', icon: BarChart3 },
+    { name: 'KI-Mitarbeiter', icon: Bot },
+    { name: 'System Admin (Q-Space)', icon: Settings },
 ];
 
-const mockFiles = [
-    { id: 1, name: 'Quartalsbericht Q4.docx', type: 'Dokument', owner: 'Dr. Müller', modified: 'Heute', shareStatus: 'Privat' },
-    { id: 2, name: 'Marketing-Planung Q1.xlsx', type: 'Tabelle', owner: 'Sophie Market', modified: 'Gestern', shareStatus: 'Team' },
+const mockTasks = [
+    { id: 1, title: "Q1-Report finalisieren", owner: 'Dr. Müller', status: 'Überfällig', prio: 'Hoch', due: 'Gestern' },
+    { id: 2, title: "Pitch-Deck für Innovatech erstellen", owner: 'Anna Schmidt', status: 'In Arbeit', prio: 'Hoch', due: 'Heute' }
 ];
-const mockUsers = [
-    { id: 1, name: 'Dr. Müller', email: 'ceo@aisuite.de', role: 'Admin', status: 'aktiv', groups: 'Geschäftsführung' },
-    { id: 2, name: 'Leo Sales', email: 'leo.sales@aisuite.de', role: 'Manager', status: 'aktiv', groups: 'Vertrieb' },
+const mockProjects = [
+    { id: 1, name: "Rollout neue CRM-Software", owner: "Ben Weber", status: "Aktiv" }
 ];
-const mockGroups = [
-    { id: 1, name: 'Geschäftsführung', members: 1, description: 'Zugriff auf alle strategischen Dokumente.' },
-    { id: 2, name: 'Vertrieb', members: 5, description: 'Zugriff auf Sales-Materialien und CRM-Daten.' },
+const mockDocuments = [
+    { id: 1, title: "Unternehmensstrategie 2025", owner: "Dr. Müller", version: "2.1" }
 ];
-const mockActivity = [
-    { id: 1, user: 'Dr. Müller', action: 'hat die Datei "Quartalsbericht Q4.docx" hochgeladen.', target: 'Quartalsbericht Q4.docx', time: 'vor 5 Minuten' },
-    { id: 2, user: 'Sophie Market', action: 'hat den Ordner "Q1 Kampagnen" erstellt.', target: 'Q1 Kampagnen', time: 'vor 1 Stunde' },
+const mockSops = [
+    { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
 ];
+const mockActivities = [
+    { id: 1, text: "Ben Weber hat das Projekt 'Rollout neue CRM-Software' aktualisiert.", time: "vor 5 Min."}
+];
+
+const OverviewView = () => (
+    <div className="space-y-6">
+        <h2 className="text-xl font-bold text-foreground">Übersicht</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+                <CardHeader><CardTitle>Meine Aufgaben Heute</CardTitle></CardHeader>
+                <CardContent><p className="text-4xl font-bold">1</p></CardContent>
+            </Card>
+            <Card>
+                <CardHeader><CardTitle>Überfällige Aufgaben</CardTitle></CardHeader>
+                <CardContent><p className="text-4xl font-bold text-rose-400">1</p></CardContent>
+            </Card>
+             <Card>
+                <CardHeader><CardTitle>Mein KPI-Status</CardTitle></CardHeader>
+                <CardContent><p className="text-4xl font-bold text-emerald-400">95%</p></CardContent>
+            </Card>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+                <CardHeader><CardTitle>Aktive Projekte</CardTitle></CardHeader>
+                <CardContent>
+                     <p className="text-sm text-muted-foreground">Projekt 'Rollout neue CRM-Software' ist aktiv.</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader><CardTitle>Letzte Aktivitäten</CardTitle></CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">Ben Weber hat das Projekt 'Rollout neue CRM-Software' aktualisiert.</p>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+);
+
+const WorkspaceView = () => (
+    <div>
+        <h2 className="text-xl font-bold text-foreground mb-4">Workspace</h2>
+        <Tabs defaultValue="aufgaben">
+            <TabsList>
+                <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
+                <TabsTrigger value="projekte">Projekte</TabsTrigger>
+                <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
+                <TabsTrigger value="sops">SOPs</TabsTrigger>
+            </TabsList>
+            <TabsContent value="aufgaben" className="mt-4">
+                <Card><CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader><CardContent>
+                    <Table><TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead><TableHead>Priorität</TableHead><TableHead>Fällig</TableHead></TableRow></TableHeader>
+                        <TableBody>{mockTasks.map(t => (<TableRow key={t.id}><TableCell>{t.title}</TableCell><TableCell>{t.owner}</TableCell><TableCell>{t.status}</TableCell><TableCell>{t.prio}</TableCell><TableCell>{t.due}</TableCell></TableRow>))}</TableBody>
+                    </Table>
+                </CardContent></Card>
+            </TabsContent>
+            <TabsContent value="projekte" className="mt-4">
+                <Card><CardHeader><CardTitle>Projekte</CardTitle></CardHeader><CardContent>
+                     <Table><TableHeader><TableRow><TableHead>Projektname</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                        <TableBody>{mockProjects.map(p => (<TableRow key={p.id}><TableCell>{p.name}</TableCell><TableCell>{p.owner}</TableCell><TableCell>{p.status}</TableCell></TableRow>))}</TableBody>
+                    </Table>
+                </CardContent></Card>
+            </TabsContent>
+            <TabsContent value="dokumente" className="mt-4">
+                <Card><CardHeader><CardTitle>Dokumente</CardTitle></CardHeader><CardContent>
+                    <Table><TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Version</TableHead></TableRow></TableHeader>
+                        <TableBody>{mockDocuments.map(d => (<TableRow key={d.id}><TableCell>{d.title}</TableCell><TableCell>{d.owner}</TableCell><TableCell>{d.version}</TableCell></TableRow>))}</TableBody>
+                    </Table>
+                </CardContent></Card>
+            </TabsContent>
+            <TabsContent value="sops" className="mt-4">
+                <Card><CardHeader><CardTitle>SOPs</CardTitle></CardHeader><CardContent>
+                    <Table><TableHeader><TableRow><TableHead>SOP-Titel</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                        <TableBody>{mockSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
+                    </Table>
+                </CardContent></Card>
+            </TabsContent>
+        </Tabs>
+    </div>
+);
 
 const KpiDashboard = () => {
     
@@ -101,7 +176,7 @@ const KpiDashboard = () => {
     return (
         <div className="space-y-6">
             <header>
-                <h2 className="text-xl font-bold text-foreground">KPI-Übersicht – Organisation & Leistung</h2>
+                <h2 className="text-xl font-bold text-foreground">KPI-Dashboard – Organisation & Leistung</h2>
                 <p className="text-sm text-muted-foreground">Systembasierte Leistungsbewertung. Automatisiert. Objektiv.</p>
                 <div className="mt-2">
                     <Link href="/q-space/kpi-dashboard/formeln" className="text-sm text-primary hover:underline">
@@ -183,143 +258,43 @@ const KpiDashboard = () => {
 };
 
 
-const OverviewView = () => (
-    <div className="space-y-8">
-        <div>
-            <h2 className="text-xl font-bold text-foreground">Workspace</h2>
-            <p className="text-sm text-muted-foreground">Q-Space ist dein zentraler Arbeitsbereich für Dokumente, Nutzer und Zusammenarbeit.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-                <CardHeader><CardTitle>Dateien gesamt</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">1.250</p></CardContent>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Aktive Nutzer</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">14</p></CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle>Gruppen</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">5</p></CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle>Letzte Aktivitäten</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">32</p><p className="text-xs text-muted-foreground">in den letzten 24h</p></CardContent>
-            </Card>
-        </div>
-         <div>
-            <h3 className="text-lg font-bold text-foreground mb-4">Schnellaktionen</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outline">Dokument hochladen</Button>
-                <Button variant="outline">Ordner erstellen</Button>
-                <Button variant="outline">Nutzer anlegen</Button>
-                <Button variant="outline">Gruppe anlegen</Button>
-            </div>
-        </div>
-    </div>
-);
-
-const FilesView = () => (
+const AiMitarbeiterView = () => (
     <Card>
         <CardHeader>
-            <CardTitle>Dateien & Dokumente</CardTitle>
+            <CardTitle>KI-Mitarbeiter in Q-Space</CardTitle>
         </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Typ</TableHead>
-                        <TableHead>Besitzer</TableHead>
-                        <TableHead>Letzte Änderung</TableHead>
-                        <TableHead>Freigabe-Status</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockFiles.map(c => (
-                        <TableRow key={c.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{c.name}</TableCell>
-                            <TableCell>{c.type}</TableCell>
-                            <TableCell>{c.owner}</TableCell>
-                            <TableCell>{c.modified}</TableCell>
-                            <TableCell><Badge variant="outline">{c.shareStatus}</Badge></TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+        <CardContent className="space-y-4">
+            <p className="text-muted-foreground">KI-Mitarbeiter haben keine administrativen Rechte in Q-Space. Sie agieren als unterstützende Instanzen.</p>
+            <ul className="list-disc pl-5 space-y-2">
+                <li><strong className="text-foreground">KPI-Analyse:</strong> Die KI hilft bei der Auswertung und Interpretation von Leistungsdaten.</li>
+                <li><strong className="text-foreground">Eskalationsvorbereitung:</strong> Die KI bereitet die notwendigen Informationen und Gesprächsgrundlagen für Eskalationsfälle vor.</li>
+                <li><strong className="text-foreground">Gesprächsmoderation:</strong> Die KI kann als neutraler Moderator in Feedback- und Eskalationsgesprächen agieren.</li>
+            </ul>
+            <p className="font-bold text-primary pt-4">Wichtig: Die KI trifft keine endgültigen Entscheidungen.</p>
         </CardContent>
     </Card>
 );
 
-const UsersView = () => (
-    <Card>
-        <CardHeader><CardTitle>Nutzer</CardTitle></CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>E-Mail</TableHead><TableHead>Rolle</TableHead><TableHead>Status</TableHead><TableHead>Gruppen</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    {mockUsers.map(u => (
-                        <TableRow key={u.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{u.name}</TableCell>
-                            <TableCell>{u.email}</TableCell>
-                            <TableCell>{u.role}</TableCell>
-                            <TableCell><Badge variant={u.status === 'aktiv' ? 'default' : 'secondary'}>{u.status}</Badge></TableCell>
-                            <TableCell>{u.groups}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
-
-const GroupsView = () => (
-    <Card>
-        <CardHeader><CardTitle>Gruppen</CardTitle></CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader><TableRow><TableHead>Gruppenname</TableHead><TableHead>Mitglieder</TableHead><TableHead>Beschreibung</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    {mockGroups.map(g => (
-                        <TableRow key={g.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{g.name}</TableCell>
-                            <TableCell>{g.members}</TableCell>
-                            <TableCell>{g.description}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
-
-const ActivityView = () => (
-    <Card>
-        <CardHeader><CardTitle>Aktivitätsprotokoll</CardTitle></CardHeader>
-        <CardContent>
-             <Table>
-                <TableHeader><TableRow><TableHead>Nutzer</TableHead><TableHead>Aktion</TableHead><TableHead>Zeitstempel</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    {mockActivity.map(a => (
-                        <TableRow key={a.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{a.user}</TableCell>
-                            <TableCell>{a.action}</TableCell>
-                            <TableCell>{a.time}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-)
-
-const GenericView = ({ title }: { title: string }) => (
-    <Card>
+const SystemAdminView = () => (
+     <Card>
         <CardHeader>
-            <CardTitle>{title}</CardTitle>
+            <CardTitle>System Admin (Q-Space)</CardTitle>
         </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground italic">Ansicht für "{title}" wird aufgebaut.</p>
+        <CardContent className="space-y-4">
+            <h3 className="font-bold text-foreground">Funktionen</h3>
+            <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Nutzerverwaltung für Q-Space</li>
+                <li>Rollen- und Rechtevergabe</li>
+                <li>Bereichszuordnung</li>
+                <li>Sicherheitseinstellungen</li>
+                <li>Systemstatus und Monitoring</li>
+            </ul>
+             <h3 className="font-bold text-foreground pt-4">Einschränkungen</h3>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                <li>Kein Zugriff auf Billing-Informationen</li>
+                <li>Keine Konfiguration anderer Qore-Tools</li>
+                <li>Keine direkte Steuerung anderer Qore-Systeme</li>
+            </ul>
         </CardContent>
     </Card>
 );
@@ -329,24 +304,19 @@ export default function QSpacePage() {
 
     const renderModule = () => {
         switch (activeModule) {
-            case 'KPI-Dashboard': return <KpiDashboard />;
             case 'Übersicht': return <OverviewView />;
-            case 'Dateien & Dokumente': return <FilesView />;
-            case 'Nutzer': return <UsersView />;
-            case 'Gruppen': return <GroupsView />;
-            case 'Aktivitätsprotokoll': return <ActivityView />;
-            case 'Ordnerstruktur': return <GenericView title="Ordnerstruktur" />;
-            case 'Geteilt mit mir': return <GenericView title="Geteilt mit mir" />;
-            case 'Berechtigungen': return <GenericView title="Berechtigungen" />;
-            case 'Einstellungen': return <GenericView title="Einstellungen" />;
-            default: return <KpiDashboard />;
+            case 'Workspace': return <WorkspaceView />;
+            case 'KPI-Dashboard': return <KpiDashboard />;
+            case 'KI-Mitarbeiter': return <AiMitarbeiterView />;
+            case 'System Admin (Q-Space)': return <SystemAdminView />;
+            default: return <OverviewView />;
         }
     };
 
   return (
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
         {/* Left Sidebar for Modules */}
-        <aside className="w-56 border-r border-border pr-4 space-y-1">
+        <aside className="w-64 border-r border-border pr-4 space-y-1">
             <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">Q-Space</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
@@ -366,31 +336,6 @@ export default function QSpacePage() {
 
         {/* Main Area */}
         <main className="flex-1 pl-6 space-y-6">
-            {/* Topbar */}
-            <header className="flex justify-between items-center">
-                 <div className="relative w-96">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input type="text" placeholder="Dateien, Ordner, Nutzer durchsuchen..." className="pl-9 bg-input" />
-                </div>
-                <div className="flex items-center gap-3">
-                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                           <Button>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Erstellen
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Neue Datei</DropdownMenuItem>
-                            <DropdownMenuItem>Neuer Ordner</DropdownMenuItem>
-                            <DropdownMenuItem>Neuer Nutzer</DropdownMenuItem>
-                            <DropdownMenuItem>Neue Gruppe</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            </header>
-
-            {/* Module Content */}
             <div className="animate-in fade-in duration-300">
                 {renderModule()}
             </div>
