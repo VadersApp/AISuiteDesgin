@@ -41,6 +41,7 @@ import {
   Search as SearchIcon,
   Bot as BotIcon,
   X,
+  Send,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
