@@ -1,10 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PhoneIncoming, PhoneForwarded, Settings, BarChart2, Plus } from "lucide-react";
+import { PhoneIncoming, PhoneForwarded, Settings, BarChart2, Plus, Headset, Shield, TrendingUp, FileText } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+const serviceKpis = [
+  { title: "Anrufe heute", value: "72", icon: PhoneIncoming },
+  { title: "Deflection Rate", value: "89%", icon: Shield },
+  { title: "Eskalationsrate", value: "11%", icon: TrendingUp },
+  { title: "Erstellte Tickets", value: "64", icon: FileText },
+];
 
 export default function QcallPage() {
+  const [isServiceActive, setIsServiceActive] = useState(false);
+
   return (
     <div className="space-y-8">
       <header>
@@ -13,6 +25,53 @@ export default function QcallPage() {
         </h1>
         <p className="text-muted-foreground">Ihr entwickelter AI Telefonassistent für In- & Outbound.</p>
       </header>
+
+      {/* Digital Customer Service Card */}
+      <Card className="p-6">
+        <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center gap-4">
+               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
+                  <Headset className="w-6 h-6" />
+               </div>
+               <div>
+                  <h2 className="text-xl font-bold text-foreground">Digitaler Kundenservice</h2>
+                  <p className="text-sm text-muted-foreground">AI-basierter Telefon-Kundenservice mit Ticket-Dokumentation und Eskalation.</p>
+               </div>
+            </div>
+             <div className="flex items-center gap-3">
+               <Label htmlFor="service-active-switch" className="text-xs font-bold text-muted-foreground">
+                 {isServiceActive ? 'Aktiv' : 'Inaktiv'}
+               </Label>
+               <Switch
+                 id="service-active-switch"
+                 checked={isServiceActive}
+                 onCheckedChange={setIsServiceActive}
+               />
+            </div>
+        </div>
+        
+        {isServiceActive && (
+          <div className="mt-6 pt-6 border-t border-border animate-in fade-in duration-300">
+            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">Live-Analyse</h3>
+             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {serviceKpis.map(kpi => {
+                const Icon = kpi.icon;
+                return (
+                  <Card key={kpi.title} className="p-4 bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-background/50 rounded-lg text-muted-foreground"><Icon className="w-4 h-4" /></div>
+                      <div>
+                          <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
+                          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{kpi.title}</p>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Qcall - Inbound */}
