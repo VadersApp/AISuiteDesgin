@@ -38,7 +38,9 @@ import {
   ArrowRight,
   BarChart3,
   Briefcase,
-  Bot
+  Bot,
+  Building,
+  KeyRound
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -46,6 +48,8 @@ import { cn } from '@/lib/utils';
 import { kpiMitarbeiter, topKennzahlen } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 
 const modules = [
@@ -229,22 +233,22 @@ const KpiDashboard = () => {
                             {kpiMitarbeiter.map((m) => (
                                 <TableRow key={m.id} className="cursor-pointer hover:bg-accent/50">
                                     <TableCell className="font-medium">
-                                        <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`} className="hover:underline">{m.name}</Link>
+                                        <Link href={`/q-space/employees/${m.id}`} className="hover:underline">{m.name}</Link>
                                     </TableCell>
                                     <TableCell>{m.abteilung}</TableCell>
                                     <TableCell>{m.mitarbeitertyp}</TableCell>
                                     <TableCell className="font-mono font-bold">
-                                         <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`} className="hover:underline">{m.zWert}%</Link>
+                                         <Link href={`/q-space/employees/${m.id}`} className="hover:underline">{m.zWert}%</Link>
                                     </TableCell>
                                     <TableCell>
-                                        <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`}>
+                                        <Link href={`/q-space/employees/${m.id}`}>
                                             <Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge>
                                         </Link>
                                     </TableCell>
                                     <TableCell>{getTrendIcon(m.trend as any)}</TableCell>
                                     <TableCell>{m.letzteAbweichung}</TableCell>
                                     <TableCell>
-                                        <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`}>
+                                        <Link href={`/q-space/employees/${m.id}`}>
                                             <Badge variant={m.eskalation === 'Ja' ? 'destructive' : 'secondary'}>{m.eskalation}</Badge>
                                         </Link>
                                     </TableCell>
@@ -364,29 +368,120 @@ const MitarbeiterView = () => {
 };
 
 
-const SystemAdminView = () => (
-     <Card>
-        <CardHeader>
-            <CardTitle>System Admin (Q-Space)</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <h3 className="font-bold text-foreground">Funktionen</h3>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-                <li>Nutzerverwaltung für Q-Space</li>
-                <li>Rollen- und Rechtevergabe</li>
-                <li>Bereichszuordnung</li>
-                <li>Sicherheitseinstellungen</li>
-                <li>Systemstatus und Monitoring</li>
-            </ul>
-             <h3 className="font-bold text-foreground pt-4">Einschränkungen</h3>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                <li>Kein Zugriff auf Billing-Informationen</li>
-                <li>Keine Konfiguration anderer Qore-Tools</li>
-                <li>Keine direkte Steuerung anderer Qore-Systeme</li>
-            </ul>
-        </CardContent>
-    </Card>
-);
+const SystemAdminView = () => {
+    const adminTabs = [
+        { value: 'overview', label: 'Übersicht' },
+        { value: 'users', label: 'Benutzer' },
+        { value: 'teams-depts', label: 'Teams & Bereiche' },
+        { value: 'roles-rights', label: 'Rollen & Rechte' },
+        { value: 'kpi-policies', label: 'KPI-Richtlinien' },
+        { value: 'security', label: 'Sicherheit' },
+        { value: 'system-health', label: 'Systemzustand' },
+    ];
+    return (
+        <div>
+            <header className="mb-6">
+                <h2 className="text-xl font-bold text-foreground">System Admin (Q-Space)</h2>
+                <p className="text-sm text-muted-foreground">Administrative Steuerung von Q-Space.</p>
+            </header>
+            <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="mb-4">
+                    {adminTabs.map(tab => (
+                        <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                    ))}
+                </TabsList>
+
+                <TabsContent value="overview">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card><CardHeader><CardTitle>Aktive Nutzer</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{kpiMitarbeiter.length}</p></CardContent></Card>
+                        <Card><CardHeader><CardTitle>Teams</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.team))].length}</p></CardContent></Card>
+                        <Card><CardHeader><CardTitle>Bereiche</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.abteilung))].length}</p></CardContent></Card>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="users">
+                    <Card>
+                        <CardHeader><CardTitle>Benutzerverwaltung</CardTitle></CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Rolle</TableHead><TableHead>Team</TableHead><TableHead>Bereich</TableHead><TableHead>Aktiv</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {kpiMitarbeiter.map(user => (
+                                        <TableRow key={user.id}>
+                                            <TableCell>{user.name}</TableCell>
+                                            <TableCell><Select defaultValue={user.role}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Mitarbeiter">Mitarbeiter</SelectItem><SelectItem value="Teamleiter">Teamleiter</SelectItem></SelectContent></Select></TableCell>
+                                            <TableCell><Select defaultValue={user.team}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Core-Backend">Core-Backend</SelectItem><SelectItem value="Enterprise">Enterprise</SelectItem></SelectContent></Select></TableCell>
+                                            <TableCell><Select defaultValue={user.abteilung}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="IT">IT</SelectItem><SelectItem value="Vertrieb">Vertrieb</SelectItem></SelectContent></Select></TableCell>
+                                            <TableCell><Switch defaultChecked={true} /></TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="teams-depts">
+                    <div className="grid grid-cols-2 gap-6">
+                        <Card><CardHeader><CardTitle>Bereiche</CardTitle><Button size="sm" className="mt-2">Neuer Bereich</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Bereiche...</p></CardContent></Card>
+                        <Card><CardHeader><CardTitle>Teams</CardTitle><Button size="sm" className="mt-2">Neues Team</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Teams...</p></CardContent></Card>
+                    </div>
+                </TabsContent>
+
+                 <TabsContent value="roles-rights">
+                    <Card><CardHeader><CardTitle>Rollen & Rechte (Read-only)</CardTitle></CardHeader>
+                        <CardContent><p className="text-muted-foreground">Hier würde eine schreibgeschützte Übersicht der Berechtigungen pro Rolle angezeigt.</p></CardContent>
+                    </Card>
+                </TabsContent>
+                
+                <TabsContent value="kpi-policies">
+                    <Card>
+                        <CardHeader><CardTitle>KPI-Richtlinien</CardTitle><p className="text-sm text-muted-foreground">Nur für `exec` Rolle sichtbar/bearbeitbar.</p></CardHeader>
+                        <CardContent className="space-y-4">
+                           <div className="grid grid-cols-3 gap-4">
+                                <div><Label>OK-Schwelle (≥)</Label><Input type="number" defaultValue="90" className="bg-input"/></div>
+                                <div><Label>Beobachtungs-Schwelle (≥)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
+                                <div><Label>Eskalations-Schwelle (&lt;)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
+                           </div>
+                           <Separator/>
+                           <h4 className="font-bold">Abzugsparameter</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div><Label>Überfällig</Label><Input type="number" defaultValue="2" className="bg-input"/></div>
+                                <div><Label>Verspätet</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
+                                <div><Label>Blockiert</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
+                                <div><Label>SOP-Abweichung</Label><Input type="number" defaultValue="3" className="bg-input"/></div>
+                                <div><Label>Projektverzug</Label><Input type="number" defaultValue="4" className="bg-input"/></div>
+                           </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="security">
+                     <Card>
+                        <CardHeader><CardTitle>Sicherheit</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Card className="p-4"><h4 className="font-bold">Rollenverteilung</h4><p>5 Mitarbeiter, 2 Teamleiter...</p></Card>
+                                <Card className="p-4"><h4 className="font-bold">Letztes Audit-Event</h4><p>Nutzer `space_admin` hat Rolle von `Ben Weber` geändert.</p></Card>
+                            </div>
+                        </CardContent>
+                     </Card>
+                </TabsContent>
+
+                 <TabsContent value="system-health">
+                     <Card>
+                        <CardHeader><CardTitle>Systemzustand</CardTitle></CardHeader>
+                        <CardContent className="grid grid-cols-3 gap-4">
+                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">KPI Engine</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
+                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Eskalations-Service</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
+                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Datenkonsistenz</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
+                        </CardContent>
+                     </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+}
 
 export default function QSpacePage() {
     const [activeModule, setActiveModule] = useState(modules[0].name);
