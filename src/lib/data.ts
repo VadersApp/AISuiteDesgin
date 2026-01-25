@@ -463,10 +463,10 @@ export function getDynamicQalenderBookings() {
 
 
 export const kpiMitarbeiter = [
-    { id: 'ben-weber', role: 'Developer', name: 'Ben Weber', abteilung: 'IT', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72 },
-    { id: 'anna-schmidt', role: 'Sales Manager', name: 'Anna Schmidt', abteilung: 'Vertrieb', mitarbeitertyp: 'Mensch', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81 },
-    { id: 'sophie-lang', role: 'Marketing Manager', name: 'Sophie Lang', abteilung: 'Marketing', mitarbeitertyp: 'Mensch', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83 },
-    { id: 'dr-mueller', role: 'CEO', name: 'Dr. Müller', abteilung: 'Geschäftsführung', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95 },
+    { id: 'ben-weber', role: 'Developer', name: 'Ben Weber', abteilung: 'IT', team: 'Core-Backend', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72, activeTasks: 8, activeProjects: 2, overdueTasks: 3, blockedTasks: 1, kpiBreakdown: [{deduction: 7, reason: 'Deployment-Verzug (+3 Tage)'}, {deduction: 2, reason: '2 überfällige Aufgaben'}] },
+    { id: 'anna-schmidt', role: 'Sales Manager', name: 'Anna Schmidt', abteilung: 'Vertrieb', team: 'Enterprise', mitarbeitertyp: 'Mensch', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81, activeTasks: 5, activeProjects: 3, overdueTasks: 1, blockedTasks: 0, kpiBreakdown: [{deduction: 3, reason: 'Zielverfehlung Q4 (-15%)'}] },
+    { id: 'sophie-lang', role: 'Marketing Manager', name: 'Sophie Lang', abteilung: 'Marketing', team: 'Performance', mitarbeitertyp: 'Mensch', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83, activeTasks: 3, activeProjects: 1, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [{deduction: 2, reason: 'Budgetüberschreitung (+5%)'}] },
+    { id: 'dr-mueller', role: 'CEO', name: 'Dr. Müller', abteilung: 'Geschäftsführung', team: 'Management', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95, activeTasks: 2, activeProjects: 4, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
 ].sort((a, b) => a.zWert - b.zWert);
 
 export const gesamtZufriedenheit = Math.round(kpiMitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / kpiMitarbeiter.length);

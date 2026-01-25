@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,13 +45,14 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { kpiMitarbeiter, topKennzahlen } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const modules = [
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'Workspace', icon: Briefcase },
     { name: 'KPI-Dashboard', icon: BarChart3 },
-    { name: 'KI-Mitarbeiter', icon: Bot },
+    { name: 'Mitarbeiter', icon: Users },
     { name: 'System Admin (Q-Space)', icon: Settings },
 ];
 
@@ -257,23 +258,111 @@ const KpiDashboard = () => {
     );
 };
 
+const MitarbeiterView = () => {
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [teamFilter, setTeamFilter] = useState('all');
+    const [escalationFilter, setEscalationFilter] = useState('all');
+    const [searchTerm, setSearchTerm] = useState('');
 
-const AiMitarbeiterView = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>KI-Mitarbeiter in Q-Space</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <p className="text-muted-foreground">KI-Mitarbeiter haben keine administrativen Rechte in Q-Space. Sie agieren als unterstützende Instanzen.</p>
-            <ul className="list-disc pl-5 space-y-2">
-                <li><strong className="text-foreground">KPI-Analyse:</strong> Die KI hilft bei der Auswertung und Interpretation von Leistungsdaten.</li>
-                <li><strong className="text-foreground">Eskalationsvorbereitung:</strong> Die KI bereitet die notwendigen Informationen und Gesprächsgrundlagen für Eskalationsfälle vor.</li>
-                <li><strong className="text-foreground">Gesprächsmoderation:</strong> Die KI kann als neutraler Moderator in Feedback- und Eskalationsgesprächen agieren.</li>
-            </ul>
-            <p className="font-bold text-primary pt-4">Wichtig: Die KI trifft keine endgültigen Entscheidungen.</p>
-        </CardContent>
-    </Card>
-);
+    const teams = useMemo(() => [...new Set(kpiMitarbeiter.map(m => m.team))], []);
+    const departments = useMemo(() => [...new Set(kpiMitarbeiter.map(m => m.abteilung))], []);
+
+    const filteredMitarbeiter = useMemo(() => {
+        return kpiMitarbeiter.filter(m => {
+            if (statusFilter !== 'all' && m.status !== statusFilter) return false;
+            if (teamFilter !== 'all' && m.team !== teamFilter) return false;
+            if (escalationFilter === 'yes' && m.eskalation !== 'Ja') return false;
+            if (searchTerm && !m.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+            return true;
+        });
+    }, [statusFilter, teamFilter, escalationFilter, searchTerm]);
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Stabil': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            case 'Beobachtung': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            case 'Warnung': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+            case 'Eskalation': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            default: return 'bg-slate-500/10 text-slate-400';
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <header>
+                <h2 className="text-xl font-bold text-foreground">Mitarbeiter</h2>
+                <p className="text-sm text-muted-foreground">Arbeits- und Leistungsübersicht Ihrer Mitarbeiter.</p>
+            </header>
+            <Card>
+                <CardHeader>
+                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                        <CardTitle>Mitarbeiterübersicht</CardTitle>
+                        <div className="flex items-center gap-2 flex-wrap">
+                             <Input placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full md:w-48 bg-input" />
+                             <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Status" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle Status</SelectItem>
+                                    <SelectItem value="Stabil">Stabil</SelectItem>
+                                    <SelectItem value="Beobachtung">Beobachtung</SelectItem>
+                                    <SelectItem value="Warnung">Warnung</SelectItem>
+                                    <SelectItem value="Eskalation">Eskalation</SelectItem>
+                                </SelectContent>
+                             </Select>
+                             <Select value={teamFilter} onValueChange={setTeamFilter}>
+                                <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Team" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle Teams</SelectItem>
+                                    {teams.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                </SelectContent>
+                             </Select>
+                             <Select value={escalationFilter} onValueChange={setEscalationFilter}>
+                                <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Eskalation" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle</SelectItem>
+                                    <SelectItem value="yes">Nur Eskalationen</SelectItem>
+                                </SelectContent>
+                             </Select>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Rolle</TableHead>
+                                <TableHead>Team</TableHead>
+                                <TableHead>Bereich</TableHead>
+                                <TableHead>KPI Score</TableHead>
+                                <TableHead>KPI Status</TableHead>
+                                <TableHead>Aktive Aufgaben</TableHead>
+                                <TableHead>Aktive Projekte</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {filteredMitarbeiter.map(m => (
+                            <TableRow key={m.id} className="cursor-pointer hover:bg-accent/50">
+                                <TableCell className="font-medium">
+                                    <Link href={`/q-space/employees/${m.id}`} className="hover:underline">{m.name}</Link>
+                                </TableCell>
+                                <TableCell className="text-xs">{m.role}</TableCell>
+                                <TableCell>{m.team}</TableCell>
+                                <TableCell>{m.abteilung}</TableCell>
+                                <TableCell className="font-mono font-bold text-sm">{m.zWert}%</TableCell>
+                                <TableCell><Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge></TableCell>
+                                <TableCell className="text-center">{m.activeTasks}</TableCell>
+                                <TableCell className="text-center">{m.activeProjects}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
 
 const SystemAdminView = () => (
      <Card>
@@ -307,7 +396,7 @@ export default function QSpacePage() {
             case 'Übersicht': return <OverviewView />;
             case 'Workspace': return <WorkspaceView />;
             case 'KPI-Dashboard': return <KpiDashboard />;
-            case 'KI-Mitarbeiter': return <AiMitarbeiterView />;
+            case 'Mitarbeiter': return <MitarbeiterView />;
             case 'System Admin (Q-Space)': return <SystemAdminView />;
             default: return <OverviewView />;
         }
