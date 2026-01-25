@@ -53,6 +53,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useSidebar } from '@/components/ui/sidebar';
 
 
 const modules = [
@@ -661,6 +662,7 @@ export default function QSpacePage() {
 
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [activeChatThread, setActiveChatThread] = useState<string | null>(null);
+    const { state, isMobile } = useSidebar();
 
     const renderModule = () => {
         switch (activeModule) {
@@ -735,7 +737,10 @@ export default function QSpacePage() {
           setActiveChatThread(null);
           setIsChatOpen(true);
         }}
-        className="fixed bottom-6 left-6 h-14 w-14 rounded-full shadow-2xl z-40"
+        className={cn(
+            "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-200 ease-linear",
+            isMobile ? "left-6" : state === "collapsed" ? "left-[calc(3rem+1.5rem)]" : "left-[calc(18rem+1.5rem)]"
+        )}
       >
         <MessageSquare />
          {totalUnread > 0 && (

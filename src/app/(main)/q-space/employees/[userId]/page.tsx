@@ -41,6 +41,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSidebar } from '@/components/ui/sidebar';
 
 const ChatInbox = ({
   isOpen,
@@ -252,6 +253,7 @@ export default function MitarbeiterDetailPage() {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeChatThread, setActiveChatThread] = useState<string | null>(null);
+  const { state, isMobile } = useSidebar();
 
   const handleOpenChat = (threadId: string | null) => {
     setActiveChatThread(threadId);
@@ -531,7 +533,10 @@ export default function MitarbeiterDetailPage() {
           setActiveChatThread(null);
           setIsChatOpen(true);
         }}
-        className="fixed bottom-6 left-6 h-14 w-14 rounded-full shadow-2xl z-40"
+        className={cn(
+            "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-200 ease-linear",
+            isMobile ? "left-6" : state === "collapsed" ? "left-[calc(3rem+1.5rem)]" : "left-[calc(18rem+1.5rem)]"
+        )}
       >
         <MessageSquare />
          {totalUnread > 0 && (
