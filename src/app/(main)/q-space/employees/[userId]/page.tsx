@@ -23,7 +23,8 @@ import {
   CircleOff,
   UserCheck as UserCheckIcon,
   Users as UsersIcon,
-  Flame
+  Flame,
+  HeartPulse
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';

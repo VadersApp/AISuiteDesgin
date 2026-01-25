@@ -55,7 +55,7 @@ export default function WarnungenPage() {
             <TableCell>Management</TableCell>
             <TableCell className="text-right">
               <Button asChild size="sm">
-                <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`}>Details</Link>
+                <Link href={`/q-space/employees/${m.id}`}>Details</Link>
               </Button>
             </TableCell>
           </TableRow>

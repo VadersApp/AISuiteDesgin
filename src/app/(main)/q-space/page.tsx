@@ -23,12 +23,12 @@ import {
   LayoutDashboard,
   FileText,
   Users,
-  ShieldCheck,
   Activity,
   Settings,
   Search,
   Plus,
-  Kanban,
+  Briefcase,
+  BarChart3,
   HeartPulse,
   UserCheck,
   AlertTriangle,
@@ -36,14 +36,8 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowRight,
-  BarChart3,
-  Briefcase,
-  Bot,
-  Building,
-  KeyRound
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { kpiMitarbeiter, topKennzahlen } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -72,9 +66,6 @@ const mockDocuments = [
 ];
 const mockSops = [
     { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
-];
-const mockActivities = [
-    { id: 1, text: "Ben Weber hat das Projekt 'Rollout neue CRM-Software' aktualisiert.", time: "vor 5 Min."}
 ];
 
 const OverviewView = () => (
@@ -269,7 +260,6 @@ const MitarbeiterView = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const teams = useMemo(() => [...new Set(kpiMitarbeiter.map(m => m.team))], []);
-    const departments = useMemo(() => [...new Set(kpiMitarbeiter.map(m => m.abteilung))], []);
 
     const filteredMitarbeiter = useMemo(() => {
         return kpiMitarbeiter.filter(m => {
@@ -443,7 +433,6 @@ const SystemAdminView = () => {
                                 <div><Label>Beobachtungs-Schwelle (≥)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
                                 <div><Label>Eskalations-Schwelle (&lt;)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
                            </div>
-                           <Separator/>
                            <h4 className="font-bold">Abzugsparameter</h4>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 <div><Label>Überfällig</Label><Input type="number" defaultValue="2" className="bg-input"/></div>
@@ -520,6 +509,28 @@ export default function QSpacePage() {
 
         {/* Main Area */}
         <main className="flex-1 pl-6 space-y-6">
+             <header className="flex justify-between items-center">
+                 <div className="relative w-96">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input type="text" placeholder="Q-Space durchsuchen..." className="pl-9 bg-input" />
+                </div>
+                <div className="flex items-center gap-3">
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                           <Button>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Erstellen
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Neue Aufgabe</DropdownMenuItem>
+                            <DropdownMenuItem>Neues Projekt</DropdownMenuItem>
+                            <DropdownMenuItem>Neues Dokument</DropdownMenuItem>
+                             <DropdownMenuItem>Neue SOP</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </header>
             <div className="animate-in fade-in duration-300">
                 {renderModule()}
             </div>

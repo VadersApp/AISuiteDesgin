@@ -64,7 +64,7 @@ export default function GruenerBereichPage() {
               {gruenerBereich.map((m) => (
                 <TableRow key={m.id} className="cursor-pointer hover:bg-accent/50">
                    <TableCell className="font-medium">
-                     <Link href={`/q-space/kpi-dashboard/mitarbeiter/${m.id}`} className="hover:underline">{m.name}</Link>
+                     <Link href={`/q-space/employees/${m.id}`} className="hover:underline">{m.name}</Link>
                    </TableCell>
                   <TableCell>{m.abteilung}</TableCell>
                   <TableCell className="font-mono font-bold">{m.zWert}%</TableCell>
