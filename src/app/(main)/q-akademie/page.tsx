@@ -402,7 +402,6 @@ const QOnboardingView = () => (
 );
 
 const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void }) => {
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
     return (
     <div>
         <Tabs defaultValue="unternehmenskurse" className="w-full">
@@ -412,12 +411,7 @@ const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void
                     <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
                     <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
                 </TabsList>
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                       <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
-                    </DialogTrigger>
-                    <DialogContent><DialogHeader><DialogTitle>Kurs erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent>
-                </Dialog>
+                <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
             </div>
             <TabsContent value="q-kurse">
                 <div className="text-center py-12 text-muted-foreground italic">Keine Q-Kurse verfügbar.</div>
@@ -541,19 +535,13 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => {
 
 const LearningPathsView = () => {
     const [feedbackItem, setFeedbackItem] = useState<any | null>(null);
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     return (
     <>
         <Card>
             <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>Lernpfade</CardTitle>
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
-                    </DialogTrigger>
-                     <DialogContent><DialogHeader><DialogTitle>Lernpfad erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent>
-                </Dialog>
+                <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -583,17 +571,11 @@ const LearningPathsView = () => {
 
 
 const ParticipantsView = () => {
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
     return (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Teilnehmer</CardTitle>
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
-                </DialogTrigger>
-                <DialogContent><DialogHeader><DialogTitle>Teilnehmer hinzufügen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent>
-            </Dialog>
+            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
         </CardHeader>
         <CardContent>
             <Table>
@@ -615,17 +597,11 @@ const ParticipantsView = () => {
 };
 
 const CertificatesView = () => {
-    const [isCreateOpen, setIsCreateOpen] = useState(false);
     return (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Zertifikate</CardTitle>
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Zertifikat erstellen</Button>
-                </DialogTrigger>
-                <DialogContent><DialogHeader><DialogTitle>Zertifikat erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent>
-            </Dialog>
+            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Zertifikat erstellen</Button>
         </CardHeader>
         <CardContent>
             <Table>
@@ -924,19 +900,13 @@ const SettingsView = () => {
 
 
 const GenericView = ({ title }: { title: string }) => {
-     const [isOpen, setIsOpen] = useState(false);
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{title}</CardTitle>
-                <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="outline">
-                            <Plus className="mr-2 h-4 w-4" /> Erstellen
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent><DialogHeader><DialogTitle>{title} erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent>
-                </Dialog>
+                <Button variant="outline">
+                    <Plus className="mr-2 h-4 w-4" /> Erstellen
+                </Button>
             </CardHeader>
             <CardContent>
                 <p className="text-muted-foreground italic">Ansicht für "{title}" wird aufgebaut.</p>
@@ -1215,4 +1185,3 @@ export default function QAkademiePage() {
         </div>
     );
 }
-```
