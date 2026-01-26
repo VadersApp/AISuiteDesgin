@@ -893,3 +893,9 @@ export const mockDocs = [
         },
     }
 ];
+
+export const mockTasks = Object.values(tasksMockByDepartment).flat().map((task, index) => ({
+  ...(task as any),
+  id: `task-mock-${index + 1}`,
+  owner: (task as any).agent,
+}));
