@@ -71,9 +71,9 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockTasks } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockTasks, mockSops, mockProjects } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -91,16 +91,6 @@ const modules = [
     { name: 'System Admin (Q-Space)', icon: Settings },
 ];
 
-const mockProjects = [
-    { id: 1, name: "Rollout neue CRM-Software", owner: "Ben Weber", status: "Aktiv" }
-];
-
-const mockSops = [
-    { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
-];
-
-const mockDocs = allMockDocs;
-
 const mockUploadJob = {
     uploadJobId: 'upload-xyz-123',
     status: 'needs_review',
@@ -117,9 +107,10 @@ const mockUploadJob = {
     }
 };
 
-const OverviewView = () => {
-    const aktiveEskalationen = kpiMitarbeiter.filter(m => m.status === 'Eskalation').length;
-    const mitarbeiterWatch = kpiMitarbeiter.filter(m => m.status === 'Beobachtung').length;
+const OverviewView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
+    
+    const aktiveEskalationen = filteredKpiMitarbeiter.filter(m => m.status === 'Eskalation').length;
+    const mitarbeiterWatch = filteredKpiMitarbeiter.filter(m => m.status === 'Beobachtung').length;
     let risikoStatus = 'OK';
     let risikoStatusColorClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
     if (aktiveEskalationen > 0) {
@@ -130,8 +121,8 @@ const OverviewView = () => {
         risikoStatusColorClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
     }
 
-    const aufgabenHeute = mockTasks.filter(t => t.due === 'Heute').length;
-    const aufgabenUeberfaellig = mockTasks.filter(t => t.status === 'Überfällig').length;
+    const aufgabenHeute = filteredTasks.filter(t => t.due === 'Heute').length;
+    const aufgabenUeberfaellig = filteredTasks.filter(t => t.status === 'Überfällig').length;
     const aufgabenBlockiert = 0; // No data in mock
     let arbeitslastStatus = 'Im Rahmen';
     let arbeitslastColorClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
@@ -143,8 +134,9 @@ const OverviewView = () => {
         arbeitslastColorClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
     }
 
-    const unreadThreads = chatThreads.filter(t => !t.isArchived && ['task', 'project', 'escalation', 'thread'].includes(t.contextType)).reduce((sum, t) => sum + (t.unreadCount || 0), 0);
-    const escalationThreads = chatThreads.filter(t => !t.isArchived && t.contextType === 'escalation').length;
+    const unreadThreads = filteredChatThreads.filter(t => !t.isArchived && ['task', 'project', 'escalation', 'thread'].includes(t.contextType)).reduce((sum, t) => sum + (t.unreadCount || 0), 0);
+    const escalationThreads = filteredChatThreads.filter(t => !t.isArchived && t.contextType === 'escalation').length;
+    const ownKpi = kpiMitarbeiter.find(m => m.id === currentUser.id);
 
     return (
         <div className="space-y-6">
@@ -152,15 +144,15 @@ const OverviewView = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                     <CardHeader><CardTitle>Meine Aufgaben Heute</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold">1</p></CardContent>
+                    <CardContent><p className="text-4xl font-bold">{aufgabenHeute}</p></CardContent>
                 </Card>
                 <Card>
                     <CardHeader><CardTitle>Überfällige Aufgaben</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold text-rose-400">1</p></CardContent>
+                    <CardContent><p className="text-4xl font-bold text-rose-400">{aufgabenUeberfaellig}</p></CardContent>
                 </Card>
                 <Card>
                     <CardHeader><CardTitle>Mein KPI-Status</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold text-emerald-400">95%</p></CardContent>
+                    <CardContent><p className="text-4xl font-bold text-emerald-400">{ownKpi?.zWert || 'N/A'}%</p></CardContent>
                 </Card>
             </div>
             
@@ -265,8 +257,8 @@ const OverviewView = () => {
     );
 };
 
-const DocumentsView = () => {
-    const [selectedDept, setSelectedDept] = useState('all');
+const DocumentsView = ({ currentUser, filteredDocs, filteredFolders } : { currentUser: any, filteredDocs: any[], filteredFolders: any[]}) => {
+    const [selectedDept, setSelectedDept] = useState(currentUser.role === 'exec' ? 'all' : currentUser.abteilung);
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
     const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
     const [uploadMode, setUploadMode] = useState(false);
@@ -291,22 +283,22 @@ const DocumentsView = () => {
         return uniqueDepts.sort();
     }, []);
 
-    const filteredDocs = useMemo(() => {
-        return mockDocs.filter(doc => {
+    const finalFilteredDocs = useMemo(() => {
+        return filteredDocs.filter(doc => {
             const inDept = selectedDept === 'all' || doc.deptId === selectedDept;
             const inFolder = selectedFolderId === null || doc.folderId === selectedFolderId;
             const matchesSearch = searchTerm === '' || doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || doc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
             return inDept && inFolder && matchesSearch;
         })
-    }, [selectedDept, selectedFolderId, searchTerm]);
+    }, [filteredDocs, selectedDept, selectedFolderId, searchTerm]);
 
     const renderFolders = (parentId: string | null) => {
-        const foldersToRender = docFolders
-            .filter(f => f.parentFolderId === parentId && (selectedDept === 'all' || f.deptId === selectedDept || f.deptId === 'company'))
+        const foldersToRender = filteredFolders
+            .filter(f => f.parentFolderId === parentId && (selectedDept === 'all' || f.deptId === selectedDept || f.deptId === 'Geschäftsführung'))
             .sort((a, b) => a.name.localeCompare(b.name));
         
         return foldersToRender.map(folder => {
-            const hasChildren = docFolders.some(child => child.parentFolderId === folder.id);
+            const hasChildren = filteredFolders.some(child => child.parentFolderId === folder.id);
             const isExpanded = expandedFolders.has(folder.id);
     
             return (
@@ -343,13 +335,10 @@ const DocumentsView = () => {
             );
         });
     };
-    
-    // Recursive function to render folders
-    
 
     const handleFinalizeUpload = () => {
         // Mock finalization
-        const uploadedDoc = mockDocs.find(d => d.fileName === mockUploadJob.fileName);
+        const uploadedDoc = allMockDocs.find(d => d.fileName === mockUploadJob.fileName);
         if (uploadedDoc) {
             setSelectedDoc(uploadedDoc);
         }
@@ -361,10 +350,10 @@ const DocumentsView = () => {
             {/* Left: Folder Tree */}
             <Card className="col-span-3 flex flex-col">
                 <CardHeader className="p-4 border-b">
-                    <Select value={selectedDept} onValueChange={setSelectedDept}>
+                    <Select value={selectedDept} onValueChange={setSelectedDept} disabled={currentUser.role !== 'exec'}>
                         <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">Alle Bereiche</SelectItem>
+                            {currentUser.role === 'exec' && <SelectItem value="all">Alle Bereiche</SelectItem>}
                             {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                         </SelectContent>
                     </Select>
@@ -383,14 +372,14 @@ const DocumentsView = () => {
             <Card className="col-span-5 flex flex-col">
                 <CardHeader className="p-4 border-b">
                     <div className="flex justify-between items-center">
-                        <h3 className="font-bold">Dokumente ({filteredDocs.length})</h3>
+                        <h3 className="font-bold">Dokumente ({finalFilteredDocs.length})</h3>
                         <Button size="sm" onClick={() => { setUploadMode(true); setSelectedDoc(null); }}><Upload className="w-4 h-4 mr-2" /> Hochladen</Button>
                     </div>
                      <Input placeholder="Dokumente durchsuchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="mt-2 bg-input" />
                 </CardHeader>
                 <ScrollArea className="flex-1">
                     <div className="p-2 space-y-2">
-                        {filteredDocs.map(doc => (
+                        {finalFilteredDocs.map(doc => (
                              <div key={doc.id} onClick={() => { setSelectedDoc(doc); setUploadMode(false); }} className={cn("p-3 rounded-lg border cursor-pointer", selectedDoc?.id === doc.id ? 'bg-muted border-primary/50' : 'bg-card hover:bg-muted/50')}>
                                 <div className="flex items-start justify-between">
                                     <p className="font-bold text-sm text-foreground line-clamp-1 flex items-center gap-2">
@@ -531,7 +520,7 @@ const DocumentsView = () => {
 }
 
 
-const WorkspaceView = () => (
+const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredSops, filteredDocs, filteredFolders } : { currentUser: any, filteredTasks: any[], filteredProjects: any[], filteredSops: any[], filteredDocs: any[], filteredFolders: any[]}) => (
     <div>
         <h2 className="text-xl font-bold text-foreground mb-4">Workspace</h2>
         <Tabs defaultValue="aufgaben">
@@ -544,24 +533,24 @@ const WorkspaceView = () => (
             <TabsContent value="aufgaben" className="mt-4">
                 <Card><CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader><CardContent>
                     <Table><TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead><TableHead>Priorität</TableHead><TableHead>Fällig</TableHead></TableRow></TableHeader>
-                        <TableBody>{mockTasks.map(t => (<TableRow key={t.id}><TableCell>{t.title}</TableCell><TableCell>{t.owner}</TableCell><TableCell>{t.status}</TableCell><TableCell>{t.prio}</TableCell><TableCell>{t.due}</TableCell></TableRow>))}</TableBody>
+                        <TableBody>{filteredTasks.map(t => (<TableRow key={t.id}><TableCell>{t.title}</TableCell><TableCell>{t.owner}</TableCell><TableCell>{t.status}</TableCell><TableCell>{t.prio}</TableCell><TableCell>{t.due}</TableCell></TableRow>))}</TableBody>
                     </Table>
                 </CardContent></Card>
             </TabsContent>
             <TabsContent value="projekte" className="mt-4">
                 <Card><CardHeader><CardTitle>Projekte</CardTitle></CardHeader><CardContent>
                      <Table><TableHeader><TableRow><TableHead>Projektname</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                        <TableBody>{mockProjects.map(p => (<TableRow key={p.id}><TableCell>{p.name}</TableCell><TableCell>{p.owner}</TableCell><TableCell>{p.status}</TableCell></TableRow>))}</TableBody>
+                        <TableBody>{filteredProjects.map(p => (<TableRow key={p.id}><TableCell>{p.name}</TableCell><TableCell>{p.owner}</TableCell><TableCell>{p.status}</TableCell></TableRow>))}</TableBody>
                     </Table>
                 </CardContent></Card>
             </TabsContent>
             <TabsContent value="dokumente" className="mt-4">
-                <DocumentsView />
+                <DocumentsView currentUser={currentUser} filteredDocs={filteredDocs} filteredFolders={filteredFolders} />
             </TabsContent>
             <TabsContent value="sops" className="mt-4">
                 <Card><CardHeader><CardTitle>Arbeitsanweisungen</CardTitle></CardHeader><CardContent>
                     <Table><TableHeader><TableRow><TableHead>Titel der Arbeitsanweisung</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                        <TableBody>{mockSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
+                        <TableBody>{filteredSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
                     </Table>
                 </CardContent></Card>
             </TabsContent>
@@ -569,8 +558,21 @@ const WorkspaceView = () => (
     </div>
 );
 
-const KpiDashboard = () => {
+const KpiDashboard = ({ mitarbeiter } : { mitarbeiter: any[]}) => {
     
+    const gesamtZufriedenheit = Math.round(mitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / (mitarbeiter.length || 1));
+    const gruenerBereichCount = mitarbeiter.filter(m => m.zWert >= 90).length;
+    const aktiveWarnungenCount = mitarbeiter.filter(m => m.zWert >= 70 && m.zWert < 80).length;
+    const beobachtungCount = mitarbeiter.filter(m => m.zWert >= 80 && m.zWert < 90).length;
+    const aktiveEskalationenCount = mitarbeiter.filter(m => m.zWert < 70).length;
+
+    const filteredTopKennzahlen = [
+        { title: 'Ø Zufriedenheit gesamt', value: `${gesamtZufriedenheit}%`, icon: 'HeartPulse', color: 'blue', href: '/q-space/kpi-dashboard/zufriedenheit' },
+        { title: 'Mitarbeiter im grünen Bereich', value: gruenerBereichCount, icon: 'UserCheck', color: 'emerald', href: '/q-space/kpi-dashboard/gruen' },
+        { title: 'Aktive Warnungen', value: aktiveWarnungenCount + beobachtungCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
+        { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
+    ];
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'Stabil': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
@@ -607,7 +609,7 @@ const KpiDashboard = () => {
             </header>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {topKennzahlen.map((kpi, index) => {
+                {filteredTopKennzahlen.map((kpi, index) => {
                     const Icon = iconMap[kpi.icon];
                     return (
                         <Link href={kpi.href} key={index}>
@@ -646,7 +648,7 @@ const KpiDashboard = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {kpiMitarbeiter.map((m) => (
+                            {mitarbeiter.map((m) => (
                                 <TableRow key={m.id} className="cursor-pointer hover:bg-accent/50">
                                     <TableCell className="font-medium">
                                         <Link href={`/q-space/employees/${m.id}`} className="hover:underline">{m.name}</Link>
@@ -678,7 +680,7 @@ const KpiDashboard = () => {
     );
 };
 
-const MitarbeiterView = () => {
+const MitarbeiterView = ({ mitarbeiter }: { mitarbeiter: any[]}) => {
     const { toast } = useToast();
     const [statusFilter, setStatusFilter] = useState('all');
     const [teamFilter, setTeamFilter] = useState('all');
@@ -703,14 +705,14 @@ const MitarbeiterView = () => {
 
 
     const filteredMitarbeiter = useMemo(() => {
-        return kpiMitarbeiter.filter(m => {
+        return mitarbeiter.filter(m => {
             if (statusFilter !== 'all' && m.status !== statusFilter) return false;
             if (teamFilter !== 'all' && m.team !== teamFilter) return false;
             if (escalationFilter === 'yes' && m.eskalation !== 'Ja') return false;
             if (searchTerm && !m.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
             return true;
         });
-    }, [statusFilter, teamFilter, escalationFilter, searchTerm]);
+    }, [mitarbeiter, statusFilter, teamFilter, escalationFilter, searchTerm]);
     
     const handleCreateInvite = (e: FormEvent) => {
         e.preventDefault();
@@ -1066,19 +1068,82 @@ export default function QSpacePage() {
   const pathname = usePathname();
   const router = useRouter();
 
+  // Simulate the currently logged-in user. In a real app, this would come from an auth context.
+  const [currentUserId, setCurrentUserId] = useState('ben-weber');
+  const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
+
+  // DERIVED DATA BASED ON USER ROLE
+  const filteredKpiMitarbeiter = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return kpiMitarbeiter;
+    if (currentUser.role === 'dept_head') return kpiMitarbeiter.filter(m => m.abteilung === currentUser.abteilung);
+    if (currentUser.role === 'team_lead') return kpiMitarbeiter.filter(m => m.team === currentUser.team);
+    return kpiMitarbeiter.filter(m => m.id === currentUser.id);
+  }, [currentUser]);
+
+  const filteredChatThreads = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return chatThreads;
+    return chatThreads.filter(t => t.participants.includes(currentUser.id));
+  }, [currentUser]);
+
+  const tasksWithDept = useMemo(() => mockTasks.map(t => {
+      const owner = kpiMitarbeiter.find(m => m.name === t.owner);
+      return {...t, deptId: owner?.abteilung, ownerId: owner?.id };
+  }), []);
+
+  const filteredTasks = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return tasksWithDept;
+    return tasksWithDept.filter(t => t.deptId === currentUser.abteilung || t.ownerId === currentUser.id);
+  }, [currentUser, tasksWithDept]);
+
+  const projectsWithDept = useMemo(() => mockProjects.map(p => {
+    const owner = kpiMitarbeiter.find(m => m.name === p.owner);
+    return {...p, deptId: owner?.abteilung, ownerId: owner?.id };
+  }), []);
+
+  const filteredProjects = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return projectsWithDept;
+    return projectsWithDept.filter(p => p.deptId === currentUser.abteilung || p.ownerId === currentUser.id);
+  }, [currentUser, projectsWithDept]);
+
+  const filteredSops = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return mockSops;
+    return mockSops.filter(s => s.deptId === currentUser.abteilung);
+  }, [currentUser]);
+
+  const filteredDocs = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return allMockDocs;
+    return allMockDocs.filter(doc => doc.deptId === currentUser.abteilung || doc.ownerUserId === currentUser.id);
+  }, [currentUser]);
+  
+  const filteredFolders = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return docFolders;
+    return docFolders.filter(folder => folder.deptId === currentUser.abteilung || folder.deptId === 'Geschäftsführung');
+  }, [currentUser]);
+
   const totalUnread = chatThreads.reduce(
       (sum, t) => sum + (t.unreadCount || 0),
       0
     );
 
+  if (!currentUser) {
+    return <div className="p-8">Benutzer wird geladen oder konnte nicht gefunden werden...</div>;
+  }
+
   const renderModule = () => {
       switch (activeModule) {
-          case 'Übersicht': return <OverviewView />;
-          case 'Workspace': return <WorkspaceView />;
-          case 'KPI-Dashboard': return <KpiDashboard />;
-          case 'Mitarbeiter': return <MitarbeiterView />;
+          case 'Übersicht': return <OverviewView currentUser={currentUser} filteredKpiMitarbeiter={filteredKpiMitarbeiter} filteredChatThreads={filteredChatThreads} filteredTasks={filteredTasks} />;
+          case 'Workspace': return <WorkspaceView currentUser={currentUser} filteredTasks={filteredTasks} filteredProjects={filteredProjects} filteredSops={filteredSops} filteredDocs={filteredDocs} filteredFolders={filteredFolders} />;
+          case 'KPI-Dashboard': return <KpiDashboard mitarbeiter={filteredKpiMitarbeiter} />;
+          case 'Mitarbeiter': return <MitarbeiterView mitarbeiter={filteredKpiMitarbeiter} />;
           case 'System Admin (Q-Space)': return <SystemAdminView />;
-          default: return <OverviewView />;
+          default: return <OverviewView currentUser={currentUser} filteredKpiMitarbeiter={filteredKpiMitarbeiter} filteredChatThreads={filteredChatThreads} filteredTasks={filteredTasks} />;
       }
   };
 
@@ -1136,6 +1201,17 @@ export default function QSpacePage() {
                     <Input type="text" placeholder="Q-Space durchsuchen..." className="pl-9 bg-input" />
                 </div>
                 <div className="flex items-center gap-3">
+                    <Select value={currentUserId} onValueChange={setCurrentUserId}>
+                        <SelectTrigger className="w-[280px] bg-input">
+                            <SelectValue placeholder="Angemeldeten Benutzer simulieren" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectLabel>Benutzer wechseln zur Demonstration</SelectLabel>
+                            {kpiMitarbeiter.map(m => (
+                            <SelectItem key={m.id} value={m.id}>{m.name} ({m.role})</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                            <Button>
@@ -1160,10 +1236,3 @@ export default function QSpacePage() {
     </>
   );
 }
-
-    
-
-
-
-
-

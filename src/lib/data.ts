@@ -466,10 +466,10 @@ export const kpiMitarbeiter = [
     { id: 'ben-weber', role: 'Developer', name: 'Ben Weber', abteilung: 'IT', team: 'Core-Backend', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72, activeTasks: 8, activeProjects: 2, overdueTasks: 3, blockedTasks: 1, kpiBreakdown: [{deduction: 7, reason: 'Deployment-Verzug (+3 Tage)'}, {deduction: 2, reason: '2 überfällige Aufgaben'}] },
     { id: 'anna-schmidt', role: 'Sales Manager', name: 'Anna Schmidt', abteilung: 'Vertrieb', team: 'Enterprise', mitarbeitertyp: 'Mensch', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81, activeTasks: 5, activeProjects: 3, overdueTasks: 1, blockedTasks: 0, kpiBreakdown: [{deduction: 3, reason: 'Zielverfehlung Q4 (-15%)'}] },
     { id: 'sophie-lang', role: 'Marketing Manager', name: 'Sophie Lang', abteilung: 'Marketing', team: 'Performance', mitarbeitertyp: 'Mensch', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83, activeTasks: 3, activeProjects: 1, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [{deduction: 2, reason: 'Budgetüberschreitung (+5%)'}] },
-    { id: 'dr-mueller', role: 'CEO', name: 'Dr. Müller', abteilung: 'Geschäftsführung', team: 'Management', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95, activeTasks: 2, activeProjects: 4, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
+    { id: 'dr-mueller', role: 'exec', name: 'Dr. Müller', abteilung: 'Geschäftsführung', team: 'Management', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95, activeTasks: 2, activeProjects: 4, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
     { id: 'sam-finance', role: 'Accountant', name: 'Sam Finance', abteilung: 'Finanzen & Controlling', team: 'Finance', mitarbeitertyp: 'Mensch', zWert: 98, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 98, activeTasks: 1, activeProjects: 0, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
     { id: 'clara-compliance', role: 'Compliance Officer', name: 'Clara Compliance', abteilung: 'Recht & Compliance', team: 'Legal', mitarbeitertyp: 'Mensch', zWert: 99, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 99, activeTasks: 2, activeProjects: 0, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
-    { id: 'mila-hr', role: 'HR Manager', name: 'Mila HR', abteilung: 'Personalwesen (HR)', team: 'HR', mitarbeitertyp: 'Mensch', zWert: 96, status: 'Stabil', trend: 'up', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 94, activeTasks: 4, activeProjects: 1, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
+    { id: 'mila-hr', role: 'dept_head', name: 'Mila HR', abteilung: 'Personalwesen (HR)', team: 'HR', mitarbeitertyp: 'Mensch', zWert: 96, status: 'Stabil', trend: 'up', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 94, activeTasks: 4, activeProjects: 1, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
 ].sort((a, b) => a.zWert - b.zWert);
 
 export const gesamtZufriedenheit = Math.round(kpiMitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / kpiMitarbeiter.length);
@@ -899,3 +899,7 @@ export const mockTasks = Object.values(tasksMockByDepartment).flat().map((task, 
   id: `task-mock-${index + 1}`,
   owner: (task as any).agent,
 }));
+
+export const mockSops = [
+    { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv", deptId: "Vertrieb" }
+];
