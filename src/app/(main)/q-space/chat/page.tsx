@@ -125,8 +125,15 @@ const ChatContent = () => {
     <div className="grid grid-cols-12 gap-6 h-full">
       {/* Left Column: Inbox */}
       <Card className="col-span-12 md:col-span-4 flex flex-col h-full">
-        <CardHeader className="p-4 border-b border-border">
-          <CardTitle className="text-lg">Chat</CardTitle>
+        <CardHeader className="p-4 border-b border-border flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" asChild className="h-8 w-8">
+                  <Link href="/q-space">
+                      <ArrowLeft className="w-4 h-4" />
+                  </Link>
+              </Button>
+              <CardTitle className="text-lg">Chat</CardTitle>
+          </div>
         </CardHeader>
         <div className="p-4 border-b border-border">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
