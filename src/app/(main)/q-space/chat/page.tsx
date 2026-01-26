@@ -48,6 +48,7 @@ const ChatContent = () => {
     threadIdFromParams
   );
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('threads');
 
   const threads = chatThreads;
   const messages = activeThreadId ? chatMessages[activeThreadId] || [] : [];
@@ -98,13 +99,27 @@ const ChatContent = () => {
       }
   }
 
-  const filteredThreads = useMemo(() => 
-    threads.filter(t => 
-      !t.isArchived && (
-        t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.lastMessageSnippet.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    ), [threads, searchTerm]);
+  const filteredThreads = useMemo(() => {
+    return threads.filter(t => {
+      if (t.isArchived) return false;
+
+      const searchTermLower = searchTerm.toLowerCase();
+      const matchesSearch = t.title.toLowerCase().includes(searchTermLower) || t.lastMessageSnippet.toLowerCase().includes(searchTermLower);
+
+      if (!matchesSearch) return false;
+
+      switch (activeTab) {
+        case 'threads':
+          return ['task', 'project', 'escalation', 'thread'].includes(t.contextType);
+        case 'teams':
+          return t.contextType === 'team';
+        case 'direkt':
+          return t.contextType === 'dm';
+        default:
+          return true; // Should not happen
+      }
+    });
+  }, [threads, searchTerm, activeTab]);
 
   return (
     <div className="grid grid-cols-12 gap-6 h-full">
@@ -114,7 +129,7 @@ const ChatContent = () => {
           <CardTitle className="text-lg">Chat</CardTitle>
         </CardHeader>
         <div className="p-4 border-b border-border">
-          <Tabs defaultValue="threads" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="threads">Threads</TabsTrigger>
               <TabsTrigger value="teams">Teams</TabsTrigger>
@@ -127,9 +142,8 @@ const ChatContent = () => {
           </Tabs>
         </div>
         <ScrollArea className="flex-1">
-            {/* The content of tabs should be here, but for simplicity will just filter a single list */}
              <div className="p-2 space-y-1">
-                {filteredThreads.map((thread) => (
+                {filteredThreads.length > 0 ? filteredThreads.map((thread) => (
                     <div 
                         key={thread.id} 
                         onClick={() => handleThreadSelect(thread.id)} 
@@ -146,7 +160,11 @@ const ChatContent = () => {
                         </div>
                         <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{thread.lastMessageSnippet}</p>
                     </div>
-                ))}
+                )) : (
+                  <div className="text-center p-8 text-sm text-muted-foreground italic">
+                    Keine Konversationen in dieser Ansicht.
+                  </div>
+                )}
             </div>
         </ScrollArea>
         <div className="p-4 border-t border-border mt-auto">
