@@ -90,8 +90,23 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const videoRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
 
+    const stopStream = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    };
+
     const resetState = () => {
+        if (mediaRecorder) {
+            mediaRecorder.onstop = null;
+            if (mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+            }
+        }
         stopStream();
+        if (recordedVideoUrl) {
+            URL.revokeObjectURL(recordedVideoUrl);
+        }
         setStep('mode-selection');
         setRecordingMode(null);
         setRecordedVideoUrl(null);
@@ -106,12 +121,6 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             resetState();
         }
     }, [open]);
-
-    const stopStream = () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-    };
 
     const handleStartRecording = async () => {
         if (!recordingMode) return;
