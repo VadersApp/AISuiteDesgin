@@ -25,6 +25,45 @@ const iconMap: {[key: string]: React.ElementType} = {
     plus: Plus
 }
 
+const AvaSetcard = () => (
+    <Card className="p-6">
+        <h3 className="text-lg font-bold text-foreground mb-4">Fähigkeiten & Einsatzbereich</h3>
+        <div className="space-y-4 text-sm">
+            <div>
+                <h4 className="font-bold text-xs uppercase text-muted-foreground tracking-wider">Rolle</h4>
+                <p className="text-foreground mt-1">Zentrale KI-Assistenz und Support-Instanz für eingehende Kundenkommunikation.</p>
+            </div>
+            <div>
+                <h4 className="font-bold text-xs uppercase text-muted-foreground tracking-wider">Kernfähigkeiten</h4>
+                <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
+                    <li>Annahme und Bearbeitung eingehender Telefonanrufe (Inbound)</li>
+                    <li>Erfassung, Strukturierung und Priorisierung von Kundenanliegen</li>
+                    <li>Beantwortung von Support- und Serviceanfragen</li>
+                    <li>Statusabfragen zu Terminen, Vorgängen und Tickets</li>
+                    <li>E-Mail-Management inkl. Sortierung und Antwortentwürfen</li>
+                    <li>Termin- und Kalenderkoordination</li>
+                    <li>Ticket- und Vorgangserfassung im System</li>
+                    <li>Meeting-Vorbereitung und Protokollerstellung</li>
+                    <li>Kontextverständnis über Q-Core & Q-Space</li>
+                    <li>Automatische Eskalation bei kritischen oder sensiblen Fällen</li>
+                </ul>
+            </div>
+            <div>
+                <h4 className="font-bold text-xs uppercase text-muted-foreground tracking-wider">Abgrenzung</h4>
+                <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
+                    <li>Kein Outbound</li>
+                    <li>Kein Vertrieb</li>
+                    <li>Keine aktive Lead-Ansprache</li>
+                </ul>
+            </div>
+            <div>
+                <h4 className="font-bold text-xs uppercase text-muted-foreground tracking-wider">Mehrwert</h4>
+                <p className="text-foreground mt-1">Ständige Erreichbarkeit, strukturierter Kundenservice und deutliche Entlastung interner Teams.</p>
+            </div>
+        </div>
+    </Card>
+);
+
 export default function BotSetcardPage() {
     const params = useParams<{ id: string }>();
     const bot = bots.find(b => b.id === params.id);
@@ -75,6 +114,9 @@ export default function BotSetcardPage() {
                             })}
                         </div>
                     </Card>
+
+                    {bot.id === 'ava' && <AvaSetcard />}
+                    
                     <Card className="bg-amber-500/[0.02] border border-amber-500/10 p-6">
                         <h3 className="text-xs font-bold text-amber-500 uppercase mb-4 flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5" /> Compliance</h3>
                         <p className="text-[11px] text-muted-foreground leading-relaxed italic">{bot.complianceNote}</p>
