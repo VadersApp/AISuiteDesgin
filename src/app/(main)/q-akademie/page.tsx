@@ -89,21 +89,29 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
+    const animationFrameId = useRef<number | null>(null);
+    const mediaStreamsRef = useRef<MediaStream[]>([]);
 
-    const stopStream = () => {
+    const cleanup = () => {
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+            animationFrameId.current = null;
+        }
+        mediaStreamsRef.current.forEach(s => {
+            s.getTracks().forEach(track => track.stop());
+        });
+        mediaStreamsRef.current = [];
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
     };
 
     const resetState = () => {
-        if (mediaRecorder) {
-            mediaRecorder.onstop = null;
-            if (mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-            }
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.onstop = null; // Prevent onstop from firing on manual reset
+            mediaRecorder.stop();
         }
-        stopStream();
+        cleanup();
         if (recordedVideoUrl) {
             URL.revokeObjectURL(recordedVideoUrl);
         }
@@ -127,14 +135,21 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         setError(null);
         
         try {
-            let finalStream: MediaStream;
+            let displayStream: MediaStream;
+            let recorderStream: MediaStream;
 
             if (recordingMode === 'camera') {
-                finalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const cameraAudioStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                mediaStreamsRef.current.push(cameraAudioStream);
+                displayStream = cameraAudioStream;
+                recorderStream = cameraAudioStream;
             } else {
-                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: true });
+                mediaStreamsRef.current.push(screenStream);
+
                 if (recordingMode === 'screen-cam') {
-                    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 180 }, audio: false });
+                    mediaStreamsRef.current.push(cameraStream);
                     
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
@@ -151,8 +166,8 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     camVideo.play();
 
                     await Promise.all([
-                        new Promise(resolve => screenVideo.onloadedmetadata = resolve),
-                        new Promise(resolve => camVideo.onloadedmetadata = resolve)
+                        new Promise<void>(resolve => screenVideo.onloadedmetadata = () => resolve()),
+                        new Promise<void>(resolve => camVideo.onloadedmetadata = () => resolve())
                     ]);
                     
                     canvas.width = screenVideo.videoWidth;
@@ -160,45 +175,56 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     
                     const draw = () => {
                         ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
-                        const camWidth = canvas.width / 5;
+                        const camWidth = canvas.width / 6;
                         const camHeight = (camVideo.videoHeight / camVideo.videoWidth) * camWidth;
                         ctx.drawImage(camVideo, canvas.width - camWidth - 20, canvas.height - camHeight - 20, camWidth, camHeight);
-                        requestAnimationFrame(draw);
+                        animationFrameId.current = requestAnimationFrame(draw);
                     };
                     draw();
                     
-                    const canvasStream = canvas.captureStream();
-                    const audioTrack = screenStream.getAudioTracks()[0];
-                    if (audioTrack) {
-                         canvasStream.addTrack(audioTrack.clone());
+                    recorderStream = canvas.captureStream(30);
+                    const audioTracks = screenStream.getAudioTracks();
+                    if (audioTracks.length > 0) {
+                         recorderStream.addTrack(audioTracks[0]);
                     }
-                    finalStream = canvasStream;
-
-                } else { // screen only
-                    finalStream = screenStream;
+                    displayStream = recorderStream;
+                } else {
+                    displayStream = screenStream;
+                    recorderStream = screenStream;
                 }
             }
 
-            setStream(finalStream);
+            setStream(displayStream);
             
             if (videoRef.current) {
-                videoRef.current.srcObject = finalStream;
-                videoRef.current.play();
+                videoRef.current.srcObject = displayStream;
+                videoRef.current.play().catch(e => console.error("Video play failed", e));
             }
 
-            const recorder = new MediaRecorder(finalStream);
+            const recorder = new MediaRecorder(recorderStream, { mimeType: 'video/webm' });
             setMediaRecorder(recorder);
-            recorder.ondataavailable = (e) => setRecordedChunks(prev => [...prev, e.data]);
+            
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    setRecordedChunks(prev => [...prev, e.data]);
+                }
+            };
+            
             recorder.onstop = () => {
                 setRecordedChunks(currentChunks => {
+                    if (currentChunks.length === 0) {
+                        cleanup();
+                        return [];
+                    }
                     const blob = new Blob(currentChunks, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
                     setRecordedVideoUrl(url);
                     setStep('preview');
-                    return currentChunks;
+                    cleanup();
+                    return []; // Reset chunks after processing
                 });
-                finalStream.getTracks().forEach(track => track.stop());
             };
+
             setRecordedChunks([]);
             recorder.start();
             setStep('recording');
@@ -206,8 +232,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         } catch (err: any) {
             console.error('Error accessing media devices.', err);
             setError(`Zugriff auf Medien verweigert: ${err.message}. Bitte Berechtigungen in den Browsereinstellungen prüfen.`);
-            setRecordingMode(null);
-            setStep('mode-selection');
+            resetState();
         }
     };
     
@@ -292,7 +317,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                            <Textarea id="description" name="description" placeholder="Kurze Beschreibung des Videoinhalts..." className="bg-input" />
                         </div>
                          <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => resetState()}>Erneut aufnehmen</Button>
+                            <Button type="button" variant="outline" onClick={() => { resetState(); setStep('mode-selection'); }}>Erneut aufnehmen</Button>
                             <Button type="submit">Speichern & Hochladen</Button>
                         </div>
                     </form>
