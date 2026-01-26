@@ -932,9 +932,60 @@ export const mockAcademyDocs = [
 ];
 
 export const mockCourses = [
-    { id: 1, title: 'Onboarding für Sales-Team', description: 'Grundlagen für neue Vertriebsmitarbeiter.', modules: 5, enrolled: 12, status: 'Veröffentlicht' },
-    { id: 2, title: 'DSGVO-Basisschulung', description: 'Rechtliche Grundlagen für alle Mitarbeiter.', modules: 3, enrolled: 45, status: 'Veröffentlicht' },
-    { id: 3, title: 'Führungskräfte-Training Q1', description: 'Entwurf für das kommende Quartal.', modules: 8, enrolled: 0, status: 'Entwurf' },
+    { 
+        id: 1, 
+        title: 'Onboarding für Sales-Team', 
+        description: 'Grundlagen für neue Vertriebsmitarbeiter.', 
+        modulesCount: 2, 
+        enrolled: 12, 
+        status: 'Veröffentlicht',
+        modules: [
+            {
+                id: 'm1',
+                title: 'Einführung in die Sales-Strategie',
+                lessons: [
+                    { id: 'l1-1', title: 'Willkommensvideo', type: 'video', duration: '5:42' },
+                    { id: 'l1-2', title: 'Verständnisprüfung: Unsere Werte', type: 'confirmation' },
+                    { id: 'l1-3', title: 'Grundlagen-Quiz', type: 'quiz' },
+                ]
+            },
+            {
+                id: 'm2',
+                title: 'Praktische Anwendung',
+                lessons: [
+                    { id: 'l2-1', title: 'Aufgabe: Erster Pitch-Entwurf', type: 'task' },
+                    { id: 'l2-2', title: 'Entscheidungs-Szenario: Umgang mit Einwänden', type: 'decision' },
+                ]
+            }
+        ]
+    },
+    { 
+        id: 2, 
+        title: 'DSGVO-Basisschulung', 
+        description: 'Rechtliche Grundlagen für alle Mitarbeiter.', 
+        modulesCount: 1, 
+        enrolled: 45, 
+        status: 'Veröffentlicht',
+        modules: [
+             {
+                id: 'm3',
+                title: 'Grundlagen der DSGVO',
+                lessons: [
+                    { id: 'l3-1', title: 'Was ist die DSGVO?', type: 'video', duration: '12:10' },
+                    { id: 'l3-2', title: 'Bestätigung der Richtlinien', type: 'confirmation' },
+                ]
+            },
+        ]
+    },
+    { 
+        id: 3, 
+        title: 'Führungskräfte-Training Q1', 
+        description: 'Entwurf für das kommende Quartal.', 
+        modulesCount: 0,
+        enrolled: 0, 
+        status: 'Entwurf',
+        modules: []
+    },
 ];
 
 export const mockParticipants = [

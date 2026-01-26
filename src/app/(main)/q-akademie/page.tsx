@@ -28,6 +28,13 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
+import {
   LayoutDashboard,
   BookCopy,
   Network,
@@ -52,6 +59,11 @@ import {
   Check,
   Radio,
   Upload,
+  ChevronLeft,
+  FileQuestion,
+  CheckSquare,
+  CheckCircle,
+  GitBranch,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -64,6 +76,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const modules = [
@@ -386,7 +399,7 @@ const QOnboardingView = () => (
     </div>
 );
 
-const CoursesView = ({ onCreate }: { onCreate: () => void }) => (
+const CoursesView = ({ onCreate, onCourseSelect }: { onCreate: () => void, onCourseSelect: (course: any) => void }) => (
     <div>
         <Tabs defaultValue="unternehmenskurse" className="w-full">
             <div className="flex justify-between items-center mb-6">
@@ -403,7 +416,7 @@ const CoursesView = ({ onCreate }: { onCreate: () => void }) => (
             <TabsContent value="unternehmenskurse">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {mockCourses.map(course => (
-                        <Card key={course.id} className="flex flex-col">
+                        <Card key={course.id} className="flex flex-col cursor-pointer hover:border-primary/50" onClick={() => onCourseSelect(course)}>
                             <CardHeader>
                                 <div className="flex justify-between items-start">
                                     <CardTitle className="line-clamp-2">{course.title}</CardTitle>
@@ -413,7 +426,7 @@ const CoursesView = ({ onCreate }: { onCreate: () => void }) => (
                             </CardHeader>
                             <CardContent className="flex-grow">
                                 <div className="text-sm text-muted-foreground flex items-center justify-between">
-                                    <span>{course.modules} Module</span>
+                                    <span>{course.modulesCount} Module</span>
                                     <span>{course.enrolled} Teilnehmer</span>
                                 </div>
                             </CardContent>
@@ -559,6 +572,32 @@ const ParticipantsView = ({ onCreate }: { onCreate: () => void }) => (
 );
 
 const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void }) => {
+    if (title === "Fortschritt & Reports") {
+        return (
+             <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">{title}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Aufgaben-Abschlussquote</CardTitle></CardHeader>
+                        <CardContent><p className="text-4xl font-bold">92%</p></CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Quiz-Erfolgsquote</CardTitle></CardHeader>
+                        <CardContent><p className="text-4xl font-bold">88%</p></CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Ø Bearbeitungsdauer</CardTitle></CardHeader>
+                        <CardContent><p className="text-4xl font-bold">2.5 Tage</p></CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader><CardTitle className="text-base">Häufigste Fehlerfrage</CardTitle></CardHeader>
+                        <CardContent><p className="text-sm">"Welche Daten gelten als personenbezogen?"</p></CardContent>
+                    </Card>
+                </div>
+                <p className="text-muted-foreground italic">Weitere detaillierte Reports werden hier angezeigt.</p>
+            </div>
+        )
+    }
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -577,6 +616,165 @@ const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void
 };
 
 
+// New interactive components
+const lessonIcons: { [key: string]: React.ElementType } = {
+  video: Video,
+  dokument: FileIcon,
+  quiz: FileQuestion,
+  task: CheckSquare,
+  confirmation: CheckCircle,
+  decision: GitBranch,
+};
+
+const QuizLektionView = ({ lesson }: { lesson: any }) => (
+    <div>
+        <h3 className="font-bold text-lg mb-4">{lesson.title}</h3>
+        <p className="text-sm text-muted-foreground mb-6">Bitte beantworten Sie die folgende Frage.</p>
+        <div className="space-y-4">
+            <p className="font-medium">Frage 1: Was ist der Hauptzweck der DSGVO?</p>
+            <RadioGroup defaultValue="b">
+                <div className="flex items-center space-x-2"><RadioGroupItem value="a" id="r1" /><Label htmlFor="r1">Datenmonetarisierung</Label></div>
+                <div className="flex items-center space-x-2"><RadioGroupItem value="b" id="r2" /><Label htmlFor="r2">Schutz personenbezogener Daten</Label></div>
+                <div className="flex items-center space-x-2"><RadioGroupItem value="c" id="r3" /><Label htmlFor="r3">Beschleunigung von Datenübertragungen</Label></div>
+            </RadioGroup>
+            <Button className="mt-4">Antwort absenden</Button>
+        </div>
+    </div>
+);
+
+const AufgabeLektionView = ({ lesson }: { lesson: any }) => (
+    <div>
+        <h3 className="font-bold text-lg mb-4">{lesson.title}</h3>
+        <p className="text-sm text-muted-foreground mb-6">Bitte bearbeiten und reichen Sie die folgende Aufgabe ein.</p>
+        <div className="space-y-4">
+             <div className="p-4 bg-muted/50 rounded-lg border">
+                <h4 className="font-bold text-sm">Aufgabenstellung</h4>
+                <p className="text-sm mt-1">Erstellen Sie einen kurzen Entwurf für einen Pitch (max. 3 Sätze), der unser Kernprodukt einem potenziellen Kunden vorstellt.</p>
+             </div>
+             <Textarea placeholder="Ihre Antwort hier..." rows={5} className="bg-input"/>
+             <Input type="file" className="bg-input"/>
+             <Button>Aufgabe einreichen</Button>
+        </div>
+    </div>
+);
+
+const BestaetigungLektionView = ({ lesson }: { lesson: any }) => (
+    <div>
+        <h3 className="font-bold text-lg mb-4">{lesson.title}</h3>
+        <div className="p-4 bg-muted/50 rounded-lg border space-y-2">
+            <h4 className="font-bold text-sm">Unsere Werte</h4>
+            <ul className="list-disc list-inside text-sm">
+                <li>Integrität und Transparenz</li>
+                <li>Fokus auf den Kundenerfolg</li>
+                <li>Mut zur Innovation</li>
+            </ul>
+        </div>
+        <div className="flex items-center space-x-2 mt-6">
+            <Checkbox id="terms" />
+            <Label htmlFor="terms" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Ich habe die Werte gelesen und verstanden.
+            </Label>
+        </div>
+        <Button className="mt-4">Bestätigen & weiter</Button>
+    </div>
+);
+
+const EntscheidungLektionView = ({ lesson }: { lesson: any }) => (
+    <div>
+        <h3 className="font-bold text-lg mb-4">{lesson.title}</h3>
+        <div className="p-4 bg-muted/50 rounded-lg border mb-6">
+            <h4 className="font-bold text-sm">Szenario</h4>
+            <p className="text-sm mt-1">Ein potenzieller Kunde sagt am Telefon: "Ihre Lösung ist zu teuer." Wie reagieren Sie?</p>
+        </div>
+        <div className="space-y-3">
+            <Button variant="outline" className="w-full justify-start text-left h-auto py-2">A) Preis sofort reduzieren.</Button>
+            <Button variant="outline" className="w-full justify-start text-left h-auto py-2">B) Nach dem Budget fragen und den Wert der Lösung betonen.</Button>
+            <Button variant="outline" className="w-full justify-start text-left h-auto py-2">C) Gespräch beenden.</Button>
+        </div>
+    </div>
+);
+
+
+const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChange: (open: boolean) => void }) => {
+    
+    const renderContent = () => {
+        if (!lesson) return null;
+        switch(lesson.type) {
+            case 'quiz': return <QuizLektionView lesson={lesson} />;
+            case 'task': return <AufgabeLektionView lesson={lesson} />;
+            case 'confirmation': return <BestaetigungLektionView lesson={lesson} />;
+            case 'decision': return <EntscheidungLektionView lesson={lesson} />;
+            default:
+                return (
+                    <div>
+                        <h3 className="font-bold text-lg mb-4">{lesson.title}</h3>
+                        <p className="text-muted-foreground">Inhalt für Lektionstyp '{lesson.type}' wird hier angezeigt.</p>
+                    </div>
+                );
+        }
+    }
+
+    return (
+        <Sheet open={!!lesson} onOpenChange={onOpenChange}>
+            <SheetContent className="sm:max-w-xl w-full">
+                <SheetHeader>
+                    <SheetTitle>Lektion</SheetTitle>
+                    <SheetDescription>Absolvieren Sie diese Lektion, um im Kurs fortzufahren.</SheetDescription>
+                </SheetHeader>
+                <div className="py-8">
+                   {renderContent()}
+                </div>
+            </SheetContent>
+        </Sheet>
+    )
+};
+
+
+const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void }) => {
+    const [selectedLesson, setSelectedLesson] = useState<any | null>(null);
+
+    return (
+        <div className="space-y-6">
+            <header>
+                <Button variant="ghost" onClick={onBack} className="mb-4">
+                    <ChevronLeft className="mr-2 h-4 w-4" />
+                    Zurück zur Kursübersicht
+                </Button>
+                <h2 className="text-2xl font-bold text-foreground">{course.title}</h2>
+                <p className="text-muted-foreground">{course.description}</p>
+            </header>
+            <div>
+                 <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={course.modules[0]?.id}>
+                    {(course.modules || []).map((module: any) => (
+                        <AccordionItem value={module.id} key={module.id} className="bg-card/80 border border-border rounded-xl overflow-hidden">
+                           <AccordionTrigger className="p-4 hover:no-underline">{module.title}</AccordionTrigger>
+                           <AccordionContent className="p-4 pt-0">
+                               <div className="space-y-2">
+                                  {(module.lessons || []).map((lesson: any) => {
+                                      const Icon = lessonIcons[lesson.type] || FileIcon;
+                                      return (
+                                        <div key={lesson.id} onClick={() => setSelectedLesson(lesson)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer">
+                                            <Icon className="w-4 h-4 text-primary" />
+                                            <span className="text-sm font-medium">{lesson.title}</span>
+                                            {lesson.duration && <span className="ml-auto text-xs text-muted-foreground">{lesson.duration}</span>}
+                                        </div>
+                                      );
+                                  })}
+                               </div>
+                               <Button variant="outline" size="sm" className="mt-4 w-full">
+                                   <Plus className="mr-2 h-4 w-4" /> Lektion hinzufügen
+                               </Button>
+                           </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+            </div>
+             <LessonSheet lesson={selectedLesson} onOpenChange={(open) => !open && setSelectedLesson(null)} />
+        </div>
+    )
+};
+
+
 export default function QAkademiePage() {
     const [activeModule, setActiveModule] = useState(modules[0].name);
     const [isRecordingDialogOpen, setIsRecordingDialogOpen] = useState(false);
@@ -586,6 +784,7 @@ export default function QAkademiePage() {
     const [isCreateCertOpen, setIsCreateCertOpen] = useState(false);
     const [isCreateDeptOpen, setIsCreateDeptOpen] = useState(false);
     const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
+    const [activeCourse, setActiveCourse] = useState<any | null>(null);
     
     const [videos, setVideos] = useState(mockAcademyVideos);
 
@@ -597,7 +796,11 @@ export default function QAkademiePage() {
         switch (activeModule) {
             case 'Übersicht': return <OverviewView />;
             case 'Q-Onboarding': return <QOnboardingView />;
-            case 'Kurse': return <CoursesView onCreate={() => setIsCreateCourseOpen(true)} />;
+            case 'Kurse': 
+                if (activeCourse) {
+                    return <CourseDetailView course={activeCourse} onBack={() => setActiveCourse(null)} />;
+                }
+                return <CoursesView onCreate={() => setIsCreateCourseOpen(true)} onCourseSelect={setActiveCourse} />;
             case 'Lernpfade': return <LearningPathsView onCreate={() => setIsCreateLpOpen(true)} />;
             case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onRecordVideo={() => setIsRecordingDialogOpen(true)} onUploadVideo={() => {}} onUploadDoc={() => {}} onCreateWissen={() => {}} />;
             case 'Teilnehmer': return <ParticipantsView onCreate={() => setIsAddParticipantOpen(true)} />;
@@ -610,38 +813,13 @@ export default function QAkademiePage() {
     };
     
      const renderHeaderActions = () => {
-        const createButton = (onClick: () => void, text: string) => (
-            <Button variant="outline" onClick={onClick}>
-                <Plus className="mr-2 h-4 w-4" /> {text}
-            </Button>
-        );
+        // This is handled by the kontext-sensitive buttons now.
+        return null;
+    };
 
-        switch (activeModule) {
-            case 'Kurse': return createButton(() => setIsCreateCourseOpen(true), 'Kurs erstellen');
-            case 'Lernpfade': return createButton(() => setIsCreateLpOpen(true), 'Lernpfad erstellen');
-            case 'Inhalte': return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Inhalt erstellen</Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => {}}><Upload className="mr-2 h-4 w-4" />Video hochladen</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setIsRecordingDialogOpen(true)}><Video className="mr-2 h-4 w-4" />Video aufnehmen</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {}}><FileIcon className="mr-2 h-4 w-4" />Dokument hochladen</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {}}><BrainCircuit className="mr-2 h-4 w-4" />Wissensbaustein erstellen</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
-            case 'Teilnehmer': return createButton(() => setIsAddParticipantOpen(true), 'Teilnehmer hinzufügen');
-            case 'Abteilungen & Rollen': return (
-                <div className="flex gap-2">
-                    {createButton(() => setIsCreateDeptOpen(true), 'Abteilung erstellen')}
-                    {createButton(() => setIsCreateRoleOpen(true), 'Rolle erstellen')}
-                </div>
-            );
-            case 'Zertifikate': return createButton(() => setIsCreateCertOpen(true), 'Zertifikat erstellen');
-            default: return null;
-        }
+    const handleModuleClick = (moduleName: string) => {
+        setActiveCourse(null); // Reset course view when changing module
+        setActiveModule(moduleName);
     };
 
     return (
@@ -654,7 +832,7 @@ export default function QAkademiePage() {
                         <Button
                             key={mod.name}
                             variant={activeModule === mod.name ? 'secondary' : 'ghost'}
-                            onClick={() => setActiveModule(mod.name)}
+                            onClick={() => handleModuleClick(mod.name)}
                             className="w-full justify-start text-sm"
                         >
                             <Icon className="mr-2 h-4 w-4" />
@@ -670,7 +848,6 @@ export default function QAkademiePage() {
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <Input type="text" placeholder="Kurse, Videos, Inhalte durchsuchen..." className="pl-9 bg-input" />
                     </div>
-                    {renderHeaderActions()}
                 </header>
 
                 <div className="animate-in fade-in duration-300">
