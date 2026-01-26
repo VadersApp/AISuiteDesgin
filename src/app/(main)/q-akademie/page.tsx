@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useState, useRef, useEffect, type FormEvent } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -401,7 +401,9 @@ const QOnboardingView = () => (
     </div>
 );
 
-const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void }) => (
+const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void }) => {
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    return (
     <div>
         <Tabs defaultValue="unternehmenskurse" className="w-full">
             <div className="flex justify-between items-center mb-6">
@@ -410,7 +412,7 @@ const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void
                     <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
                     <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
                 </TabsList>
-                <Dialog>
+                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <DialogTrigger asChild>
                        <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
                     </DialogTrigger>
@@ -449,7 +451,8 @@ const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void
             </TabsContent>
         </Tabs>
     </div>
-);
+    )
+};
 
 const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => {
     const [isRecordingDialogOpen, setIsRecordingDialogOpen] = useState(false);
@@ -538,13 +541,14 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => {
 
 const LearningPathsView = () => {
     const [feedbackItem, setFeedbackItem] = useState<any | null>(null);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     return (
     <>
         <Card>
             <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>Lernpfade</CardTitle>
-                <Dialog>
+                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <DialogTrigger asChild>
                         <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
                     </DialogTrigger>
@@ -578,11 +582,13 @@ const LearningPathsView = () => {
 };
 
 
-const ParticipantsView = () => (
+const ParticipantsView = () => {
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    return (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Teilnehmer</CardTitle>
-            <Dialog>
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                 <DialogTrigger asChild>
                     <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
                 </DialogTrigger>
@@ -605,13 +611,16 @@ const ParticipantsView = () => (
             </Table>
         </CardContent>
     </Card>
-);
+    );
+};
 
-const CertificatesView = () => (
+const CertificatesView = () => {
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    return (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Zertifikate</CardTitle>
-            <Dialog>
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                 <DialogTrigger asChild>
                     <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Zertifikat erstellen</Button>
                 </DialogTrigger>
@@ -634,7 +643,8 @@ const CertificatesView = () => (
             </Table>
         </CardContent>
     </Card>
-);
+    );
+};
 
 const FeedbackDialog = ({ open, onOpenChange, itemName }: { open: boolean, onOpenChange: (open: boolean) => void, itemName: string }) => {
     const { toast } = useToast();
@@ -805,10 +815,115 @@ const ReportingView = () => {
     )
 }
 
+const SettingsView = () => {
+    return (
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-2xl font-bold text-foreground">Einstellungen</h2>
+                <p className="text-muted-foreground">Verwalten Sie die globalen Einstellungen für die Q-Akademie.</p>
+            </div>
+            <Tabs defaultValue="branding" className="w-full">
+                <TabsList>
+                    <TabsTrigger value="branding">Branding & Design</TabsTrigger>
+                    <TabsTrigger value="language">Mehrsprachigkeit</TabsTrigger>
+                    <TabsTrigger value="notifications">Benachrichtigungen</TabsTrigger>
+                </TabsList>
+                <TabsContent value="branding" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Branding & Design</CardTitle>
+                            <CardDescription>Passen Sie das Erscheinungsbild der Akademie an. Änderungen gelten nur für die Q-Akademie.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <Label>Akademie-Logo (optional)</Label>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center border">
+                                        <Upload className="w-6 h-6 text-muted-foreground" />
+                                    </div>
+                                    <Button variant="outline">Logo hochladen</Button>
+                                </div>
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="accent-color">Akzentfarbe</Label>
+                                <Input id="accent-color" type="color" defaultValue="#3b82f6" className="w-24 h-10 p-1 bg-input" />
+                            </div>
+                            <Separator />
+                            <h3 className="font-bold">Zertifikats-Layout</h3>
+                            <div className="space-y-2">
+                                <Label>Zertifikats-Logo</Label>
+                                <Button variant="outline" size="sm">Logo hochladen</Button>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="signature">Signatur (Text)</Label>
+                                <Input id="signature" placeholder="z.B. Dr. Müller, CEO" className="bg-input" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="language" className="mt-6">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Mehrsprachigkeit</CardTitle>
+                            <CardDescription>Verwalten Sie die Sprachen für Kursinhalte.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Alert>
+                                <AlertTitle>Sprachlogik</AlertTitle>
+                                <AlertDescription>
+                                    Kurse und Inhalte sind sprachgebunden. Teilnehmer sehen standardmäßig nur Inhalte in ihrer Profil-Sprache. Es erfolgt keine automatische Übersetzung.
+                                </AlertDescription>
+                            </Alert>
+                             <div>
+                                <h3 className="font-medium mb-2">Aktive Sprachen</h3>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                                        <p className="font-mono text-sm">Deutsch (de)</p>
+                                        <Badge variant="default">Standard</Badge>
+                                    </div>
+                                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+                                        <p className="font-mono text-sm">Englisch (en)</p>
+                                         <Button variant="ghost" size="sm">Als Standard festlegen</Button>
+                                    </div>
+                                </div>
+                            </div>
+                            <Button variant="outline" className="w-full mt-4"><Plus className="mr-2 h-4 w-4" /> Sprache hinzufügen</Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="notifications" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Benachrichtigungen</CardTitle>
+                            <CardDescription>Legen Sie fest, wann und wie Nutzer und Trainer benachrichtigt werden.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {[
+                                { id: 'new-course', title: 'Neuer Kurs zugewiesen', desc: 'Wenn ein Teilnehmer einem Kurs zugewiesen wird.' },
+                                { id: 'new-path', title: 'Neuer Lernpfad zugewiesen', desc: 'Wenn ein Teilnehmer einem Lernpfad zugewiesen wird.' },
+                                { id: 'task-review', title: 'Aufgabe bewertet', desc: 'Wenn eine eingereichte Aufgabe kommentiert/bewertet wurde.' },
+                                { id: 'exam-result', title: 'Prüfung bestanden/nicht bestanden', desc: 'Nach Abschluss einer Prüfung.' },
+                                { id: 'cert-earned', title: 'Zertifikat erhalten', desc: 'Wenn ein Zertifikat automatisch ausgestellt wird.' },
+                                { id: 'feedback-received', title: 'Neues Feedback erhalten', desc: 'Benachrichtigt Trainer/Admins über neues Feedback.', forAdmin: true },
+                            ].map(item => (
+                                <div key={item.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                    <div>
+                                        <Label htmlFor={item.id} className="font-bold text-foreground">{item.title} {item.forAdmin && <Badge variant="secondary" className="ml-2">Trainer/Admin</Badge>}</Label>
+                                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                                    </div>
+                                    <Switch id={item.id} defaultChecked />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+};
+
+
 const GenericView = ({ title }: { title: string }) => {
-    if (title === "Fortschritt & Reports") {
-        return <ReportingView />;
-    }
      const [isOpen, setIsOpen] = useState(false);
     return (
         <Card>
@@ -1055,7 +1170,7 @@ export default function QAkademiePage() {
             case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
             case 'Fortschritt & Reports': return <ReportingView />;
             case 'Zertifikate': return <CertificatesView />;
-            case 'Einstellungen': return <GenericView title="Einstellungen" />;
+            case 'Einstellungen': return <SettingsView />;
             default: return <OverviewView />;
         }
     };
@@ -1100,3 +1215,4 @@ export default function QAkademiePage() {
         </div>
     );
 }
+```
