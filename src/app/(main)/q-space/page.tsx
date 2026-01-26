@@ -66,11 +66,12 @@ import {
   Tag,
   Archive,
   Send,
+  BrainCircuit,
   ChevronRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -102,83 +103,7 @@ const mockSops = [
     { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
 ];
 
-const mockDocs = [
-    { 
-        id: 'doc-1',
-        title: 'Unternehmensstrategie 2025',
-        ownerUserId: 'dr-mueller',
-        ownerName: 'Dr. Müller',
-        deptId: 'Geschäftsführung',
-        folderId: 'folder-gf-1',
-        tags: ['strategy', 'q1', 'planning'],
-        status: 'active',
-        versionCurrent: 2.1,
-        fileName: 'unternehmensstrategie_2025_v2.1.pdf',
-        mimeType: 'application/pdf',
-        sizeBytes: 2.5 * 1024 * 1024,
-        updatedAt: '2024-07-20T10:00:00Z',
-    },
-    { 
-        id: 'doc-2',
-        title: 'Security Policy - Remote Work',
-        ownerUserId: 'ben-weber',
-        ownerName: 'Ben Weber',
-        deptId: 'IT',
-        folderId: 'folder-it-4',
-        tags: ['security', 'policy', 'remote'],
-        status: 'active',
-        versionCurrent: 1.0,
-        fileName: 'remote_work_policy.docx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        sizeBytes: 150 * 1024,
-        updatedAt: '2024-07-19T14:30:00Z',
-    },
-    {
-        id: 'doc-3',
-        title: 'Pitch Deck Innovatech',
-        ownerUserId: 'anna-schmidt',
-        ownerName: 'Anna Schmidt',
-        deptId: 'Vertrieb',
-        folderId: 'folder-sales-2',
-        tags: ['pitch', 'innovatech', 'q1'],
-        status: 'active',
-        versionCurrent: 1.2,
-        fileName: 'Pitch_Innovatech_final.pptx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        sizeBytes: 5.8 * 1024 * 1024,
-        updatedAt: '2024-07-21T09:00:00Z',
-    },
-    {
-        id: 'doc-4',
-        title: 'General IT Documentation',
-        ownerUserId: 'ben-weber',
-        ownerName: 'Ben Weber',
-        deptId: 'IT',
-        folderId: 'folder-it-2',
-        tags: ['it', 'general'],
-        status: 'active',
-        versionCurrent: 1.0,
-        fileName: 'it_general.docx',
-        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        sizeBytes: 50 * 1024,
-        updatedAt: '2024-06-19T14:30:00Z',
-    },
-    {
-        id: 'doc-5',
-        title: 'Onboarding Prozess für neue Sales-Mitarbeiter',
-        ownerUserId: 'mila-hr',
-        ownerName: 'Mila HR',
-        deptId: 'Personalwesen (HR)',
-        folderId: 'folder-hr-2',
-        tags: ['onboarding', 'sales', 'prozess', 'hr'],
-        status: 'active',
-        versionCurrent: 1.0,
-        fileName: 'Onboarding_Process_New_Sales_Team.pdf',
-        mimeType: 'application/pdf',
-        sizeBytes: 780 * 1024,
-        updatedAt: '2024-07-22T11:00:00Z',
-    }
-];
+const mockDocs = allMockDocs;
 
 const mockUploadJob = {
     uploadJobId: 'upload-xyz-123',
@@ -396,10 +321,10 @@ const DocumentsView = () => {
                                 </Card>
                             </div>
                         </ScrollArea>
-                        <CardContent className="p-4 border-t flex gap-2">
+                        <CardFooter className="p-4 border-t flex gap-2">
                             <Button variant="outline" className="flex-1">Anpassen</Button>
                             <Button className="flex-1" onClick={handleFinalizeUpload}>Übernehmen & Fertigstellen</Button>
-                        </CardContent>
+                        </CardFooter>
                     </div>
                 )}
                 {!uploadMode && selectedDoc && (
@@ -421,11 +346,68 @@ const DocumentsView = () => {
                                 <div><Label>Version</Label><p>{selectedDoc.versionCurrent}</p></div>
                                 <div><Label>Größe</Label><p>{(selectedDoc.sizeBytes / (1024*1024)).toFixed(2)} MB</p></div>
                                 <div><Label>Zuletzt geändert</Label><p>{format(new Date(selectedDoc.updatedAt), "dd.MM.yyyy HH:mm")}</p></div>
+                                
+                                {selectedDoc.aiAnalysis && (
+                                    <Card className="bg-blue-950/50 border-blue-500/20 mt-4">
+                                        <CardHeader>
+                                            <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
+                                                <BrainCircuit className="w-4 h-4"/> KI-Analyse
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4 text-sm">
+                                            <div>
+                                                <Label className="text-blue-400/80 text-xs">Dokumenttyp</Label>
+                                                <p>{selectedDoc.aiAnalysis.documentType}</p>
+                                            </div>
+                                            <div>
+                                                <Label className="text-blue-400/80 text-xs">Zweck</Label>
+                                                <p className="text-xs">{selectedDoc.aiAnalysis.purposeSummary}</p>
+                                            </div>
+                                            <div>
+                                                <Label className="text-blue-400/80 text-xs">Prozess</Label>
+                                                <p>{selectedDoc.aiAnalysis.businessProcess}</p>
+                                            </div>
+                                            <div>
+                                                <Label className="text-blue-400/80 text-xs">Kritikalität</Label>
+                                                <Badge variant="outline" className={cn(
+                                                    'capitalize', 
+                                                    selectedDoc.aiAnalysis.criticality === 'high' && 'border-rose-500/50 text-rose-400',
+                                                    selectedDoc.aiAnalysis.criticality === 'medium' && 'border-amber-500/50 text-amber-400',
+                                                    selectedDoc.aiAnalysis.criticality === 'low' && 'border-slate-500/50 text-slate-400'
+                                                )}>
+                                                    {selectedDoc.aiAnalysis.criticality}
+                                                </Badge>
+                                            </div>
+                                            { (selectedDoc.aiAnalysis.suggestedLinks.sopIds?.length > 0 || selectedDoc.aiAnalysis.suggestedLinks.taskIds?.length > 0 || selectedDoc.aiAnalysis.suggestedLinks.projectIds?.length > 0) &&
+                                                <div>
+                                                    <Label className="text-blue-400/80 text-xs">Vorgeschlagene Verknüpfungen</Label>
+                                                    <div className="space-y-1 mt-1">
+                                                        {selectedDoc.aiAnalysis.suggestedLinks.sopIds?.map((id: string) => (
+                                                            <Button key={id} variant="outline" size="sm" className="h-auto py-1 px-2 text-xs w-full justify-start gap-2">
+                                                                <FileText className="w-3 h-3"/> {id} <span className="text-muted-foreground ml-auto">(SOP)</span>
+                                                            </Button>
+                                                        ))}
+                                                        {selectedDoc.aiAnalysis.suggestedLinks.taskIds?.map((id: string) => (
+                                                            <Button key={id} variant="outline" size="sm" className="h-auto py-1 px-2 text-xs w-full justify-start gap-2">
+                                                                <CheckSquare className="w-3 h-3"/> {id} <span className="text-muted-foreground ml-auto">(Aufgabe)</span>
+                                                            </Button>
+                                                        ))}
+                                                        {selectedDoc.aiAnalysis.suggestedLinks.projectIds?.map((id: string) => (
+                                                            <Button key={id} variant="outline" size="sm" className="h-auto py-1 px-2 text-xs w-full justify-start gap-2">
+                                                                <Briefcase className="w-3 h-3"/> {id} <span className="text-muted-foreground ml-auto">(Projekt)</span>
+                                                            </Button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            }
+                                        </CardContent>
+                                    </Card>
+                                )}
                             </div>
                         </ScrollArea>
-                        <CardContent className="p-4 border-t">
+                        <CardFooter className="p-4 border-t">
                             <Button variant="outline"><Archive className="w-4 h-4 mr-2"/>Archivieren</Button>
-                        </CardContent>
+                        </CardFooter>
                     </div>
                 )}
                 {!uploadMode && !selectedDoc && (
@@ -1070,5 +1052,6 @@ export default function QSpacePage() {
 }
 
     
+
 
 
