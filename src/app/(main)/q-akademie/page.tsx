@@ -64,12 +64,14 @@ import {
   CheckSquare,
   CheckCircle,
   GitBranch,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs, mockCertificates } from '@/lib/data';
+import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs, mockCertificates, kpiMitarbeiter } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
@@ -77,6 +79,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const modules = [
@@ -105,8 +109,8 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const animationFrameId = useRef<number | null>(null);
     const mediaStreamsRef = useRef<MediaStream[]>([]);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-
-    const cleanup = () => {
+    
+    const cleanup = React.useCallback(() => {
         if (animationFrameId.current) {
             cancelAnimationFrame(animationFrameId.current);
             animationFrameId.current = null;
@@ -119,9 +123,9 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         });
         mediaStreamsRef.current = [];
         mediaRecorderRef.current = null;
-    };
+    }, []);
     
-    const resetState = () => {
+    const resetState = React.useCallback(() => {
         cleanup();
         if (recordedVideoUrl) {
             URL.revokeObjectURL(recordedVideoUrl);
@@ -131,18 +135,13 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         setRecordedVideoUrl(null);
         setRecordedChunks([]);
         setError(null);
-    };
+    }, [cleanup, recordedVideoUrl]);
 
     useEffect(() => {
-        // Full cleanup when the dialog is closed, regardless of how.
         if (!open) {
             resetState();
         }
-        // Ensure unmount cleanup
-        return () => {
-          cleanup();
-        }
-    }, [open]);
+    }, [open, resetState]);
 
     const handleStartRecording = async () => {
         if (!recordingMode) return;
@@ -224,15 +223,14 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             
             recorder.onstop = () => {
                 setRecordedChunks(currentChunks => {
+                    cleanup();
                     if (currentChunks.length === 0) {
-                        cleanup();
                         return [];
                     }
                     const blob = new Blob(currentChunks, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
                     setRecordedVideoUrl(url);
                     setStep('preview');
-                    cleanup();
                     return [];
                 });
             };
@@ -273,7 +271,10 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={(isOpen) => {
+            if (!isOpen) resetState();
+            onOpenChange(isOpen);
+        }}>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Video aufnehmen</DialogTitle>
@@ -523,29 +524,42 @@ const InhalteView = ({videos, setVideos, onRecordVideo, onUploadVideo, onUploadD
     </div>
 );
 
-const LearningPathsView = ({ onCreate }: { onCreate: () => void }) => (
-    <Card>
-        <CardHeader className="flex-row items-center justify-between">
-            <CardTitle>Lernpfade</CardTitle>
-            <Button variant="outline" onClick={onCreate}><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Anzahl Kurse</TableHead><TableHead>Zugewiesen an</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                <TableBody>
-                    {mockLearningPaths.map(lp => (
-                        <TableRow key={lp.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{lp.title}</TableCell>
-                            <TableCell>{lp.courses}</TableCell>
-                            <TableCell>{lp.assigned}</TableCell>
-                            <TableCell><Badge variant={lp.mandatory ? 'destructive' : 'outline'}>{lp.mandatory ? 'Pflicht' : 'Optional'}</Badge></TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+const LearningPathsView = ({ onCreate }: { onCreate: () => void }) => {
+    const [feedbackItem, setFeedbackItem] = useState<any | null>(null);
+
+    return (
+    <>
+        <Card>
+            <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Lernpfade</CardTitle>
+                <Button variant="outline" onClick={onCreate}><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Anzahl Kurse</TableHead><TableHead>Zugewiesen an</TableHead><TableHead>Status</TableHead><TableHead>Feedback</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                        {mockLearningPaths.map(lp => (
+                            <TableRow key={lp.id} className="cursor-pointer">
+                                <TableCell className="font-medium">{lp.title}</TableCell>
+                                <TableCell>{lp.courses}</TableCell>
+                                <TableCell>{lp.assigned}</TableCell>
+                                <TableCell><Badge variant={lp.mandatory ? 'destructive' : 'outline'}>{lp.mandatory ? 'Pflicht' : 'Optional'}</Badge></TableCell>
+                                <TableCell><Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setFeedbackItem(lp); }}>Geben</Button></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+        <FeedbackDialog 
+            open={!!feedbackItem}
+            onOpenChange={(open) => !open && setFeedbackItem(null)}
+            itemName={feedbackItem?.title || ''}
+        />
+    </>
+    )
+};
+
 
 const ParticipantsView = ({ onCreate }: { onCreate: () => void }) => (
     <Card>
@@ -595,42 +609,178 @@ const CertificatesView = ({ onCreate }: { onCreate: () => void }) => (
     </Card>
 );
 
-const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void }) => {
-    if (title === "Fortschritt & Reports") {
-        return (
-             <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-foreground">{title}</h2>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card>
-                        <CardHeader><CardTitle className="text-base">Aufgaben-Abschlussquote</CardTitle></CardHeader>
-                        <CardContent><p className="text-4xl font-bold">92%</p></CardContent>
+const FeedbackDialog = ({ open, onOpenChange, itemName }: { open: boolean, onOpenChange: (open: boolean) => void, itemName: string }) => {
+    const { toast } = useToast();
+    const [feedbackSent, setFeedbackSent] = useState(false);
+
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        setFeedbackSent(true);
+        setTimeout(() => {
+            onOpenChange(false);
+            // reset dialog state after closing animation
+            setTimeout(() => setFeedbackSent(false), 300);
+            toast({ title: "Feedback gesendet", description: "Vielen Dank für Ihre Hilfe, das System zu verbessern!" });
+        }, 1500);
+    }
+    
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Feedback für "{itemName}"</DialogTitle>
+                    <DialogDescription>
+                        Ihre Meinung ist uns wichtig, um die Qualität unserer Lerninhalte stetig zu verbessern.
+                    </DialogDescription>
+                </DialogHeader>
+                {feedbackSent ? (
+                    <div className="flex flex-col items-center justify-center h-48 text-center">
+                        <CheckCircle className="w-12 h-12 text-emerald-500 mb-4" />
+                        <p className="font-bold">Vielen Dank!</p>
+                        <p className="text-sm text-muted-foreground">Ihr Feedback wird verarbeitet.</p>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit}>
+                        <div className="py-4 space-y-4">
+                            <div>
+                                <Label className="font-bold text-base">Gesamteindruck</Label>
+                                <div className="flex justify-center gap-4 mt-2">
+                                     <Button type="button" variant="outline" size="lg" className="h-16 w-24 flex-col gap-1">
+                                        <ThumbsUp className="w-5 h-5"/>
+                                        <span className="text-xs">Hilfreich</span>
+                                     </Button>
+                                     <Button type="button" variant="outline" size="lg" className="h-16 w-24 flex-col gap-1">
+                                        <ThumbsDown className="w-5 h-5"/>
+                                        <span className="text-xs">Nicht hilfreich</span>
+                                     </Button>
+                                </div>
+                            </div>
+                            <Separator />
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Kategorie (optional)</Label>
+                                <Select name="category">
+                                    <SelectTrigger id="category" className="bg-input"><SelectValue placeholder="Wählen Sie eine Kategorie..." /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="unklar">Inhalt unklar</SelectItem>
+                                        <SelectItem value="laenge">Zu lang / zu kurz</SelectItem>
+                                        <SelectItem value="technik">Technisches Problem</SelectItem>
+                                        <SelectItem value="verbesserung">Verbesserungsvorschlag</SelectItem>
+                                        <SelectItem value="sonstiges">Sonstiges</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="comment">Kommentar (optional)</Label>
+                                <Textarea id="comment" name="comment" className="bg-input" placeholder="Was können wir besser machen?" />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="submit">Feedback senden</Button>
+                        </DialogFooter>
+                    </form>
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const ReportingView = () => {
+    const [period, setPeriod] = useState('30d');
+    const [deptFilter, setDeptFilter] = useState('all');
+    const departments = ['Alle', ...new Set(kpiMitarbeiter.map(m => m.abteilung))];
+
+    const kpiCards = [
+        { title: 'Kurs-Abschlussquote', value: '85%', change: '+3% vs. Vormonat' },
+        { title: 'Prüfungs-Bestehensquote', value: '88%', change: '-1% vs. Vormonat' },
+        { title: 'Ø Zeit bis Abschluss', value: '4.2 Tage', change: '-0.5 Tage vs. Vormonat' },
+        { title: 'Zertifikatsquote', value: '75%', change: '+5% vs. Vormonat' },
+    ];
+    return (
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                 <h2 className="text-2xl font-bold text-foreground">Fortschritt &amp; Reports</h2>
+                 <div className="flex items-center gap-2">
+                     <Select value={period} onValueChange={setPeriod}>
+                        <SelectTrigger className="w-[180px] bg-input"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="7d">Letzte 7 Tage</SelectItem>
+                            <SelectItem value="30d">Letzte 30 Tage</SelectItem>
+                            <SelectItem value="90d">Letzte 90 Tage</SelectItem>
+                        </SelectContent>
+                     </Select>
+                     <Select value={deptFilter} onValueChange={setDeptFilter}>
+                        <SelectTrigger className="w-[180px] bg-input"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            {departments.map(d => <SelectItem key={d} value={d.toLowerCase()}>{d}</SelectItem>)}
+                        </SelectContent>
+                     </Select>
+                     <Button variant="outline">Export</Button>
+                 </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {kpiCards.map(kpi => (
+                    <Card key={kpi.title}>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-bold">{kpi.value}</p>
+                            <p className="text-xs text-muted-foreground">{kpi.change}</p>
+                        </CardContent>
                     </Card>
-                    <Card>
-                        <CardHeader><CardTitle className="text-base">Prüfungs-Bestehensquote</CardTitle></CardHeader>
-                        <CardContent><p className="text-4xl font-bold">88%</p></CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader><CardTitle className="text-base">Ø Bearbeitungsdauer</CardTitle></CardHeader>
-                        <CardContent><p className="text-4xl font-bold">2.5 Tage</p></CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader><CardTitle className="text-base">Zertifikatsquote</CardTitle></CardHeader>
-                        <CardContent><p className="text-4xl font-bold">75%</p></CardContent>
-                    </Card>
-                </div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                  <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base">Häufigste Fehlerquellen in Prüfungen</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>Lernpfad-Performance</CardTitle></CardHeader>
                     <CardContent>
-                        <ul className="list-disc pl-5 text-sm space-y-1">
-                            <li>Frage "Welche Daten gelten als personenbezogen?" (DSGVO-Kurs)</li>
-                            <li>Szenario "Umgang mit Einwänden" (Sales Onboarding)</li>
-                        </ul>
+                        <div className="space-y-4">
+                            {mockLearningPaths.map(lp => (
+                                <div key={lp.id}>
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="font-bold">{lp.title}</span>
+                                        <span className="text-muted-foreground">78%</span>
+                                    </div>
+                                    <Progress value={78} className="h-2"/>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader><CardTitle>Feedback-Analyse</CardTitle></CardHeader>
+                    <CardContent className="flex items-center justify-around text-center">
+                        <div>
+                             <p className="text-4xl font-bold text-emerald-500 flex items-center gap-2 justify-center"><ThumbsUp/> 128</p>
+                             <p className="text-xs text-muted-foreground">Positive Rückmeldungen</p>
+                        </div>
+                        <Separator orientation="vertical" className="h-16"/>
+                         <div>
+                             <p className="text-4xl font-bold text-rose-500 flex items-center gap-2 justify-center"><ThumbsDown/> 12</p>
+                             <p className="text-xs text-muted-foreground">Negative Rückmeldungen</p>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
-        )
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">Häufigste Fehlerquellen in Prüfungen</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ul className="list-disc pl-5 text-sm space-y-1">
+                        <li>Frage "Welche Daten gelten als personenbezogen?" (DSGVO-Kurs)</li>
+                        <li>Szenario "Umgang mit Einwänden" (Sales Onboarding)</li>
+                    </ul>
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void }) => {
+    if (title === "Fortschritt & Reports") {
+        return <ReportingView />;
     }
     return (
         <Card>
@@ -650,7 +800,6 @@ const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void
 };
 
 
-// New interactive components
 const lessonIcons: { [key: string]: React.ElementType } = {
   video: Video,
   dokument: FileIcon,
@@ -710,7 +859,7 @@ const BestaetigungLektionView = ({ lesson }: { lesson: any }) => (
                 Ich habe die Werte gelesen und verstanden.
             </Label>
         </div>
-        <Button className="mt-4">Bestätigen & weiter</Button>
+        <Button className="mt-4">Bestätigen &amp; weiter</Button>
     </div>
 );
 
@@ -748,6 +897,8 @@ const PruefungLektionView = ({ lesson }: { lesson: any }) => (
 
 
 const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChange: (open: boolean) => void }) => {
+    const { toast } = useToast();
+    const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
     
     const renderContent = () => {
         if (!lesson) return null;
@@ -768,65 +919,87 @@ const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChang
     }
 
     return (
-        <Sheet open={!!lesson} onOpenChange={onOpenChange}>
-            <SheetContent className="sm:max-w-xl w-full">
-                <SheetHeader>
-                    <SheetTitle>Lektion</SheetTitle>
-                    <SheetDescription>Absolvieren Sie diese Lektion, um im Kurs fortzufahren.</SheetDescription>
-                </SheetHeader>
-                <div className="py-8">
-                   {renderContent()}
-                </div>
-            </SheetContent>
-        </Sheet>
+        <>
+            <Sheet open={!!lesson} onOpenChange={onOpenChange}>
+                <SheetContent className="sm:max-w-xl w-full flex flex-col">
+                    <SheetHeader>
+                        <SheetTitle>Lektion</SheetTitle>
+                        <SheetDescription>Absolvieren Sie diese Lektion, um im Kurs fortzufahren.</SheetDescription>
+                    </SheetHeader>
+                    <ScrollArea className="flex-1 -mx-6 px-6">
+                        <div className="py-8">
+                           {renderContent()}
+                        </div>
+                    </ScrollArea>
+                    <div className="mt-auto pt-6 border-t">
+                        <div className="text-center">
+                            <p className="text-sm font-bold mb-2">War diese Lektion hilfreich?</p>
+                            <div className="flex justify-center gap-2">
+                                <Button variant="outline" size="icon" onClick={() => toast({ title: "Feedback erhalten", description: "Danke!" })}><ThumbsUp className="w-4 h-4" /></Button>
+                                <Button variant="outline" size="icon" onClick={() => toast({ title: "Feedback erhalten", description: "Danke!" })}><ThumbsDown className="w-4 h-4" /></Button>
+                                <Button variant="outline" onClick={() => setIsFeedbackDialogOpen(true)}>Detailliertes Feedback</Button>
+                            </div>
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
+            <FeedbackDialog open={isFeedbackDialogOpen} onOpenChange={setIsFeedbackDialogOpen} itemName={lesson?.title || ''} />
+        </>
     )
 };
 
 
 const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void }) => {
     const [selectedLesson, setSelectedLesson] = useState<any | null>(null);
+    const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
 
     return (
-        <div className="space-y-6">
-            <header>
-                <Button variant="ghost" onClick={onBack} className="mb-4">
-                    <ChevronLeft className="mr-2 h-4 w-4" />
-                    Zurück zur Kursübersicht
-                </Button>
-                <h2 className="text-2xl font-bold text-foreground">{course.title}</h2>
-                <p className="text-muted-foreground">{course.description}</p>
-            </header>
-            <div>
-                 <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={course.modules[0]?.id}>
-                    {(course.modules || []).map((module: any) => (
-                        <AccordionItem value={module.id} key={module.id} className="bg-card/80 border border-border rounded-xl overflow-hidden">
-                           <AccordionTrigger className="p-4 hover:no-underline">{module.title}</AccordionTrigger>
-                           <AccordionContent className="p-4 pt-0">
-                               <div className="space-y-2">
-                                  {(module.lessons || []).map((lesson: any) => {
-                                      const Icon = lessonIcons[lesson.type] || FileIcon;
-                                      return (
-                                        <div key={lesson.id} onClick={() => setSelectedLesson(lesson)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer">
-                                            <Icon className="w-4 h-4 text-primary" />
-                                            <span className="text-sm font-medium">{lesson.title}</span>
-                                            {lesson.type === 'prüfung' && lesson.details.isMandatory && (
-                                                <Badge variant="outline" className="ml-2 border-amber-500/50 text-amber-400">Pflicht</Badge>
-                                            )}
-                                            {lesson.duration && <span className="ml-auto text-xs text-muted-foreground">{lesson.duration}</span>}
-                                        </div>
-                                      );
-                                  })}
-                               </div>
-                               <Button variant="outline" size="sm" className="mt-4 w-full">
-                                   <Plus className="mr-2 h-4 w-4" /> Lektion hinzufügen
-                               </Button>
-                           </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
+        <>
+            <div className="space-y-6">
+                <header className="flex flex-col md:flex-row justify-between md:items-start gap-4">
+                    <div className="flex-1">
+                        <Button variant="ghost" onClick={onBack} className="mb-4 px-0 hover:bg-transparent">
+                            <ChevronLeft className="mr-2 h-4 w-4" />
+                            Zurück zur Kursübersicht
+                        </Button>
+                        <h2 className="text-2xl font-bold text-foreground">{course.title}</h2>
+                        <p className="text-muted-foreground">{course.description}</p>
+                    </div>
+                    <Button variant="outline" className="mt-2" onClick={() => setIsFeedbackDialogOpen(true)}>Feedback geben</Button>
+                </header>
+                <div>
+                     <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={course.modules[0]?.id}>
+                        {(course.modules || []).map((module: any) => (
+                            <AccordionItem value={module.id} key={module.id} className="bg-card/80 border border-border rounded-xl overflow-hidden">
+                               <AccordionTrigger className="p-4 hover:no-underline">{module.title}</AccordionTrigger>
+                               <AccordionContent className="p-4 pt-0">
+                                   <div className="space-y-2">
+                                      {(module.lessons || []).map((lesson: any) => {
+                                          const Icon = lessonIcons[lesson.type] || FileIcon;
+                                          return (
+                                            <div key={lesson.id} onClick={() => setSelectedLesson(lesson)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer">
+                                                <Icon className="w-4 h-4 text-primary" />
+                                                <span className="text-sm font-medium">{lesson.title}</span>
+                                                {lesson.type === 'prüfung' && lesson.details.isMandatory && (
+                                                    <Badge variant="outline" className="ml-2 border-amber-500/50 text-amber-400">Pflicht</Badge>
+                                                )}
+                                                {lesson.duration && <span className="ml-auto text-xs text-muted-foreground">{lesson.duration}</span>}
+                                            </div>
+                                          );
+                                      })}
+                                   </div>
+                                   <Button variant="outline" size="sm" className="mt-4 w-full">
+                                       <Plus className="mr-2 h-4 w-4" /> Lektion hinzufügen
+                                   </Button>
+                               </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                </div>
+                 <LessonSheet lesson={selectedLesson} onOpenChange={(open) => !open && setSelectedLesson(null)} />
             </div>
-             <LessonSheet lesson={selectedLesson} onOpenChange={(open) => !open && setSelectedLesson(null)} />
-        </div>
+            <FeedbackDialog open={isFeedbackDialogOpen} onOpenChange={setIsFeedbackDialogOpen} itemName={course.title} />
+        </>
     )
 };
 
@@ -861,20 +1034,15 @@ export default function QAkademiePage() {
             case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onRecordVideo={() => setIsRecordingDialogOpen(true)} onUploadVideo={() => {}} onUploadDoc={() => {}} onCreateWissen={() => {}} />;
             case 'Teilnehmer': return <ParticipantsView onCreate={() => setIsAddParticipantOpen(true)} />;
             case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
-            case 'Fortschritt & Reports': return <GenericView title="Fortschritt & Reports" />;
+            case 'Fortschritt & Reports': return <ReportingView />;
             case 'Zertifikate': return <CertificatesView onCreate={() => setIsCreateCertOpen(true)} />;
             case 'Einstellungen': return <GenericView title="Einstellungen" />;
             default: return <OverviewView />;
         }
     };
-    
-     const renderHeaderActions = () => {
-        // This is handled by the kontext-sensitive buttons now.
-        return null;
-    };
 
     const handleModuleClick = (moduleName: string) => {
-        setActiveCourse(null); // Reset course view when changing module
+        setActiveCourse(null);
         setActiveModule(moduleName);
     };
 
@@ -910,19 +1078,7 @@ export default function QAkademiePage() {
                     {renderModule()}
                 </div>
             </main>
-            <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={(open) => {
-                if (!open) {
-                    // This is the explicit cleanup call that was missing
-                    const recorderDialog = document.querySelector('[role="dialog"]');
-                    if (recorderDialog) {
-                       // A bit of a hacky way to ensure cleanup if state isn't enough
-                       const closeButton = recorderDialog.querySelector('button[aria-label="Close"]');
-                       // @ts-ignore
-                       if(closeButton) closeButton.click();
-                    }
-                }
-                setIsRecordingDialogOpen(open);
-            }} onVideoSaved={handleVideoSaved} />
+            <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={handleVideoSaved} />
             
             {/* Placeholder Dialogs */}
             <Dialog open={isCreateCourseOpen} onOpenChange={setIsCreateCourseOpen}><DialogContent><DialogHeader><DialogTitle>Kurs erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
@@ -935,4 +1091,3 @@ export default function QAkademiePage() {
         </div>
     );
 }
-
