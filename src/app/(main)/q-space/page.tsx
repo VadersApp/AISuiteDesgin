@@ -3,7 +3,7 @@
 import { useState, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -918,25 +918,42 @@ const SystemAdminView = () => {
 }
 
 export default function QSpacePage() {
-    const [activeModule, setActiveModule] = useState(modules[1].name);
-    const pathname = usePathname();
-    const router = useRouter();
+  const [activeModule, setActiveModule] = useState(modules[1].name);
+  const pathname = usePathname();
+  const router = useRouter();
 
-    const totalUnread = chatThreads.reduce(
-        (sum, t) => sum + (t.unreadCount || 0),
-        0
-      );
+  const totalUnread = chatThreads.reduce(
+      (sum, t) => sum + (t.unreadCount || 0),
+      0
+    );
 
-    const renderModule = () => {
-        switch (activeModule) {
-            case 'Übersicht': return <OverviewView />;
-            case 'Workspace': return <WorkspaceView />;
-            case 'KPI-Dashboard': return <KpiDashboard />;
-            case 'Mitarbeiter': return <MitarbeiterView />;
-            case 'System Admin (Q-Space)': return <SystemAdminView />;
-            default: return <OverviewView />;
+  const renderModule = () => {
+      switch (activeModule) {
+          case 'Übersicht': return <OverviewView />;
+          case 'Workspace': return <WorkspaceView />;
+          case 'KPI-Dashboard': return <KpiDashboard />;
+          case 'Mitarbeiter': return <MitarbeiterView />;
+          case 'System Admin (Q-Space)': return <SystemAdminView />;
+          default: return <OverviewView />;
+      }
+  };
+
+  if (pathname.startsWith('/q-space/chat')) {
+      if (activeModule !== 'Chat') {
+          setActiveModule('Chat');
+      }
+  }
+
+  const handleModuleClick = (moduleName: string) => {
+    if (moduleName === 'Chat') {
+        router.push('/q-space/chat');
+    } else {
+        if (pathname.startsWith('/q-space/chat')) {
+            router.push('/q-space');
         }
-    };
+        setActiveModule(moduleName);
+    }
+  };
 
   return (
     <>
@@ -947,46 +964,22 @@ export default function QSpacePage() {
             {modules.map((mod) => {
                 const Icon = mod.icon;
                 const isChatLink = mod.name === 'Chat';
-                
-                if (isChatLink) {
-                    const isChatActive = pathname.startsWith('/q-space/chat');
-                    return (
-                        <div key={mod.name} className="relative">
-                            <Button
-                                asChild
-                                variant={isChatActive ? 'secondary' : 'ghost'}
-                                className="w-full justify-start text-sm"
-                            >
-                                <Link href="/q-space/chat">
-                                    <Icon className="mr-2 h-4 w-4" />
-                                    {mod.name}
-                                </Link>
-                            </Button>
-                            {totalUnread > 0 && (
-                                <Badge className="absolute right-3 top-1/2 -translate-y-1/2 h-5 justify-center p-1.5 text-xs">{totalUnread}</Badge>
-                            )}
-                        </div>
-                    );
-                }
-
-                // Logic for other buttons
-                 const isModuleActive = activeModule === mod.name && !pathname.startsWith('/q-space/chat');
+                const isActive = isChatLink ? pathname.startsWith('/q-space/chat') : activeModule === mod.name && !pathname.startsWith('/q-space/chat');
 
                  return (
-                    <Button
-                        key={mod.name}
-                        variant={isModuleActive ? 'secondary' : 'ghost'}
-                        onClick={() => {
-                            if (pathname.startsWith('/q-space/chat')) {
-                                router.push('/q-space');
-                            }
-                            setActiveModule(mod.name)
-                        }}
-                        className="w-full justify-start text-sm"
-                    >
-                        <Icon className="mr-2 h-4 w-4" />
-                        {mod.name}
-                    </Button>
+                    <div key={mod.name} className="relative">
+                        <Button
+                            variant={isActive ? 'secondary' : 'ghost'}
+                            onClick={() => handleModuleClick(mod.name)}
+                            className="w-full justify-start text-sm"
+                        >
+                            <Icon className="mr-2 h-4 w-4" />
+                            {mod.name}
+                        </Button>
+                        {isChatLink && totalUnread > 0 && (
+                            <Badge className="absolute right-3 top-1/2 -translate-y-1/2 h-5 justify-center p-1.5 text-xs">{totalUnread}</Badge>
+                        )}
+                    </div>
                 )
             })}
         </aside>
@@ -1024,4 +1017,4 @@ export default function QSpacePage() {
   );
 }
 
-
+    
