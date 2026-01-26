@@ -371,7 +371,6 @@ const CoursesView = () => (
                     <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
                 </TabsList>
             </Tabs>
-             <Button><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
         </div>
         <Tabs defaultValue="unternehmenskurse">
             <TabsContent value="q-kurse">
@@ -418,7 +417,7 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => (
             </TabsList>
             <TabsContent value="videos">
                 <Card>
-                    <CardHeader><Button><Plus className="w-4 h-4 mr-2"/> Video hochladen</Button></CardHeader>
+                    <CardHeader></CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Dauer</TableHead><TableHead>Uploader</TableHead><TableHead>Datum</TableHead></TableRow></TableHeader>
@@ -438,7 +437,7 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => (
             </TabsContent>
             <TabsContent value="dokumente">
                  <Card>
-                    <CardHeader><Button><Plus className="w-4 h-4 mr-2"/> Dokument hochladen</Button></CardHeader>
+                    <CardHeader></CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Typ</TableHead><TableHead>Größe</TableHead><TableHead>Uploader</TableHead><TableHead>Datum</TableHead></TableRow></TableHeader>
@@ -459,7 +458,7 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => (
             </TabsContent>
             <TabsContent value="wissensbausteine">
                  <Card>
-                    <CardHeader><Button><Plus className="w-4 h-4 mr-2"/> Wissensbaustein erstellen</Button></CardHeader>
+                    <CardHeader></CardHeader>
                     <CardContent>
                         <div className="text-center py-12 text-muted-foreground italic">Keine Wissensbausteine vorhanden.</div>
                     </CardContent>
