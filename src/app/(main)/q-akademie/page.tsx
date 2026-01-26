@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import {
   LayoutDashboard,
   BookCopy,
   Network,
@@ -34,12 +42,24 @@ import {
   Video,
   File as FileIcon,
   BrainCircuit,
+  Camera,
+  Mic,
+  ScreenShare,
+  StopCircle,
+  Play,
+  Loader2,
+  Check,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 
 const modules = [
@@ -54,6 +74,161 @@ const modules = [
     { name: 'Zertifikate', icon: Award },
     { name: 'Einstellungen', icon: Settings },
 ];
+
+const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved } : {open: boolean, onOpenChange: (open: boolean) => void, onVideoSaved: (video: any) => void}) => {
+    const { toast } = useToast();
+    const [step, setStep] = useState<'initial' | 'recording' | 'preview' | 'uploading'>('initial');
+    const [hasPermission, setHasPermission] = useState(false);
+    const [stream, setStream] = useState<MediaStream | null>(null);
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+    const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const previewRef = useRef<HTMLVideoElement>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (open) {
+            getPermissions();
+        } else {
+            stopStream();
+            setStep('initial');
+            setRecordedVideoUrl(null);
+            setRecordedChunks([]);
+        }
+        return () => stopStream();
+    }, [open]);
+    
+    useEffect(() => {
+        if(stream && videoRef.current) {
+            videoRef.current.srcObject = stream;
+        }
+    }, [stream])
+
+    const getPermissions = async () => {
+        try {
+            const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            setStream(mediaStream);
+            setHasPermission(true);
+            setError(null);
+        } catch (err) {
+            console.error('Error accessing media devices.', err);
+            setError('Kamera- und Mikrofonzugriff verweigert. Bitte Berechtigungen in den Browsereinstellungen prüfen.');
+            setHasPermission(false);
+        }
+    };
+    
+    const stopStream = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+    };
+    
+    const startRecording = () => {
+        if (stream) {
+            const recorder = new MediaRecorder(stream);
+            setMediaRecorder(recorder);
+            recorder.ondataavailable = (e) => setRecordedChunks(prev => [...prev, e.data]);
+            recorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                setRecordedVideoUrl(url);
+                setStep('preview');
+                stopStream();
+            };
+            setRecordedChunks([]);
+            recorder.start();
+            setStep('recording');
+        }
+    };
+    
+    const stopRecording = () => {
+        mediaRecorder?.stop();
+    };
+
+    const handleSave = (e: FormEvent) => {
+        e.preventDefault();
+        const formData = new FormData(e.target as HTMLFormElement);
+        const title = formData.get('title') as string;
+        
+        setStep('uploading');
+        // Simulate upload
+        setTimeout(() => {
+            const newVideo = {
+                id: `vid-${Date.now()}`,
+                title: title || 'Unbenanntes Video',
+                duration: '0:42', // Mock
+                uploader: 'Dr. Müller',
+                date: new Date().toLocaleDateString('de-DE')
+            };
+            onVideoSaved(newVideo);
+            toast({ title: "Video gespeichert", description: "Ihre Aufnahme wurde der Bibliothek hinzugefügt." });
+            onOpenChange(false);
+        }, 2000);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Video aufnehmen</DialogTitle>
+                    <DialogDescription>Nehmen Sie ein Video auf, um es in Ihren Kursen zu verwenden.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                    {!hasPermission && (
+                        <Alert variant="destructive">
+                            <AlertTitle>Zugriff erforderlich</AlertTitle>
+                            <AlertDescription>
+                                {error || 'Bitte erlauben Sie den Zugriff auf Kamera und Mikrofon.'}
+                                <Button onClick={getPermissions} className="mt-4">Erneut versuchen</Button>
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {hasPermission && (
+                        <div className="bg-black rounded-lg aspect-video relative flex items-center justify-center">
+                            {step !== 'preview' && <video ref={videoRef} className="w-full h-full" autoPlay muted />}
+                             {step === 'preview' && <video ref={previewRef} src={recordedVideoUrl || ''} className="w-full h-full" controls />}
+                        </div>
+                    )}
+                </div>
+                 {step === 'initial' && hasPermission && (
+                    <div className="flex justify-center">
+                        <Button onClick={startRecording} size="lg"><Camera className="mr-2"/> Aufnahme starten</Button>
+                    </div>
+                )}
+                {step === 'recording' && (
+                     <div className="flex justify-center">
+                        <Button onClick={stopRecording} variant="destructive" size="lg"><StopCircle className="mr-2"/> Aufnahme stoppen</Button>
+                    </div>
+                )}
+                 {step === 'preview' && (
+                    <form onSubmit={handleSave} className="space-y-4">
+                        <div className="space-y-2">
+                           <Label htmlFor="title">Titel</Label>
+                           <Input id="title" name="title" placeholder="Video-Titel" required className="bg-input" />
+                        </div>
+                        <div className="space-y-2">
+                           <Label htmlFor="description">Beschreibung</Label>
+                           <Textarea id="description" name="description" placeholder="Kurze Beschreibung des Videoinhalts..." className="bg-input" />
+                        </div>
+                         <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => { setStep('initial'); getPermissions(); }}>Erneut aufnehmen</Button>
+                            <Button type="submit">Speichern & Hochladen</Button>
+                        </div>
+                    </form>
+                )}
+                 {step === 'uploading' && (
+                    <div className="flex items-center justify-center flex-col gap-2 text-muted-foreground">
+                        <Loader2 className="animate-spin w-8 h-8" />
+                        <p>Video wird hochgeladen...</p>
+                    </div>
+                )}
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 
 const OverviewView = () => (
     <div className="space-y-6">
@@ -164,7 +339,7 @@ const CoursesView = () => (
     </div>
 );
 
-const InhalteView = () => (
+const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => (
     <div>
         <Tabs defaultValue="videos">
             <TabsList className="mb-6">
@@ -179,7 +354,7 @@ const InhalteView = () => (
                         <Table>
                             <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Dauer</TableHead><TableHead>Uploader</TableHead><TableHead>Datum</TableHead></TableRow></TableHeader>
                             <TableBody>
-                                {mockAcademyVideos.map(v => (
+                                {videos.map(v => (
                                     <TableRow key={v.id} className="cursor-pointer">
                                         <TableCell className="font-medium flex items-center gap-2"><Video className="w-4 h-4 text-muted-foreground"/> {v.title}</TableCell>
                                         <TableCell>{v.duration}</TableCell>
@@ -281,6 +456,12 @@ const GenericView = ({ title }: { title: string }) => (
 
 export default function QAkademiePage() {
     const [activeModule, setActiveModule] = useState(modules[0].name);
+    const [isRecordingDialogOpen, setIsRecordingDialogOpen] = useState(false);
+    const [videos, setVideos] = useState(mockAcademyVideos);
+
+    const handleVideoSaved = (newVideo: any) => {
+        setVideos(prev => [newVideo, ...prev]);
+    };
 
     const renderModule = () => {
         switch (activeModule) {
@@ -288,7 +469,7 @@ export default function QAkademiePage() {
             case 'Q-Onboarding': return <QOnboardingView />;
             case 'Kurse': return <CoursesView />;
             case 'Lernpfade': return <LearningPathsView />;
-            case 'Inhalte': return <InhalteView />;
+            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} />;
             case 'Teilnehmer': return <ParticipantsView />;
             case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
             case 'Fortschritt & Reports': return <GenericView title="Fortschritt & Reports" />;
@@ -336,6 +517,7 @@ export default function QAkademiePage() {
                                 <DropdownMenuItem>Kurs erstellen</DropdownMenuItem>
                                 <DropdownMenuItem>Lernpfad erstellen</DropdownMenuItem>
                                 <DropdownMenuItem>Video hochladen</DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsRecordingDialogOpen(true)}>Video aufnehmen</DropdownMenuItem>
                                 <DropdownMenuItem>Dokument hochladen</DropdownMenuItem>
                                 <DropdownMenuItem>Wissensbaustein erstellen</DropdownMenuItem>
                             </DropdownMenuContent>
@@ -347,6 +529,7 @@ export default function QAkademiePage() {
                     {renderModule()}
                 </div>
             </main>
+            <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={handleVideoSaved} />
         </div>
     );
 }
