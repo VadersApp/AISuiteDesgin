@@ -384,7 +384,7 @@ const DocumentsView = () => {
                                                     <div className="space-y-1 mt-1">
                                                         {selectedDoc.aiAnalysis.suggestedLinks.sopIds?.map((id: string) => (
                                                             <Button key={id} variant="outline" size="sm" className="h-auto py-1 px-2 text-xs w-full justify-start gap-2">
-                                                                <FileText className="w-3 h-3"/> {id} <span className="text-muted-foreground ml-auto">(SOP)</span>
+                                                                <FileText className="w-3 h-3"/> {id} <span className="text-muted-foreground ml-auto">(Arbeitsanweisung)</span>
                                                             </Button>
                                                         ))}
                                                         {selectedDoc.aiAnalysis.suggestedLinks.taskIds?.map((id: string) => (
@@ -429,7 +429,7 @@ const WorkspaceView = () => (
                 <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
                 <TabsTrigger value="projekte">Projekte</TabsTrigger>
                 <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
-                <TabsTrigger value="sops">SOPs</TabsTrigger>
+                <TabsTrigger value="sops">Arbeitsanweisungen</TabsTrigger>
             </TabsList>
             <TabsContent value="aufgaben" className="mt-4">
                 <Card><CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader><CardContent>
@@ -449,8 +449,8 @@ const WorkspaceView = () => (
                 <DocumentsView />
             </TabsContent>
             <TabsContent value="sops" className="mt-4">
-                <Card><CardHeader><CardTitle>SOPs</CardTitle></CardHeader><CardContent>
-                    <Table><TableHeader><TableRow><TableHead>SOP-Titel</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <Card><CardHeader><CardTitle>Arbeitsanweisungen</CardTitle></CardHeader><CardContent>
+                    <Table><TableHeader><TableRow><TableHead>Titel der Arbeitsanweisung</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                         <TableBody>{mockSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
                     </Table>
                 </CardContent></Card>
@@ -917,7 +917,7 @@ const SystemAdminView = () => {
                                 <div><Label>Überfällig</Label><Input type="number" defaultValue="2" className="bg-input"/></div>
                                 <div><Label>Verspätet</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
                                 <div><Label>Blockiert</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
-                                <div><Label>SOP-Abweichung</Label><Input type="number" defaultValue="3" className="bg-input"/></div>
+                                <div><Label>Abweichung Arbeitsanweisung</Label><Input type="number" defaultValue="3" className="bg-input"/></div>
                                 <div><Label>Projektverzug</Label><Input type="number" defaultValue="4" className="bg-input"/></div>
                            </div>
                         </CardContent>
@@ -1037,7 +1037,7 @@ export default function QSpacePage() {
                             <DropdownMenuItem>Neue Aufgabe</DropdownMenuItem>
                             <DropdownMenuItem>Neues Projekt</DropdownMenuItem>
                             <DropdownMenuItem>Neues Dokument</DropdownMenuItem>
-                             <DropdownMenuItem>Neue SOP</DropdownMenuItem>
+                             <DropdownMenuItem>Neue Arbeitsanweisung</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -1052,6 +1052,7 @@ export default function QSpacePage() {
 }
 
     
+
 
 
 
