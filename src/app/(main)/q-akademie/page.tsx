@@ -49,6 +49,7 @@ import {
   Play,
   Loader2,
   Check,
+  Radio,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -60,6 +61,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 
 const modules = [
@@ -75,71 +77,128 @@ const modules = [
     { name: 'Einstellungen', icon: Settings },
 ];
 
-const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved } : {open: boolean, onOpenChange: (open: boolean) => void, onVideoSaved: (video: any) => void}) => {
+type RecordingMode = 'screen' | 'screen-cam' | 'camera';
+
+const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boolean, onOpenChange: (open: boolean) => void, onVideoSaved: (video: any) => void }) => {
     const { toast } = useToast();
-    const [step, setStep] = useState<'initial' | 'recording' | 'preview' | 'uploading'>('initial');
-    const [hasPermission, setHasPermission] = useState(false);
+    const [step, setStep] = useState<'mode-selection' | 'recording' | 'preview' | 'uploading'>('mode-selection');
+    const [recordingMode, setRecordingMode] = useState<RecordingMode | null>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const previewRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (open) {
-            getPermissions();
-        } else {
-            stopStream();
-            setStep('initial');
-            setRecordedVideoUrl(null);
-            setRecordedChunks([]);
-        }
-        return () => stopStream();
-    }, [open]);
-    
-    useEffect(() => {
-        if(stream && videoRef.current) {
-            videoRef.current.srcObject = stream;
-        }
-    }, [stream])
-
-    const getPermissions = async () => {
-        try {
-            const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            setStream(mediaStream);
-            setHasPermission(true);
-            setError(null);
-        } catch (err) {
-            console.error('Error accessing media devices.', err);
-            setError('Kamera- und Mikrofonzugriff verweigert. Bitte Berechtigungen in den Browsereinstellungen prüfen.');
-            setHasPermission(false);
-        }
+    const resetState = () => {
+        stopStream();
+        setStep('mode-selection');
+        setRecordingMode(null);
+        setRecordedVideoUrl(null);
+        setRecordedChunks([]);
+        setError(null);
+        setStream(null);
+        setMediaRecorder(null);
     };
     
+    useEffect(() => {
+        if (!open) {
+            resetState();
+        }
+    }, [open]);
+
     const stopStream = () => {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
-            setStream(null);
         }
     };
-    
-    const startRecording = () => {
-        if (stream) {
-            const recorder = new MediaRecorder(stream);
+
+    const handleStartRecording = async () => {
+        if (!recordingMode) return;
+        setError(null);
+        
+        try {
+            let finalStream: MediaStream;
+
+            if (recordingMode === 'camera') {
+                finalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            } else {
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                if (recordingMode === 'screen-cam') {
+                    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) throw new Error('Canvas context not available');
+
+                    const screenVideo = document.createElement('video');
+                    screenVideo.srcObject = screenStream;
+                    screenVideo.muted = true;
+                    screenVideo.play();
+
+                    const camVideo = document.createElement('video');
+                    camVideo.srcObject = cameraStream;
+                    camVideo.muted = true;
+                    camVideo.play();
+
+                    await Promise.all([
+                        new Promise(resolve => screenVideo.onloadedmetadata = resolve),
+                        new Promise(resolve => camVideo.onloadedmetadata = resolve)
+                    ]);
+                    
+                    canvas.width = screenVideo.videoWidth;
+                    canvas.height = screenVideo.videoHeight;
+                    
+                    const draw = () => {
+                        ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
+                        const camWidth = canvas.width / 5;
+                        const camHeight = (camVideo.videoHeight / camVideo.videoWidth) * camWidth;
+                        ctx.drawImage(camVideo, canvas.width - camWidth - 20, canvas.height - camHeight - 20, camWidth, camHeight);
+                        requestAnimationFrame(draw);
+                    };
+                    draw();
+                    
+                    const canvasStream = canvas.captureStream();
+                    const audioTrack = screenStream.getAudioTracks()[0];
+                    if (audioTrack) {
+                         canvasStream.addTrack(audioTrack.clone());
+                    }
+                    finalStream = canvasStream;
+
+                } else { // screen only
+                    finalStream = screenStream;
+                }
+            }
+
+            setStream(finalStream);
+            
+            if (videoRef.current) {
+                videoRef.current.srcObject = finalStream;
+                videoRef.current.play();
+            }
+
+            const recorder = new MediaRecorder(finalStream);
             setMediaRecorder(recorder);
             recorder.ondataavailable = (e) => setRecordedChunks(prev => [...prev, e.data]);
             recorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                setRecordedVideoUrl(url);
-                setStep('preview');
-                stopStream();
+                setRecordedChunks(currentChunks => {
+                    const blob = new Blob(currentChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    setRecordedVideoUrl(url);
+                    setStep('preview');
+                    return currentChunks;
+                });
+                finalStream.getTracks().forEach(track => track.stop());
             };
             setRecordedChunks([]);
             recorder.start();
             setStep('recording');
+
+        } catch (err: any) {
+            console.error('Error accessing media devices.', err);
+            setError(`Zugriff auf Medien verweigert: ${err.message}. Bitte Berechtigungen in den Browsereinstellungen prüfen.`);
+            setRecordingMode(null);
+            setStep('mode-selection');
         }
     };
     
@@ -153,7 +212,6 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved } : {open: boole
         const title = formData.get('title') as string;
         
         setStep('uploading');
-        // Simulate upload
         setTimeout(() => {
             const newVideo = {
                 id: `vid-${Date.now()}`,
@@ -173,35 +231,47 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved } : {open: boole
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Video aufnehmen</DialogTitle>
-                    <DialogDescription>Nehmen Sie ein Video auf, um es in Ihren Kursen zu verwenden.</DialogDescription>
+                     {step === 'mode-selection' && <DialogDescription>Wählen Sie einen Aufnahmemodus, um zu beginnen.</DialogDescription>}
+                     {step !== 'mode-selection' && <DialogDescription>Nehmen Sie ein Video auf, um es in Ihren Kursen zu verwenden.</DialogDescription>}
                 </DialogHeader>
-                <div className="py-4">
-                    {!hasPermission && (
-                        <Alert variant="destructive">
-                            <AlertTitle>Zugriff erforderlich</AlertTitle>
-                            <AlertDescription>
-                                {error || 'Bitte erlauben Sie den Zugriff auf Kamera und Mikrofon.'}
-                                <Button onClick={getPermissions} className="mt-4">Erneut versuchen</Button>
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                    {hasPermission && (
-                        <div className="bg-black rounded-lg aspect-video relative flex items-center justify-center">
-                            {step !== 'preview' && <video ref={videoRef} className="w-full h-full" autoPlay muted />}
-                             {step === 'preview' && <video ref={previewRef} src={recordedVideoUrl || ''} className="w-full h-full" controls />}
-                        </div>
-                    )}
+
+                {error && <Alert variant="destructive"><AlertTitle>Fehler</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
+
+                {step === 'mode-selection' && (
+                    <RadioGroup onValueChange={(v: RecordingMode) => setRecordingMode(v)} className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                        {[
+                            { value: 'screen', label: 'Bildschirmvideo', icon: ScreenShare, desc: 'Bildschirm & Mikrofon' },
+                            { value: 'screen-cam', label: 'Bildschirm & Kamera', icon: ScreenShare, desc: 'Bildschirm, Mikro & Kamera (PiP)' },
+                            { value: 'camera', label: 'Nur Kamera', icon: Camera, desc: 'Kamera & Mikrofon' }
+                        ].map(mode => (
+                             <Label key={mode.value} htmlFor={mode.value} className={cn("p-4 border rounded-lg cursor-pointer hover:bg-accent", recordingMode === mode.value && 'border-primary ring-2 ring-primary')}>
+                                <RadioGroupItem value={mode.value} id={mode.value} className="sr-only"/>
+                                <div className="flex flex-col items-center text-center gap-2">
+                                    <mode.icon className="w-8 h-8 text-primary"/>
+                                    <span className="font-bold">{mode.label}</span>
+                                    <span className="text-xs text-muted-foreground">{mode.desc}</span>
+                                </div>
+                            </Label>
+                        ))}
+                    </RadioGroup>
+                )}
+
+                {(step === 'recording' || step === 'preview') && (
+                    <div className="bg-black rounded-lg aspect-video relative flex items-center justify-center">
+                        <video ref={videoRef} className={cn("w-full h-full", step === 'preview' && 'hidden')} autoPlay muted />
+                        {step === 'preview' && <video src={recordedVideoUrl || ''} className="w-full h-full" controls />}
+                    </div>
+                )}
+                
+                <div className="mt-4 flex justify-center">
+                   {step === 'mode-selection' && (
+                      <Button onClick={handleStartRecording} disabled={!recordingMode} size="lg"><Play className="mr-2"/> Aufnahme starten</Button>
+                   )}
+                   {step === 'recording' && (
+                      <Button onClick={stopRecording} variant="destructive" size="lg"><StopCircle className="mr-2"/> Aufnahme stoppen</Button>
+                   )}
                 </div>
-                 {step === 'initial' && hasPermission && (
-                    <div className="flex justify-center">
-                        <Button onClick={startRecording} size="lg"><Camera className="mr-2"/> Aufnahme starten</Button>
-                    </div>
-                )}
-                {step === 'recording' && (
-                     <div className="flex justify-center">
-                        <Button onClick={stopRecording} variant="destructive" size="lg"><StopCircle className="mr-2"/> Aufnahme stoppen</Button>
-                    </div>
-                )}
+
                  {step === 'preview' && (
                     <form onSubmit={handleSave} className="space-y-4">
                         <div className="space-y-2">
@@ -213,15 +283,15 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved } : {open: boole
                            <Textarea id="description" name="description" placeholder="Kurze Beschreibung des Videoinhalts..." className="bg-input" />
                         </div>
                          <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => { setStep('initial'); getPermissions(); }}>Erneut aufnehmen</Button>
+                            <Button type="button" variant="outline" onClick={() => resetState()}>Erneut aufnehmen</Button>
                             <Button type="submit">Speichern & Hochladen</Button>
                         </div>
                     </form>
                 )}
                  {step === 'uploading' && (
-                    <div className="flex items-center justify-center flex-col gap-2 text-muted-foreground">
+                    <div className="flex items-center justify-center flex-col gap-2 text-muted-foreground py-10">
                         <Loader2 className="animate-spin w-8 h-8" />
-                        <p>Video wird hochgeladen...</p>
+                        <p>Video wird verarbeitet & hochgeladen...</p>
                     </div>
                 )}
             </DialogContent>
@@ -293,12 +363,17 @@ const QOnboardingView = () => (
 
 const CoursesView = () => (
     <div>
+        <div className="flex justify-between items-center mb-6">
+             <Tabs defaultValue="unternehmenskurse" className="w-full">
+                <TabsList>
+                    <TabsTrigger value="q-kurse">Q-Kurse</TabsTrigger>
+                    <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
+                    <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
+                </TabsList>
+            </Tabs>
+             <Button><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
+        </div>
         <Tabs defaultValue="unternehmenskurse">
-            <TabsList className="mb-6">
-                <TabsTrigger value="q-kurse">Q-Kurse</TabsTrigger>
-                <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
-                <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
-            </TabsList>
             <TabsContent value="q-kurse">
                 <div className="text-center py-12 text-muted-foreground italic">Keine Q-Kurse verfügbar.</div>
             </TabsContent>
@@ -324,12 +399,6 @@ const CoursesView = () => (
                             </div>
                         </Card>
                     ))}
-                     <Card className="flex flex-col items-center justify-center border-2 border-dashed bg-transparent shadow-none hover:border-primary/80 hover:bg-accent/50 transition-colors">
-                        <Button variant="ghost" className="h-auto flex-col gap-2">
-                            <Plus className="w-8 h-8 text-muted-foreground" />
-                            <span className="text-sm font-bold text-muted-foreground">Neuen Kurs erstellen</span>
-                        </Button>
-                    </Card>
                 </div>
             </TabsContent>
             <TabsContent value="eigene-kurse">
