@@ -2,6 +2,7 @@
 
 import { useState, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,7 +62,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, chatMessages, teamChatsData, invitesData } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -69,11 +70,11 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useSidebar } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 
 
 const modules = [
+    { name: 'Chat', icon: MessageSquare },
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'Workspace', icon: Briefcase },
     { name: 'KPI-Dashboard', icon: BarChart3 },
@@ -94,246 +95,6 @@ const mockDocuments = [
 const mockSops = [
     { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
 ];
-
-const ChatInbox = ({
-  isOpen,
-  onOpenChange,
-  activeThreadId,
-  onThreadSelect,
-}: {
-  isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
-  activeThreadId: string | null;
-  onThreadSelect: (threadId: string | null) => void;
-}) => {
-  const threads = chatThreads;
-  const messages = activeThreadId ? chatMessages[activeThreadId] || [] : [];
-  const activeThread = threads.find((t) => t.id === activeThreadId);
-
-  const getContextIcon = (contextType: string) => {
-    switch (contextType) {
-      case 'task': return <CheckSquare className="w-3 h-3" />;
-      case 'project': return <Folder className="w-3 h-3" />;
-      case 'escalation': return <Flame className="w-3 h-3" />;
-      case 'team': return <Users className="w-3 h-3" />;
-      case 'dm': return <UserIcon className="w-3 h-3" />;
-      default: return <MessageSquare className="w-3 h-3" />;
-    }
-  };
-
-  if (!isOpen) {
-    return null;
-  }
-
-  return (
-    <Card className="fixed inset-0 z-50 flex flex-col shadow-2xl animate-in slide-in-from-bottom-5 fade-in-50 rounded-2xl md:inset-auto md:bottom-6 md:left-6 md:w-[420px] md:h-[70vh] md:max-h-[calc(100vh-5rem)]">
-      {activeThread ? (
-        <>
-          <div className="p-4 border-b border-border flex items-center gap-3 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => onThreadSelect(null)}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h3 className="font-bold text-foreground leading-tight">
-                {activeThread.title}
-              </h3>
-              <p className="text-xs text-muted-foreground capitalize">
-                {activeThread.contextType}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ml-auto h-8 w-8"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.map((msg: any) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    'flex items-start gap-3',
-                    msg.sender.name === 'Dr. Müller' && 'justify-end'
-                  )}
-                >
-                  {msg.sender.name !== 'Dr. Müller' && (
-                    <Avatar className="w-8 h-8 border">
-                      <AvatarFallback>
-                        {msg.sender.avatar === 'Bot' ? (
-                          <BotIcon className="w-4 h-4" />
-                        ) : (
-                          msg.sender.avatar
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={cn(
-                      'max-w-xs p-3 rounded-xl text-sm',
-                      msg.type === 'system' &&
-                        'text-center w-full text-xs text-muted-foreground italic',
-                      msg.type === 'ai_summary' &&
-                        'bg-blue-500/10 border border-blue-500/20 text-blue-300',
-                      msg.type === 'user' &&
-                        (msg.sender.name === 'Dr. Müller'
-                          ? 'bg-primary text-primary-foreground rounded-br-none'
-                          : 'bg-muted rounded-bl-none')
-                    )}
-                  >
-                    <p
-                      className={cn(
-                        'text-xs font-bold mb-1',
-                        msg.sender.name === 'Dr. Müller'
-                          ? 'text-primary-foreground/80'
-                          : 'text-foreground/80'
-                      )}
-                    >
-                      {msg.sender.name}
-                    </p>
-                    <p>{msg.text}</p>
-                  </div>
-                  {msg.sender.name === 'Dr. Müller' && (
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback>DM</AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-          <div className="p-4 border-t border-border mt-auto">
-            <div className="relative">
-              <Textarea
-                placeholder="Nachricht..."
-                className="bg-input pr-12"
-                rows={1}
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute right-2 top-1/2 -translate-y-1/2"
-              >
-                <MessageSquare className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
-            <h2 className="font-bold text-lg text-foreground">Kommunikation</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <Tabs defaultValue="threads" className="flex-1 flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-border">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="threads">Threads</TabsTrigger>
-                    <TabsTrigger value="teams">Teams</TabsTrigger>
-                    <TabsTrigger value="direkt">Direkt</TabsTrigger>
-                </TabsList>
-                 <div className="relative mt-4">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Suchen..." className="pl-9 bg-input" />
-                </div>
-            </div>
-            <ScrollArea className="flex-1">
-                <TabsContent value="threads" className="m-0">
-                    <div className="p-2 space-y-1">
-                    {threads.filter(t => ['task', 'project', 'escalation', 'thread'].includes(t.contextType) && !t.isArchived).map((thread) => (
-                        <div key={thread.id} onClick={() => onThreadSelect(thread.id)} className="p-3 rounded-lg hover:bg-muted cursor-pointer">
-                            <div className="flex justify-between items-start">
-                                <p className="font-bold text-sm text-foreground line-clamp-1 flex items-center gap-2">
-                                    {getContextIcon(thread.contextType)} {thread.title}
-                                </p>
-                                {thread.unreadCount > 0 && (<Badge className="bg-primary">{thread.unreadCount}</Badge>)}
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{thread.lastMessageSnippet}</p>
-                        </div>
-                    ))}
-                    </div>
-                </TabsContent>
-                <TabsContent value="teams" className="m-0">
-                     <div className="p-2 space-y-1">
-                        {teamChatsData.map((teamChat) => {
-                            const thread = threads.find(t => t.contextType === 'team' && t.contextId === teamChat.id);
-                            return (
-                                <div key={teamChat.id} onClick={() => thread && onThreadSelect(thread.id)} className="p-3 rounded-lg hover:bg-muted cursor-pointer">
-                                     <div className="flex justify-between items-start">
-                                        <p className="font-bold text-sm text-foreground line-clamp-1 flex items-center gap-2">
-                                            <Users className="w-3 h-3" /> {teamChat.name}
-                                        </p>
-                                        {thread && thread.unreadCount > 0 && (<Badge className="bg-primary">{thread.unreadCount}</Badge>)}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{thread ? thread.lastMessageSnippet : teamChat.description}</p>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </TabsContent>
-                <TabsContent value="direkt" className="m-0">
-                    <div className="p-2 space-y-1">
-                        {kpiMitarbeiter
-                            .slice() // Create a shallow copy to avoid mutating the original
-                            .sort((a,b) => a.name.localeCompare(b.name))
-                            .map((user) => {
-                             // Assuming current user is Dr. Müller, so filter him out
-                            if (user.id === 'dr-mueller') return null;
-                            const thread = threads.find(t => t.contextType === 'dm' && t.participants.includes(user.id));
-                            return (
-                                 <div key={user.id} onClick={() => thread && onThreadSelect(thread.id)} className="p-3 rounded-lg hover:bg-muted cursor-pointer flex justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="w-8 h-8">
-                                            <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                            <p className="font-bold text-sm text-foreground">{user.name}</p>
-                                            <p className="text-xs text-muted-foreground">{user.role}</p>
-                                        </div>
-                                    </div>
-                                    {thread && thread.unreadCount > 0 && (<Badge className="bg-primary">{thread.unreadCount}</Badge>)}
-                                 </div>
-                            )
-                        })}
-                    </div>
-                </TabsContent>
-            </ScrollArea>
-          </Tabs>
-          <div className="p-4 border-t border-border mt-auto">
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button className="w-full">
-                      <Plus className="w-4 h-4 mr-2" /> Neue Nachricht
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[385px]">
-                    <DropdownMenuItem>Neuer Arbeits-Thread</DropdownMenuItem>
-                    <DropdownMenuItem>Neuer Team-Chat</DropdownMenuItem>
-                    <DropdownMenuItem>Neue Direktnachricht</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </>
-      )}
-    </Card>
-  );
-};
-
 
 const OverviewView = () => (
     <div className="space-y-6">
@@ -904,11 +665,14 @@ const SystemAdminView = () => {
 }
 
 export default function QSpacePage() {
-    const [activeModule, setActiveModule] = useState(modules[0].name);
+    const [activeModule, setActiveModule] = useState(modules[1].name);
+    const pathname = usePathname();
+    const router = useRouter();
 
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [activeChatThread, setActiveChatThread] = useState<string | null>(null);
-    const { state, isMobile } = useSidebar();
+    const totalUnread = chatThreads.reduce(
+        (sum, t) => sum + (t.unreadCount || 0),
+        0
+      );
 
     const renderModule = () => {
         switch (activeModule) {
@@ -920,11 +684,6 @@ export default function QSpacePage() {
             default: return <OverviewView />;
         }
     };
-    
-  const totalUnread = chatThreads.reduce(
-    (sum, t) => sum + (t.unreadCount || 0),
-    0
-  );
 
   return (
     <>
@@ -934,11 +693,42 @@ export default function QSpacePage() {
             <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">Q-Space</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
-                return (
+                const isChatLink = mod.name === 'Chat';
+                
+                if (isChatLink) {
+                    const isChatActive = pathname.startsWith('/q-space/chat');
+                    return (
+                        <div key={mod.name} className="relative">
+                            <Button
+                                asChild
+                                variant={isChatActive ? 'secondary' : 'ghost'}
+                                className="w-full justify-start text-sm"
+                            >
+                                <Link href="/q-space/chat">
+                                    <Icon className="mr-2 h-4 w-4" />
+                                    {mod.name}
+                                </Link>
+                            </Button>
+                            {totalUnread > 0 && (
+                                <Badge className="absolute right-3 top-1/2 -translate-y-1/2 h-5 justify-center p-1.5 text-xs">{totalUnread}</Badge>
+                            )}
+                        </div>
+                    );
+                }
+
+                // Logic for other buttons
+                 const isModuleActive = activeModule === mod.name && !pathname.startsWith('/q-space/chat');
+
+                 return (
                     <Button
                         key={mod.name}
-                        variant={activeModule === mod.name ? 'secondary' : 'ghost'}
-                        onClick={() => setActiveModule(mod.name)}
+                        variant={isModuleActive ? 'secondary' : 'ghost'}
+                        onClick={() => {
+                            if (pathname.startsWith('/q-space/chat')) {
+                                router.push('/q-space');
+                            }
+                            setActiveModule(mod.name)
+                        }}
                         className="w-full justify-start text-sm"
                     >
                         <Icon className="mr-2 h-4 w-4" />
@@ -977,30 +767,7 @@ export default function QSpacePage() {
             </div>
         </main>
     </div>
-      <Button
-        size="icon"
-        onClick={() => {
-          setActiveChatThread(null);
-          setIsChatOpen(true);
-        }}
-        className={cn(
-            "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-300 ease-in-out",
-            isMobile ? "left-6" : "left-[calc(16rem+1.5rem)]"
-        )}
-      >
-        <MessageSquare />
-         {totalUnread > 0 && (
-          <Badge className="absolute -top-1 -right-1 h-6 w-6 justify-center p-0">
-            {totalUnread}
-          </Badge>
-        )}
-      </Button>
-      <ChatInbox
-        isOpen={isChatOpen}
-        onOpenChange={setIsChatOpen}
-        activeThreadId={activeChatThread}
-        onThreadSelect={setActiveChatThread}
-      />
     </>
   );
 }
+
