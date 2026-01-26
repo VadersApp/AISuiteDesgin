@@ -233,7 +233,7 @@ const OverviewView = () => (
 const DocumentsView = () => {
     const [selectedDept, setSelectedDept] = useState('all');
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-    const [selectedDoc, setSelectedDoc] = useState<any | null>(mockDocs[0]);
+    const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
     const [uploadMode, setUploadMode] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -314,6 +314,10 @@ const DocumentsView = () => {
 
     const handleFinalizeUpload = () => {
         // Mock finalization
+        const uploadedDoc = mockDocs.find(d => d.fileName === mockUploadJob.fileName);
+        if (uploadedDoc) {
+            setSelectedDoc(uploadedDoc);
+        }
         setUploadMode(false);
     }
 
@@ -426,7 +430,7 @@ const DocumentsView = () => {
                 )}
                 {!uploadMode && !selectedDoc && (
                      <div className="flex items-center justify-center h-full text-muted-foreground text-center p-4">
-                        <p>Wähle ein Dokument aus oder lade ein neues hoch, um Details anzuzeigen.</p>
+                        <p>Bitte wählen Sie ein Dokument aus, um die Details anzuzeigen.</p>
                      </div>
                 )}
             </Card>
@@ -1066,4 +1070,5 @@ export default function QSpacePage() {
 }
 
     
+
 
