@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 import {
   LayoutDashboard,
   FileText,
@@ -41,14 +53,15 @@ import {
   Search as SearchIcon,
   Bot as BotIcon,
   X,
-  Send,
+  MoreHorizontal,
   Folder,
   CheckSquare,
   User as UserIcon,
+  Calendar as CalendarIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, chatMessages, teamChatsData } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, chatMessages, teamChatsData, invitesData } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -57,6 +70,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useToast } from '@/hooks/use-toast';
 
 
 const modules = [
@@ -208,7 +222,7 @@ const ChatInbox = ({
                 variant="ghost"
                 className="absolute right-2 top-1/2 -translate-y-1/2"
               >
-                <Send className="w-4 h-4" />
+                <MessageSquare className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -507,12 +521,28 @@ const KpiDashboard = () => {
 };
 
 const MitarbeiterView = () => {
+    const { toast } = useToast();
     const [statusFilter, setStatusFilter] = useState('all');
     const [teamFilter, setTeamFilter] = useState('all');
     const [escalationFilter, setEscalationFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    
+    // Form state for new employee
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [role, setRole] = useState('');
+    const [department, setDepartment] = useState('');
+    const [team, setTeam] = useState('');
+    const [startDate, setStartDate] = useState<Date | undefined>();
+    const [note, setNote] = useState('');
+
 
     const teams = useMemo(() => [...new Set(kpiMitarbeiter.map(m => m.team))], []);
+    const departments = useMemo(() => [...new Set(kpiMitarbeiter.map(m => m.abteilung))], []);
+    const roles = ["employee", "team_lead", "dept_head", "exec", "space_admin"];
+
 
     const filteredMitarbeiter = useMemo(() => {
         return kpiMitarbeiter.filter(m => {
@@ -523,6 +553,19 @@ const MitarbeiterView = () => {
             return true;
         });
     }, [statusFilter, teamFilter, escalationFilter, searchTerm]);
+    
+    const handleCreateInvite = (e: FormEvent) => {
+        e.preventDefault();
+        // In a real app, this would trigger a server-side function
+        console.log({ firstName, lastName, email, role, department, team, startDate, note });
+        toast({
+            title: "Einladung gesendet",
+            description: `${firstName} ${lastName} wurde per E-Mail eingeladen.`,
+        });
+        setIsCreateOpen(false);
+        // Reset form
+        setFirstName(''); setLastName(''); setEmail(''); setRole(''); setDepartment(''); setTeam(''); setStartDate(undefined); setNote('');
+    }
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -530,6 +573,11 @@ const MitarbeiterView = () => {
             case 'Beobachtung': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
             case 'Warnung': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
             case 'Eskalation': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            case 'pending': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            case 'sent': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            case 'accepted': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            case 'expired':
+            case 'cancelled': return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
             default: return 'bg-slate-500/10 text-slate-400';
         }
     };
@@ -540,72 +588,202 @@ const MitarbeiterView = () => {
                 <h2 className="text-xl font-bold text-foreground">Mitarbeiter</h2>
                 <p className="text-sm text-muted-foreground">Arbeits- und Leistungsübersicht Ihrer Mitarbeiter.</p>
             </header>
-            <Card>
-                <CardHeader>
-                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-                        <CardTitle>Mitarbeiterübersicht</CardTitle>
-                        <div className="flex items-center gap-2 flex-wrap">
-                             <Input placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full md:w-48 bg-input" />
-                             <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Status" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Alle Status</SelectItem>
-                                    <SelectItem value="Stabil">Stabil</SelectItem>
-                                    <SelectItem value="Beobachtung">Beobachtung</SelectItem>
-                                    <SelectItem value="Warnung">Warnung</SelectItem>
-                                    <SelectItem value="Eskalation">Eskalation</SelectItem>
-                                </SelectContent>
-                             </Select>
-                             <Select value={teamFilter} onValueChange={setTeamFilter}>
-                                <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Team" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Alle Teams</SelectItem>
-                                    {teams.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                                </SelectContent>
-                             </Select>
-                             <Select value={escalationFilter} onValueChange={setEscalationFilter}>
-                                <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Eskalation" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Alle</SelectItem>
-                                    <SelectItem value="yes">Nur Eskalationen</SelectItem>
-                                </SelectContent>
-                             </Select>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Rolle</TableHead>
-                                <TableHead>Team</TableHead>
-                                <TableHead>Bereich</TableHead>
-                                <TableHead>KPI Score</TableHead>
-                                <TableHead>KPI Status</TableHead>
-                                <TableHead>Aktive Aufgaben</TableHead>
-                                <TableHead>Aktive Projekte</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {filteredMitarbeiter.map(m => (
-                            <TableRow key={m.id} className="cursor-pointer hover:bg-accent/50">
-                                <TableCell className="font-medium">
-                                    <Link href={`/q-space/employees/${m.id}`} className="hover:underline">{m.name}</Link>
-                                </TableCell>
-                                <TableCell className="text-xs">{m.role}</TableCell>
-                                <TableCell>{m.team}</TableCell>
-                                <TableCell>{m.abteilung}</TableCell>
-                                <TableCell className="font-mono font-bold text-sm">{m.zWert}%</TableCell>
-                                <TableCell><Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge></TableCell>
-                                <TableCell className="text-center">{m.activeTasks}</TableCell>
-                                <TableCell className="text-center">{m.activeProjects}</TableCell>
-                            </TableRow>
-                        ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+             <Tabs defaultValue="overview">
+                <div className="flex justify-between items-center mb-4">
+                    <TabsList>
+                        <TabsTrigger value="overview">Übersicht</TabsTrigger>
+                        <TabsTrigger value="invites">Einladungen</TabsTrigger>
+                    </TabsList>
+                    <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                        <DialogTrigger asChild>
+                            <Button><Plus className="mr-2 h-4 w-4" /> Mitarbeiter anlegen</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[625px]">
+                            <DialogHeader>
+                                <DialogTitle>Mitarbeiter anlegen</DialogTitle>
+                                <DialogDescription>
+                                    Füllen Sie die Felder aus, um eine Einladung per E-Mail zu versenden.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleCreateInvite}>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="firstName">Vorname</Label>
+                                        <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="bg-input" required/>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="lastName">Nachname</Label>
+                                        <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className="bg-input" required/>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">E-Mail</Label>
+                                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-input" required/>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="role">Rolle</Label>
+                                        <Select required onValueChange={setRole} value={role}><SelectTrigger id="role" className="bg-input"><SelectValue placeholder="Rolle wählen..." /></SelectTrigger>
+                                            <SelectContent>{roles.map(r => <SelectItem key={r} value={r} className="capitalize">{r.replace('_', ' ')}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="department">Bereich</Label>
+                                         <Select required onValueChange={setDepartment} value={department}><SelectTrigger id="department" className="bg-input"><SelectValue placeholder="Bereich wählen..." /></SelectTrigger>
+                                            <SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="team">Team (optional)</Label>
+                                         <Select onValueChange={setTeam} value={team}><SelectTrigger id="team" className="bg-input"><SelectValue placeholder="Team wählen..." /></SelectTrigger>
+                                            <SelectContent>{teams.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label>Startdatum (optional)</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className={cn("w-full justify-start text-left font-normal bg-input", !startDate && "text-muted-foreground")}>
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {startDate ? format(startDate, "PPP") : <span>Datum wählen</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus /></PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="note">Notiz (optional)</Label>
+                                    <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} className="bg-input" placeholder="z.B. Startet als Vertrieb..."/>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Abbrechen</Button>
+                                <Button type="submit">Einladung senden</Button>
+                            </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+                </div>
+
+                <TabsContent value="overview">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                                <CardTitle>Mitarbeiterübersicht</CardTitle>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                     <Input placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full md:w-48 bg-input" />
+                                     <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                        <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Status" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Alle Status</SelectItem>
+                                            <SelectItem value="Stabil">Stabil</SelectItem>
+                                            <SelectItem value="Beobachtung">Beobachtung</SelectItem>
+                                            <SelectItem value="Warnung">Warnung</SelectItem>
+                                            <SelectItem value="Eskalation">Eskalation</SelectItem>
+                                        </SelectContent>
+                                     </Select>
+                                     <Select value={teamFilter} onValueChange={setTeamFilter}>
+                                        <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Team" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Alle Teams</SelectItem>
+                                            {teams.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                        </SelectContent>
+                                     </Select>
+                                     <Select value={escalationFilter} onValueChange={setEscalationFilter}>
+                                        <SelectTrigger className="w-full md:w-auto bg-input"><SelectValue placeholder="Eskalation" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Alle</SelectItem>
+                                            <SelectItem value="yes">Nur Eskalationen</SelectItem>
+                                        </SelectContent>
+                                     </Select>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Rolle</TableHead>
+                                        <TableHead>Team</TableHead>
+                                        <TableHead>Bereich</TableHead>
+                                        <TableHead>KPI Score</TableHead>
+                                        <TableHead>KPI Status</TableHead>
+                                        <TableHead>Aktive Aufgaben</TableHead>
+                                        <TableHead>Aktive Projekte</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {filteredMitarbeiter.map(m => (
+                                    <TableRow key={m.id} className="cursor-pointer hover:bg-accent/50">
+                                        <TableCell className="font-medium">
+                                            <Link href={`/q-space/employees/${m.id}`} className="hover:underline">{m.name}</Link>
+                                        </TableCell>
+                                        <TableCell className="text-xs">{m.role}</TableCell>
+                                        <TableCell>{m.team}</TableCell>
+                                        <TableCell>{m.abteilung}</TableCell>
+                                        <TableCell className="font-mono font-bold text-sm">{m.zWert}%</TableCell>
+                                        <TableCell><Badge className={cn("text-xs", getStatusColor(m.status))} variant="outline">{m.status}</Badge></TableCell>
+                                        <TableCell className="text-center">{m.activeTasks}</TableCell>
+                                        <TableCell className="text-center">{m.activeProjects}</TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="invites">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Einladungen</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>E-Mail</TableHead>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Rolle</TableHead>
+                                        <TableHead>Bereich / Team</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Läuft ab am</TableHead>
+                                        <TableHead className="text-right">Aktionen</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {invitesData.map(invite => (
+                                        <TableRow key={invite.inviteId}>
+                                            <TableCell className="font-mono text-xs">{invite.email}</TableCell>
+                                            <TableCell className="font-medium">{invite.firstName} {invite.lastName}</TableCell>
+                                            <TableCell className="capitalize text-xs">{invite.role.replace('_', ' ')}</TableCell>
+                                            <TableCell className="text-xs">{invite.deptId}{invite.teamId ? ` / ${invite.teamId}`: ''}</TableCell>
+                                            <TableCell><Badge className={cn("text-xs capitalize", getStatusColor(invite.status))} variant="outline">{invite.status}</Badge></TableCell>
+                                            <TableCell className="text-xs font-mono">{format(new Date(invite.expiresAt), "dd.MM.yyyy")}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal /></Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem>Erneut senden</DropdownMenuItem>
+                                                        <DropdownMenuItem>Kopiere Einladungslink</DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-rose-500">Abbrechen</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 };
@@ -807,7 +985,7 @@ export default function QSpacePage() {
         }}
         className={cn(
             "fixed bottom-6 h-14 w-14 rounded-full shadow-2xl z-40 transition-all duration-300 ease-in-out",
-            isMobile ? "left-6" : state === "collapsed" ? "left-[calc(3rem+1.5rem)]" : "left-[calc(18rem+1.5rem)]"
+            isMobile ? "left-6" : "left-[calc(16rem+1.5rem)]"
         )}
       >
         <MessageSquare />

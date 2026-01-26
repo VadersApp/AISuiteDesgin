@@ -600,3 +600,55 @@ export const chatMessages: { [key: string]: any[] } = {
          { id: 2, type: 'user', text: 'Klar, ich schaue es mir an.', createdAt: 'vor 2 Tagen', sender: { name: 'Sophie Lang', avatar: 'SL' } },
     ]
 };
+
+export const invitesData = [
+  {
+    inviteId: 'inv-001',
+    email: 'new.dev@example.com',
+    firstName: 'Max',
+    lastName: 'Mustermann',
+    role: 'employee',
+    deptId: 'IT',
+    teamId: 'Core-Backend',
+    status: 'pending',
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days from now
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+  },
+  {
+    inviteId: 'inv-002',
+    email: 's.jones@marketingcorp.com',
+    firstName: 'Sarah',
+    lastName: 'Jones',
+    role: 'team_lead',
+    deptId: 'Marketing',
+    teamId: 'Performance',
+    status: 'sent',
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 5),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+  },
+    {
+    inviteId: 'inv-003',
+    email: 'c.brown@salesforce.com',
+    firstName: 'Chris',
+    lastName: 'Brown',
+    role: 'employee',
+    deptId: 'Vertrieb',
+    teamId: 'Enterprise',
+    status: 'accepted',
+    expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 9),
+    acceptedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2)
+  },
+    {
+    inviteId: 'inv-004',
+    email: 'l.green@analytics.com',
+    firstName: 'Laura',
+    lastName: 'Green',
+    role: 'dept_head',
+    deptId: 'IT',
+    teamId: null,
+    status: 'expired',
+    expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8),
+  },
+];
