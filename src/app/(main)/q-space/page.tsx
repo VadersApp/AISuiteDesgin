@@ -3,7 +3,7 @@
 import { useState, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -65,6 +65,8 @@ import {
   MoreVertical,
   Tag,
   Archive,
+  Send,
+  ChevronRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -161,6 +163,21 @@ const mockDocs = [
         sizeBytes: 50 * 1024,
         updatedAt: '2024-06-19T14:30:00Z',
     },
+    {
+        id: 'doc-5',
+        title: 'Onboarding Prozess für neue Sales-Mitarbeiter',
+        ownerUserId: 'mila-hr',
+        ownerName: 'Mila HR',
+        deptId: 'Personalwesen (HR)',
+        folderId: 'folder-hr-2',
+        tags: ['onboarding', 'sales', 'prozess', 'hr'],
+        status: 'active',
+        versionCurrent: 1.0,
+        fileName: 'Onboarding_Process_New_Sales_Team.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 780 * 1024,
+        updatedAt: '2024-07-22T11:00:00Z',
+    }
 ];
 
 const mockUploadJob = {
@@ -219,13 +236,24 @@ const DocumentsView = () => {
     const [selectedDoc, setSelectedDoc] = useState<any | null>(mockDocs[0]);
     const [uploadMode, setUploadMode] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+    const toggleFolder = (folderId: string) => {
+        setExpandedFolders(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(folderId)) {
+                newSet.delete(folderId);
+            } else {
+                newSet.add(folderId);
+            }
+            return newSet;
+        });
+    };
 
     const departments = useMemo(() => {
-        const depts = [...new Set(kpiMitarbeiter.map(m => m.abteilung))];
-        if (!depts.includes('Geschäftsführung')) {
-            depts.unshift('Geschäftsführung');
-        }
-        return depts;
+        const depts = [...new Set(kpiMitarbeiter.map(m => m.abteilung)), ...new Set(docFolders.map(f => f.deptId))];
+        const uniqueDepts = [...new Set(depts)].filter(d => d !== 'company');
+        return uniqueDepts.sort();
     }, []);
 
     const filteredDocs = useMemo(() => {
@@ -237,24 +265,52 @@ const DocumentsView = () => {
         })
     }, [selectedDept, selectedFolderId, searchTerm]);
 
-    // Recursive function to render folders
     const renderFolders = (parentId: string | null) => {
-        return docFolders
+        const foldersToRender = docFolders
             .filter(f => f.parentFolderId === parentId && (selectedDept === 'all' || f.deptId === selectedDept || f.deptId === 'company'))
-            .map(folder => (
-                <div key={folder.id} className="pl-4">
-                    <Button
-                        variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
-                        className="w-full justify-start h-8 text-sm gap-2"
+            .sort((a, b) => a.name.localeCompare(b.name));
+        
+        return foldersToRender.map(folder => {
+            const hasChildren = docFolders.some(child => child.parentFolderId === folder.id);
+            const isExpanded = expandedFolders.has(folder.id);
+    
+            return (
+                <div key={folder.id}>
+                    <div 
+                        className={cn(
+                            "flex items-center group rounded-md cursor-pointer", 
+                            selectedFolderId === folder.id ? "bg-accent" : "hover:bg-muted/50"
+                        )}
                         onClick={() => setSelectedFolderId(folder.id)}
                     >
-                        <Folder className="w-4 h-4" />
-                        {folder.name}
-                    </Button>
-                    {renderFolders(folder.id)}
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="w-7 h-7 shrink-0" 
+                            onClick={(e) => { e.stopPropagation(); hasChildren && toggleFolder(folder.id); }}
+                            aria-label={isExpanded ? 'Ordner einklappen' : 'Ordner ausklappen'}
+                        >
+                           {hasChildren ? (
+                                <ChevronRight className={cn("w-4 h-4 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
+                           ) : (
+                                <span className="w-4 h-4"></span>
+                           )}
+                        </Button>
+                        <Folder className={cn("w-4 h-4 shrink-0", selectedFolderId === folder.id ? 'text-primary' : 'text-muted-foreground')} />
+                        <span className="ml-2 text-sm truncate">{folder.name}</span>
+                    </div>
+                    {isExpanded && hasChildren && (
+                        <div className="pl-5">
+                            {renderFolders(folder.id)}
+                        </div>
+                    )}
                 </div>
-            ));
+            );
+        });
     };
+    
+    // Recursive function to render folders
+    
 
     const handleFinalizeUpload = () => {
         // Mock finalization
@@ -279,9 +335,9 @@ const DocumentsView = () => {
                         {renderFolders(null)}
                     </div>
                 </ScrollArea>
-                <CardContent className="p-2 border-t">
+                <CardFooter className="p-2 border-t">
                     <Button variant="ghost" className="w-full justify-start text-sm gap-2"><FolderPlus className="w-4 h-4"/> Neuer Ordner</Button>
-                </CardContent>
+                </CardFooter>
             </Card>
 
             {/* Middle: Document List */}
@@ -1010,3 +1066,4 @@ export default function QSpacePage() {
 }
 
     
+
