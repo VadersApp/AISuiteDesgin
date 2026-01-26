@@ -30,11 +30,21 @@ import {
   Settings,
   Search,
   Plus,
+  GraduationCap,
+  Video,
+  File as FileIcon,
+  BrainCircuit,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs } from '@/lib/data';
+
 
 const modules = [
     { name: 'Übersicht', icon: LayoutDashboard },
+    { name: 'Q-Onboarding', icon: GraduationCap },
     { name: 'Kurse', icon: BookCopy },
     { name: 'Lernpfade', icon: Network },
     { name: 'Inhalte', icon: FolderKanban },
@@ -45,24 +55,6 @@ const modules = [
     { name: 'Einstellungen', icon: Settings },
 ];
 
-// Mock Data
-const mockCourses = [
-    { id: 1, title: 'Onboarding für Sales-Team', description: 'Grundlagen für neue Vertriebsmitarbeiter.', modules: 5, enrolled: 12, status: 'Veröffentlicht' },
-    { id: 2, title: 'DSGVO-Basisschulung', description: 'Rechtliche Grundlagen für alle Mitarbeiter.', modules: 3, enrolled: 45, status: 'Veröffentlicht' },
-    { id: 3, title: 'Führungskräfte-Training Q1', description: 'Entwurf für das kommende Quartal.', modules: 8, enrolled: 0, status: 'Entwurf' },
-];
-
-const mockParticipants = [
-    { id: 1, name: 'Anna Schmidt', role: 'Sales Manager', department: 'Vertrieb', courses: 3, progress: 80 },
-    { id: 2, name: 'Ben Weber', role: 'Developer', department: 'IT', courses: 2, progress: 100 },
-];
-
-const mockLearningPaths = [
-    { id: 1, title: 'Onboarding Vertrieb', courses: 3, assigned: 'Vertrieb', mandatory: true },
-    { id: 2, title: 'Führungskräfte Entwicklung', courses: 5, assigned: 'Management', mandatory: false },
-];
-
-// Views
 const OverviewView = () => (
     <div className="space-y-6">
         <div>
@@ -98,34 +90,138 @@ const OverviewView = () => (
     </div>
 );
 
+const QOnboardingView = () => (
+    <div className="space-y-6">
+        <div>
+            <h2 className="text-2xl font-bold text-foreground">Q-Onboarding</h2>
+            <p className="text-muted-foreground">Ihr systemkritisches Onboarding für den erfolgreichen Start mit QORE.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {qOnboardingModules.map((module, index) => (
+                <Card key={index} className="flex flex-col p-6">
+                    <div className="flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center border border-primary/20 mb-4">
+                            <GraduationCap className="w-5 h-5"/>
+                        </div>
+                        <h3 className="font-bold text-foreground mb-1">{module.title}</h3>
+                        <p className="text-xs text-muted-foreground mb-4">{module.description}</p>
+                    </div>
+                    <div>
+                        <Progress value={module.progress} className="h-2"/>
+                        <p className="text-xs text-muted-foreground mt-1.5">{module.progress}% abgeschlossen</p>
+                    </div>
+                </Card>
+            ))}
+        </div>
+    </div>
+);
+
 const CoursesView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockCourses.map(course => (
-            <Card key={course.id} className="flex flex-col">
-                <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <CardTitle className="line-clamp-2">{course.title}</CardTitle>
-                        <Badge variant={course.status === 'Veröffentlicht' ? 'default' : 'secondary'}>{course.status}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground pt-1">{course.description}</p>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                    <div className="text-sm text-muted-foreground flex items-center justify-between">
-                        <span>{course.modules} Module</span>
-                        <span>{course.enrolled} Teilnehmer</span>
-                    </div>
-                </CardContent>
-                <div className="p-6 pt-0">
-                    <Button variant="outline" className="w-full">Kurs verwalten</Button>
+    <div>
+        <Tabs defaultValue="unternehmenskurse">
+            <TabsList className="mb-6">
+                <TabsTrigger value="q-kurse">Q-Kurse</TabsTrigger>
+                <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
+                <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
+            </TabsList>
+            <TabsContent value="q-kurse">
+                <div className="text-center py-12 text-muted-foreground italic">Keine Q-Kurse verfügbar.</div>
+            </TabsContent>
+            <TabsContent value="unternehmenskurse">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {mockCourses.map(course => (
+                        <Card key={course.id} className="flex flex-col">
+                            <CardHeader>
+                                <div className="flex justify-between items-start">
+                                    <CardTitle className="line-clamp-2">{course.title}</CardTitle>
+                                    <Badge variant={course.status === 'Veröffentlicht' ? 'default' : 'secondary'}>{course.status}</Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground pt-1">{course.description}</p>
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                <div className="text-sm text-muted-foreground flex items-center justify-between">
+                                    <span>{course.modules} Module</span>
+                                    <span>{course.enrolled} Teilnehmer</span>
+                                </div>
+                            </CardContent>
+                            <div className="p-6 pt-0">
+                                <Button variant="outline" className="w-full">Kurs verwalten</Button>
+                            </div>
+                        </Card>
+                    ))}
+                     <Card className="flex flex-col items-center justify-center border-2 border-dashed bg-transparent shadow-none hover:border-primary/80 hover:bg-accent/50 transition-colors">
+                        <Button variant="ghost" className="h-auto flex-col gap-2">
+                            <Plus className="w-8 h-8 text-muted-foreground" />
+                            <span className="text-sm font-bold text-muted-foreground">Neuen Kurs erstellen</span>
+                        </Button>
+                    </Card>
                 </div>
-            </Card>
-        ))}
-         <Card className="flex flex-col items-center justify-center border-2 border-dashed bg-transparent shadow-none hover:border-primary/80 hover:bg-accent/50 transition-colors">
-            <Button variant="ghost" className="h-auto flex-col gap-2">
-                <Plus className="w-8 h-8 text-muted-foreground" />
-                <span className="text-sm font-bold text-muted-foreground">Neuen Kurs erstellen</span>
-            </Button>
-        </Card>
+            </TabsContent>
+            <TabsContent value="eigene-kurse">
+                 <div className="text-center py-12 text-muted-foreground italic">Sie haben noch keine eigenen Kurse erstellt.</div>
+            </TabsContent>
+        </Tabs>
+    </div>
+);
+
+const InhalteView = () => (
+    <div>
+        <Tabs defaultValue="videos">
+            <TabsList className="mb-6">
+                <TabsTrigger value="videos">Videos</TabsTrigger>
+                <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
+                <TabsTrigger value="wissensbausteine">Wissensbausteine</TabsTrigger>
+            </TabsList>
+            <TabsContent value="videos">
+                <Card>
+                    <CardHeader><Button><Plus className="w-4 h-4 mr-2"/> Video hochladen</Button></CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Dauer</TableHead><TableHead>Uploader</TableHead><TableHead>Datum</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {mockAcademyVideos.map(v => (
+                                    <TableRow key={v.id} className="cursor-pointer">
+                                        <TableCell className="font-medium flex items-center gap-2"><Video className="w-4 h-4 text-muted-foreground"/> {v.title}</TableCell>
+                                        <TableCell>{v.duration}</TableCell>
+                                        <TableCell>{v.uploader}</TableCell>
+                                        <TableCell>{v.date}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="dokumente">
+                 <Card>
+                    <CardHeader><Button><Plus className="w-4 h-4 mr-2"/> Dokument hochladen</Button></CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Typ</TableHead><TableHead>Größe</TableHead><TableHead>Uploader</TableHead><TableHead>Datum</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {mockAcademyDocs.map(d => (
+                                    <TableRow key={d.id} className="cursor-pointer">
+                                        <TableCell className="font-medium flex items-center gap-2"><FileIcon className="w-4 h-4 text-muted-foreground"/> {d.title}</TableCell>
+                                        <TableCell><Badge variant="outline">{d.type}</Badge></TableCell>
+                                        <TableCell>{d.size}</TableCell>
+                                        <TableCell>{d.uploader}</TableCell>
+                                        <TableCell>{d.date}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="wissensbausteine">
+                 <Card>
+                    <CardHeader><Button><Plus className="w-4 h-4 mr-2"/> Wissensbaustein erstellen</Button></CardHeader>
+                    <CardContent>
+                        <div className="text-center py-12 text-muted-foreground italic">Keine Wissensbausteine vorhanden.</div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
     </div>
 );
 
@@ -189,10 +285,11 @@ export default function QAkademiePage() {
     const renderModule = () => {
         switch (activeModule) {
             case 'Übersicht': return <OverviewView />;
+            case 'Q-Onboarding': return <QOnboardingView />;
             case 'Kurse': return <CoursesView />;
             case 'Lernpfade': return <LearningPathsView />;
+            case 'Inhalte': return <InhalteView />;
             case 'Teilnehmer': return <ParticipantsView />;
-            case 'Inhalte': return <GenericView title="Inhalte" />;
             case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
             case 'Fortschritt & Reports': return <GenericView title="Fortschritt & Reports" />;
             case 'Zertifikate': return <GenericView title="Zertifikate" />;
@@ -236,9 +333,11 @@ export default function QAkademiePage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Neuer Kurs</DropdownMenuItem>
-                                <DropdownMenuItem>Neuer Lernpfad</DropdownMenuItem>
+                                <DropdownMenuItem>Kurs erstellen</DropdownMenuItem>
+                                <DropdownMenuItem>Lernpfad erstellen</DropdownMenuItem>
                                 <DropdownMenuItem>Video hochladen</DropdownMenuItem>
+                                <DropdownMenuItem>Dokument hochladen</DropdownMenuItem>
+                                <DropdownMenuItem>Wissensbaustein erstellen</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

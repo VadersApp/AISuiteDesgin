@@ -894,12 +894,6 @@ export const mockDocs = [
     }
 ];
 
-export const mockTasks = Object.values(tasksMockByDepartment).flat().map((task, index) => ({
-  ...(task as any),
-  id: `task-mock-${index + 1}`,
-  owner: (task as any).agent,
-}));
-
 export const mockSops = [
     { id: 1, title: 'Prozess für neue Kundenanfragen', status: 'Aktiv', deptId: 'Vertrieb' }
 ];
@@ -909,4 +903,46 @@ export const mockProjects = [
     { id: 'proj-innovatech-deal', name: 'Innovatech Deal Q1', owner: 'Anna Schmidt', status: 'Aktiv' },
     { id: 'proj-1', name: 'Core-Backend Refactoring', owner: 'Ben Weber', status: 'Abgeschlossen' },
     { id: 'phoenix-project', name: 'Projekt Phoenix', owner: 'Dr. Müller', status: 'Planung' },
+];
+
+export const mockTasks = Object.values(tasksMockByDepartment).flat().map((task, index) => ({
+  ...(task as any),
+  id: `task-mock-${index + 1}`,
+  owner: (task as any).agent,
+}));
+
+export const qOnboardingModules = [
+  { title: 'Willkommen im Q-System', description: 'Eine Einführung in die Philosophie und die Kernkomponenten von QORE.', progress: 100 },
+  { title: 'Q-Core verstehen', description: 'Lernen Sie, wie das zentrale Gehirn von QORE funktioniert.', progress: 100 },
+  { title: 'Q-Space & Workspace-Logik', description: 'Meistern Sie die Navigation und die bereichsbasierte Arbeitsweise.', progress: 50 },
+  { title: 'KI-Mitarbeiter Überblick', description: 'Verstehen Sie die Rollen und Fähigkeiten Ihrer digitalen Kollegen.', progress: 0 },
+  { title: 'Q-Tools & Zusammenspiel', description: 'Ein Überblick über die spezialisierten Werkzeuge und deren Synergien.', progress: 0 },
+  { title: 'Sicherheit, Daten & Compliance', description: 'Die Grundprinzipien für einen sicheren und konformen Betrieb.', progress: 0 },
+  { title: 'Abschluss & Systemfreigabe', description: 'Der letzte Schritt zur vollständigen Freischaltung aller Funktionen.', progress: 0 },
+];
+
+export const mockAcademyVideos = [
+    { id: 'vid-1', title: 'Einführung in Q-Space', duration: '5:42', uploader: 'Dr. Müller', date: '14.01.2024' },
+    { id: 'vid-2', title: 'Effektives Lead Management mit Leo Sales', duration: '12:10', uploader: 'Anna Schmidt', date: '15.01.2024' },
+];
+
+export const mockAcademyDocs = [
+    { id: 'adoc-1', title: 'Onboarding Checkliste für Sales', type: 'PDF', size: '1.2 MB', uploader: 'Mila HR', date: '10.01.2024' },
+    { id: 'adoc-2', title: 'Brand Guidelines 2024', type: 'PDF', size: '5.8 MB', uploader: 'Sophie Market', date: '08.01.2024' },
+];
+
+export const mockCourses = [
+    { id: 1, title: 'Onboarding für Sales-Team', description: 'Grundlagen für neue Vertriebsmitarbeiter.', modules: 5, enrolled: 12, status: 'Veröffentlicht' },
+    { id: 2, title: 'DSGVO-Basisschulung', description: 'Rechtliche Grundlagen für alle Mitarbeiter.', modules: 3, enrolled: 45, status: 'Veröffentlicht' },
+    { id: 3, title: 'Führungskräfte-Training Q1', description: 'Entwurf für das kommende Quartal.', modules: 8, enrolled: 0, status: 'Entwurf' },
+];
+
+export const mockParticipants = [
+    { id: 1, name: 'Anna Schmidt', role: 'Sales Manager', department: 'Vertrieb', courses: 3, progress: 80 },
+    { id: 2, name: 'Ben Weber', role: 'Developer', department: 'IT', courses: 2, progress: 100 },
+];
+
+export const mockLearningPaths = [
+    { id: 1, title: 'Onboarding Vertrieb', courses: 3, assigned: 'Vertrieb', mandatory: true },
+    { id: 2, title: 'Führungskräfte Entwicklung', courses: 5, assigned: 'Management', mandatory: false },
 ];
