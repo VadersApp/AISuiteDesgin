@@ -71,7 +71,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockTasks } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -83,18 +83,14 @@ import { useToast } from '@/hooks/use-toast';
 
 
 const modules = [
-    { name: 'Chat', icon: MessageSquare },
     { name: 'Übersicht', icon: LayoutDashboard },
+    { name: 'Projekte', icon: MessageSquare },
     { name: 'Workspace', icon: Briefcase },
     { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Mitarbeiter', icon: Users },
     { name: 'System Admin (Q-Space)', icon: Settings },
 ];
 
-const mockTasks = [
-    { id: 1, title: "Q1-Report finalisieren", owner: 'Dr. Müller', status: 'Überfällig', prio: 'Hoch', due: 'Gestern' },
-    { id: 2, title: "Pitch-Deck für Innovatech erstellen", owner: 'Anna Schmidt', status: 'In Arbeit', prio: 'Hoch', due: 'Heute' }
-];
 const mockProjects = [
     { id: 1, name: "Rollout neue CRM-Software", owner: "Ben Weber", status: "Aktiv" }
 ];
@@ -121,39 +117,153 @@ const mockUploadJob = {
     }
 };
 
-const OverviewView = () => (
-    <div className="space-y-6">
-        <h2 className="text-xl font-bold text-foreground">Übersicht</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-                <CardHeader><CardTitle>Meine Aufgaben Heute</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">1</p></CardContent>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Überfällige Aufgaben</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold text-rose-400">1</p></CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle>Mein KPI-Status</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold text-emerald-400">95%</p></CardContent>
-            </Card>
+const OverviewView = () => {
+    const aktiveEskalationen = kpiMitarbeiter.filter(m => m.status === 'Eskalation').length;
+    const mitarbeiterWatch = kpiMitarbeiter.filter(m => m.status === 'Beobachtung').length;
+    let risikoStatus = 'OK';
+    let risikoStatusColorClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    if (aktiveEskalationen > 0) {
+        risikoStatus = 'Kritisch';
+        risikoStatusColorClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+    } else if (mitarbeiterWatch > 0) {
+        risikoStatus = 'Achtung';
+        risikoStatusColorClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    }
+
+    const aufgabenHeute = mockTasks.filter(t => t.due === 'Heute').length;
+    const aufgabenUeberfaellig = mockTasks.filter(t => t.status === 'Überfällig').length;
+    const aufgabenBlockiert = 0; // No data in mock
+    let arbeitslastStatus = 'Im Rahmen';
+    let arbeitslastColorClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    if (aufgabenUeberfaellig > 1) {
+        arbeitslastStatus = 'Kritisch';
+        arbeitslastColorClass = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+    } else if (aufgabenUeberfaellig > 0 || aufgabenBlockiert > 0) {
+        arbeitslastStatus = 'Erhöht';
+        arbeitslastColorClass = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+    }
+
+    const unreadThreads = chatThreads.filter(t => !t.isArchived && ['task', 'project', 'escalation', 'thread'].includes(t.contextType)).reduce((sum, t) => sum + (t.unreadCount || 0), 0);
+    const escalationThreads = chatThreads.filter(t => !t.isArchived && t.contextType === 'escalation').length;
+
+    return (
+        <div className="space-y-6">
+            <h2 className="text-xl font-bold text-foreground">Übersicht</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                    <CardHeader><CardTitle>Meine Aufgaben Heute</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold">1</p></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>Überfällige Aufgaben</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold text-rose-400">1</p></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>Mein KPI-Status</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold text-emerald-400">95%</p></CardContent>
+                </Card>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Link href="/q-space/kpi-dashboard/eskalationen" className="block">
+                    <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors h-full">
+                        <CardHeader className="p-0 mb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Flame className="w-4 h-4 text-muted-foreground" /> Risiken & Eskalationen
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-baseline">
+                                    <p className="text-xs text-muted-foreground">Aktive Eskalationen</p>
+                                    <p className="text-lg font-bold">{aktiveEskalationen}</p>
+                                </div>
+                                <div className="flex justify-between items-baseline">
+                                    <p className="text-xs text-muted-foreground">Mitarbeiter auf "Watch"</p>
+                                    <p className="text-lg font-bold">{mitarbeiterWatch}</p>
+                                </div>
+                            </div>
+                            <Badge variant="outline" className={cn('mt-3 text-xs', risikoStatusColorClass)}>
+                                Status: {risikoStatus}
+                            </Badge>
+                        </CardContent>
+                    </Card>
+                </Link>
+
+                <Link href="/tasks" className="block">
+                    <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors h-full">
+                        <CardHeader className="p-0 mb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Briefcase className="w-4 h-4 text-muted-foreground" /> Meine Arbeitslast
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-baseline">
+                                    <p className="text-xs text-muted-foreground">Aufgaben heute</p>
+                                    <p className="text-lg font-bold">{aufgabenHeute}</p>
+                                </div>
+                                <div className="flex justify-between items-baseline">
+                                    <p className="text-xs text-muted-foreground">Überfällig</p>
+                                    <p className="text-lg font-bold text-rose-400">{aufgabenUeberfaellig}</p>
+                                </div>
+                                <div className="flex justify-between items-baseline">
+                                    <p className="text-xs text-muted-foreground">Blockiert</p>
+                                    <p className="text-lg font-bold">{aufgabenBlockiert}</p>
+                                </div>
+                            </div>
+                            <Badge variant="outline" className={cn('mt-2 text-xs', arbeitslastColorClass)}>
+                                {arbeitslastStatus}
+                            </Badge>
+                        </CardContent>
+                    </Card>
+                </Link>
+                
+                <Link href="/q-space/chat" className="block">
+                    <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors h-full">
+                        <CardHeader className="p-0 mb-2">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <MessageSquare className="w-4 h-4 text-muted-foreground" /> Offene Projekt-Threads
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="space-y-1">
+                                <div className="flex justify-between items-baseline">
+                                    <p className="text-xs text-muted-foreground">Ungelesene Threads</p>
+                                    <p className={cn("font-bold text-lg", unreadThreads > 0 && 'text-blue-400')}>{unreadThreads}</p>
+                                </div>
+                                <div className="flex justify-between items-baseline">
+                                    <p className="text-xs text-muted-foreground">Mit Eskalationsbezug</p>
+                                    <p className={cn("font-bold text-lg", escalationThreads > 0 && 'text-rose-400')}>{escalationThreads}</p>
+                                </div>
+                            </div>
+                             {escalationThreads > 0 && 
+                                <Badge variant="outline" className="mt-4 text-xs bg-rose-500/10 border-rose-500/20 text-rose-400">
+                                    Warnstatus
+                                </Badge>
+                             }
+                        </CardContent>
+                    </Card>
+                </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                    <CardHeader><CardTitle>Aktive Projekte</CardTitle></CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">Projekt 'Rollout neue CRM-Software' ist aktiv.</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>Letzte Aktivitäten</CardTitle></CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">Ben Weber hat das Projekt 'Rollout neue CRM-Software' aktualisiert.</p>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-                <CardHeader><CardTitle>Aktive Projekte</CardTitle></CardHeader>
-                <CardContent>
-                     <p className="text-sm text-muted-foreground">Projekt 'Rollout neue CRM-Software' ist aktiv.</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Letzte Aktivitäten</CardTitle></CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">Ben Weber hat das Projekt 'Rollout neue CRM-Software' aktualisiert.</p>
-                </CardContent>
-            </Card>
-        </div>
-    </div>
-);
+    );
+};
 
 const DocumentsView = () => {
     const [selectedDept, setSelectedDept] = useState('all');
@@ -952,7 +1062,7 @@ const SystemAdminView = () => {
 }
 
 export default function QSpacePage() {
-  const [activeModule, setActiveModule] = useState(modules[1].name);
+  const [activeModule, setActiveModule] = useState(modules[0].name);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -973,13 +1083,13 @@ export default function QSpacePage() {
   };
 
   if (pathname.startsWith('/q-space/chat')) {
-      if (activeModule !== 'Chat') {
-          setActiveModule('Chat');
+      if (activeModule !== 'Projekte') {
+          setActiveModule('Projekte');
       }
   }
 
   const handleModuleClick = (moduleName: string) => {
-    if (moduleName === 'Chat') {
+    if (moduleName === 'Projekte') {
         router.push('/q-space/chat');
     } else {
         if (pathname.startsWith('/q-space/chat')) {
@@ -997,7 +1107,7 @@ export default function QSpacePage() {
             <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">Q-Space</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
-                const isChatLink = mod.name === 'Chat';
+                const isChatLink = mod.name === 'Projekte';
                 const isActive = isChatLink ? pathname.startsWith('/q-space/chat') : activeModule === mod.name && !pathname.startsWith('/q-space/chat');
 
                  return (
@@ -1052,6 +1162,7 @@ export default function QSpacePage() {
 }
 
     
+
 
 
 
