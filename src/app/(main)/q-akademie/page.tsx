@@ -144,6 +144,12 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         }
     }, [open, resetState]);
 
+    useEffect(() => {
+        return () => {
+            cleanup();
+        };
+    }, [cleanup]);
+
     const handleStartRecording = async () => {
         if (!recordingMode) return;
         setError(null);
@@ -223,8 +229,8 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             };
             
             recorder.onstop = () => {
+                cleanup();
                 setRecordedChunks(currentChunks => {
-                    cleanup();
                     if (currentChunks.length === 0) {
                         return [];
                     }
@@ -401,7 +407,7 @@ const QOnboardingView = () => (
     </div>
 );
 
-const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void }) => {
+const CoursesView = ({ onCourseSelect, onOpenCreateDialog }: { onCourseSelect: (course: any) => void, onOpenCreateDialog: () => void }) => {
     return (
     <div>
         <Tabs defaultValue="unternehmenskurse" className="w-full">
@@ -411,7 +417,7 @@ const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void
                     <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
                     <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
                 </TabsList>
-                <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
+                <Button variant="outline" onClick={onOpenCreateDialog}><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
             </div>
             <TabsContent value="q-kurse">
                 <div className="text-center py-12 text-muted-foreground italic">Keine Q-Kurse verfügbar.</div>
@@ -448,8 +454,7 @@ const CoursesView = ({ onCourseSelect }: { onCourseSelect: (course: any) => void
     )
 };
 
-const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => {
-    const [isRecordingDialogOpen, setIsRecordingDialogOpen] = useState(false);
+const InhalteView = ({videos, setVideos, onOpenRecordDialog, onOpenUploadDialog, onOpenWissensbausteinDialog}: {videos: any[], setVideos: any, onOpenRecordDialog: () => void, onOpenUploadDialog: () => void, onOpenWissensbausteinDialog: () => void}) => {
     return (
     <>
         <div>
@@ -469,10 +474,10 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => {}}><Upload className="mr-2 h-4 w-4" />Video hochladen</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setIsRecordingDialogOpen(true)}><Video className="mr-2 h-4 w-4" />Video aufnehmen</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={onOpenUploadDialog}><Upload className="mr-2 h-4 w-4" />Video hochladen</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={onOpenRecordDialog}><Video className="mr-2 h-4 w-4" />Video aufnehmen</DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => {}}><FileIcon className="mr-2 h-4 w-4" />Dokument hochladen</DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {}}><BrainCircuit className="mr-2 h-4 w-4" />Wissensbaustein erstellen</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={onOpenWissensbausteinDialog}><BrainCircuit className="mr-2 h-4 w-4" />Wissensbaustein erstellen</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -528,12 +533,11 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => {
                 </TabsContent>
             </Tabs>
         </div>
-        <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />
     </>
     )
 };
 
-const LearningPathsView = () => {
+const LearningPathsView = ({ onOpenCreateDialog }: { onOpenCreateDialog: () => void }) => {
     const [feedbackItem, setFeedbackItem] = useState<any | null>(null);
 
     return (
@@ -541,7 +545,7 @@ const LearningPathsView = () => {
         <Card>
             <CardHeader className="flex-row items-center justify-between">
                 <CardTitle>Lernpfade</CardTitle>
-                <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
+                <Button variant="outline" onClick={onOpenCreateDialog}><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -570,12 +574,12 @@ const LearningPathsView = () => {
 };
 
 
-const ParticipantsView = () => {
+const ParticipantsView = ({ onOpenCreateDialog }: { onOpenCreateDialog: () => void }) => {
     return (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Teilnehmer</CardTitle>
-            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
+            <Button variant="outline" onClick={onOpenCreateDialog}><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
         </CardHeader>
         <CardContent>
             <Table>
@@ -596,12 +600,12 @@ const ParticipantsView = () => {
     );
 };
 
-const CertificatesView = () => {
+const CertificatesView = ({ onOpenCreateDialog }: { onOpenCreateDialog: () => void }) => {
     return (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Zertifikate</CardTitle>
-            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Zertifikat erstellen</Button>
+            <Button variant="outline" onClick={onOpenCreateDialog}><Plus className="mr-2 h-4 w-4"/> Zertifikat erstellen</Button>
         </CardHeader>
         <CardContent>
             <Table>
@@ -899,21 +903,22 @@ const SettingsView = () => {
 };
 
 
-const GenericView = ({ title }: { title: string }) => {
-    return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{title}</CardTitle>
-                <Button variant="outline">
-                    <Plus className="mr-2 h-4 w-4" /> Erstellen
-                </Button>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground italic">Ansicht für "{title}" wird aufgebaut.</p>
-            </CardContent>
-        </Card>
-    );
-};
+const GenericCreateDialog = ({ open, onOpenChange, title, description }: { open: boolean, onOpenChange: (open: boolean) => void, title: string, description: string }) => (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{title}</DialogTitle>
+                <DialogDescription>{description}</DialogDescription>
+            </DialogHeader>
+            <div className="py-8 text-center text-muted-foreground italic">
+                Funktionalität wird hier aufgebaut.
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => onOpenChange(false)}>Schließen</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+);
 
 
 const lessonIcons: { [key: string]: React.ElementType } = {
@@ -1125,6 +1130,17 @@ export default function QAkademiePage() {
     const [activeCourse, setActiveCourse] = useState<any | null>(null);
     const [videos, setVideos] = useState(mockAcademyVideos);
 
+    // Create Dialog States
+    const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
+    const [isCreateLernpfadOpen, setIsCreateLernpfadOpen] = useState(false);
+    const [isRecordingDialogOpen, setIsRecordingDialogOpen] = useState(false);
+    const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false);
+    const [isWissensbausteinOpen, setIsWissensbausteinOpen] = useState(false);
+    const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+    const [isCreateDepartmentOpen, setIsCreateDepartmentOpen] = useState(false);
+    const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
+    const [isCreateCertificateOpen, setIsCreateCertificateOpen] = useState(false);
+    
     const renderModule = () => {
         switch (activeModule) {
             case 'Übersicht': return <OverviewView />;
@@ -1133,13 +1149,13 @@ export default function QAkademiePage() {
                 if (activeCourse) {
                     return <CourseDetailView course={activeCourse} onBack={() => setActiveCourse(null)} />;
                 }
-                return <CoursesView onCourseSelect={setActiveCourse} />;
-            case 'Lernpfade': return <LearningPathsView />;
-            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} />;
-            case 'Teilnehmer': return <ParticipantsView />;
-            case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
+                return <CoursesView onCourseSelect={setActiveCourse} onOpenCreateDialog={() => setIsCreateCourseOpen(true)} />;
+            case 'Lernpfade': return <LearningPathsView onOpenCreateDialog={() => setIsCreateLernpfadOpen(true)}/>;
+            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onOpenRecordDialog={() => setIsRecordingDialogOpen(true)} onOpenUploadDialog={()=> setIsVideoUploadOpen(true)} onOpenWissensbausteinDialog={() => setIsWissensbausteinOpen(true)} />;
+            case 'Teilnehmer': return <ParticipantsView onOpenCreateDialog={() => setIsAddParticipantOpen(true)}/>;
+            case 'Abteilungen & Rollen': return <GenericCreateDialog open={isCreateDepartmentOpen || isCreateRoleOpen} onOpenChange={isCreateDepartmentOpen ? setIsCreateDepartmentOpen : setIsCreateRoleOpen} title='Platzhalter' description='Hier wird die Erstellung von Abteilungen & Rollen verwaltet.' />;
             case 'Fortschritt & Reports': return <ReportingView />;
-            case 'Zertifikate': return <CertificatesView />;
+            case 'Zertifikate': return <CertificatesView onOpenCreateDialog={() => setIsCreateCertificateOpen(true)} />;
             case 'Einstellungen': return <SettingsView />;
             default: return <OverviewView />;
         }
@@ -1182,6 +1198,13 @@ export default function QAkademiePage() {
                     {renderModule()}
                 </div>
             </main>
+             <GenericCreateDialog open={isCreateCourseOpen} onOpenChange={setIsCreateCourseOpen} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />
+             <GenericCreateDialog open={isCreateLernpfadOpen} onOpenChange={setIsCreateLernpfadOpen} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />
+             <GenericCreateDialog open={isCreateCertificateOpen} onOpenChange={setIsCreateCertificateOpen} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />
+             <GenericCreateDialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />
+             <GenericCreateDialog open={isVideoUploadOpen} onOpenChange={setIsVideoUploadOpen} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />
+             <GenericCreateDialog open={isWissensbausteinOpen} onOpenChange={setIsWissensbausteinOpen} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />
+             <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />
         </div>
     );
 }
