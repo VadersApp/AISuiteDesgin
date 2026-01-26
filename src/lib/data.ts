@@ -963,7 +963,7 @@ export const mockCourses = [
         id: 2, 
         title: 'DSGVO-Basisschulung', 
         description: 'Rechtliche Grundlagen für alle Mitarbeiter.', 
-        modulesCount: 1, 
+        modulesCount: 2, 
         enrolled: 45, 
         status: 'Veröffentlicht',
         modules: [
@@ -975,6 +975,13 @@ export const mockCourses = [
                     { id: 'l3-2', title: 'Bestätigung der Richtlinien', type: 'confirmation' },
                 ]
             },
+            {
+                id: 'm4',
+                title: 'Abschlussprüfung',
+                lessons: [
+                    { id: 'l4-1', title: 'Finales Prüfungsszenario', type: 'prüfung', details: { isMandatory: true, passingGrade: 80, timeLimit: 15, attempts: 2 } }
+                ]
+            }
         ]
     },
     { 
@@ -996,4 +1003,9 @@ export const mockParticipants = [
 export const mockLearningPaths = [
     { id: 1, title: 'Onboarding Vertrieb', courses: 3, assigned: 'Vertrieb', mandatory: true },
     { id: 2, title: 'Führungskräfte Entwicklung', courses: 5, assigned: 'Management', mandatory: false },
+];
+
+export const mockCertificates = [
+    { id: 1, title: 'Q-Onboarding abgeschlossen', requirement: 'Q-Onboarding', validity: 'Unbegrenzt', status: 'Erhalten' },
+    { id: 2, title: 'DSGVO-Experte', requirement: 'DSGVO-Basisschulung', validity: '12 Monate', status: 'Offen' },
 ];

@@ -69,7 +69,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs } from '@/lib/data';
+import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs, mockCertificates } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
@@ -571,6 +571,30 @@ const ParticipantsView = ({ onCreate }: { onCreate: () => void }) => (
     </Card>
 );
 
+const CertificatesView = ({ onCreate }: { onCreate: () => void }) => (
+    <Card>
+        <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Zertifikate</CardTitle>
+            <Button variant="outline" onClick={onCreate}><Plus className="mr-2 h-4 w-4"/> Zertifikat erstellen</Button>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader><TableRow><TableHead>Zertifikat</TableHead><TableHead>Voraussetzung</TableHead><TableHead>Gültigkeit</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <TableBody>
+                    {mockCertificates.map(cert => (
+                        <TableRow key={cert.id} className="cursor-pointer">
+                            <TableCell className="font-medium">{cert.title}</TableCell>
+                            <TableCell>{cert.requirement}</TableCell>
+                            <TableCell>{cert.validity}</TableCell>
+                            <TableCell><Badge variant={cert.status === 'Erhalten' ? 'default' : 'secondary'}>{cert.status}</Badge></TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
+
 const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void }) => {
     if (title === "Fortschritt & Reports") {
         return (
@@ -582,7 +606,7 @@ const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void
                         <CardContent><p className="text-4xl font-bold">92%</p></CardContent>
                     </Card>
                     <Card>
-                        <CardHeader><CardTitle className="text-base">Quiz-Erfolgsquote</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="text-base">Prüfungs-Bestehensquote</CardTitle></CardHeader>
                         <CardContent><p className="text-4xl font-bold">88%</p></CardContent>
                     </Card>
                     <Card>
@@ -590,11 +614,21 @@ const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void
                         <CardContent><p className="text-4xl font-bold">2.5 Tage</p></CardContent>
                     </Card>
                     <Card>
-                        <CardHeader><CardTitle className="text-base">Häufigste Fehlerfrage</CardTitle></CardHeader>
-                        <CardContent><p className="text-sm">"Welche Daten gelten als personenbezogen?"</p></CardContent>
+                        <CardHeader><CardTitle className="text-base">Zertifikatsquote</CardTitle></CardHeader>
+                        <CardContent><p className="text-4xl font-bold">75%</p></CardContent>
                     </Card>
                 </div>
-                <p className="text-muted-foreground italic">Weitere detaillierte Reports werden hier angezeigt.</p>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Häufigste Fehlerquellen in Prüfungen</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="list-disc pl-5 text-sm space-y-1">
+                            <li>Frage "Welche Daten gelten als personenbezogen?" (DSGVO-Kurs)</li>
+                            <li>Szenario "Umgang mit Einwänden" (Sales Onboarding)</li>
+                        </ul>
+                    </CardContent>
+                </Card>
             </div>
         )
     }
@@ -624,6 +658,7 @@ const lessonIcons: { [key: string]: React.ElementType } = {
   task: CheckSquare,
   confirmation: CheckCircle,
   decision: GitBranch,
+  prüfung: Award,
 };
 
 const QuizLektionView = ({ lesson }: { lesson: any }) => (
@@ -694,6 +729,23 @@ const EntscheidungLektionView = ({ lesson }: { lesson: any }) => (
     </div>
 );
 
+const PruefungLektionView = ({ lesson }: { lesson: any }) => (
+    <div>
+        <h3 className="font-bold text-lg mb-2">{lesson.title}</h3>
+        <p className="text-sm text-muted-foreground mb-6">Schließen Sie diese Prüfung ab, um Ihr Wissen zu bestätigen.</p>
+        <Card className="bg-muted/50 border-border p-4 mb-6">
+            <h4 className="font-bold text-sm mb-3">Prüfungsdetails</h4>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <p><strong className="text-muted-foreground">Mindestquote:</strong> {lesson.details.passingGrade}%</p>
+                <p><strong className="text-muted-foreground">Zeitlimit:</strong> {lesson.details.timeLimit} Minuten</p>
+                <p><strong className="text-muted-foreground">Versuche:</strong> {lesson.details.attempts}</p>
+                <p><strong className="text-muted-foreground">Status:</strong> Noch nicht begonnen</p>
+            </div>
+        </Card>
+        <Button className="w-full">Prüfung starten</Button>
+    </div>
+);
+
 
 const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChange: (open: boolean) => void }) => {
     
@@ -704,6 +756,7 @@ const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChang
             case 'task': return <AufgabeLektionView lesson={lesson} />;
             case 'confirmation': return <BestaetigungLektionView lesson={lesson} />;
             case 'decision': return <EntscheidungLektionView lesson={lesson} />;
+            case 'prüfung': return <PruefungLektionView lesson={lesson} />;
             default:
                 return (
                     <div>
@@ -756,6 +809,9 @@ const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void 
                                         <div key={lesson.id} onClick={() => setSelectedLesson(lesson)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent cursor-pointer">
                                             <Icon className="w-4 h-4 text-primary" />
                                             <span className="text-sm font-medium">{lesson.title}</span>
+                                            {lesson.type === 'prüfung' && lesson.details.isMandatory && (
+                                                <Badge variant="outline" className="ml-2 border-amber-500/50 text-amber-400">Pflicht</Badge>
+                                            )}
                                             {lesson.duration && <span className="ml-auto text-xs text-muted-foreground">{lesson.duration}</span>}
                                         </div>
                                       );
@@ -806,7 +862,7 @@ export default function QAkademiePage() {
             case 'Teilnehmer': return <ParticipantsView onCreate={() => setIsAddParticipantOpen(true)} />;
             case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
             case 'Fortschritt & Reports': return <GenericView title="Fortschritt & Reports" />;
-            case 'Zertifikate': return <GenericView title="Zertifikate" onCreate={() => setIsCreateCertOpen(true)} />;
+            case 'Zertifikate': return <CertificatesView onCreate={() => setIsCreateCertOpen(true)} />;
             case 'Einstellungen': return <GenericView title="Einstellungen" />;
             default: return <OverviewView />;
         }
@@ -854,7 +910,19 @@ export default function QAkademiePage() {
                     {renderModule()}
                 </div>
             </main>
-            <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={handleVideoSaved} />
+            <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={(open) => {
+                if (!open) {
+                    // This is the explicit cleanup call that was missing
+                    const recorderDialog = document.querySelector('[role="dialog"]');
+                    if (recorderDialog) {
+                       // A bit of a hacky way to ensure cleanup if state isn't enough
+                       const closeButton = recorderDialog.querySelector('button[aria-label="Close"]');
+                       // @ts-ignore
+                       if(closeButton) closeButton.click();
+                    }
+                }
+                setIsRecordingDialogOpen(open);
+            }} onVideoSaved={handleVideoSaved} />
             
             {/* Placeholder Dialogs */}
             <Dialog open={isCreateCourseOpen} onOpenChange={setIsCreateCourseOpen}><DialogContent><DialogHeader><DialogTitle>Kurs erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
@@ -867,3 +935,4 @@ export default function QAkademiePage() {
         </div>
     );
 }
+
