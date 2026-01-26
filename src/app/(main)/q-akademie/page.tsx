@@ -22,6 +22,7 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -50,6 +51,7 @@ import {
   Loader2,
   Check,
   Radio,
+  Upload,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -83,34 +85,30 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const { toast } = useToast();
     const [step, setStep] = useState<'mode-selection' | 'recording' | 'preview' | 'uploading'>('mode-selection');
     const [recordingMode, setRecordingMode] = useState<RecordingMode | null>(null);
-    const [stream, setStream] = useState<MediaStream | null>(null);
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
     const animationFrameId = useRef<number | null>(null);
     const mediaStreamsRef = useRef<MediaStream[]>([]);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
     const cleanup = () => {
         if (animationFrameId.current) {
             cancelAnimationFrame(animationFrameId.current);
             animationFrameId.current = null;
         }
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop();
+        }
         mediaStreamsRef.current.forEach(s => {
             s.getTracks().forEach(track => track.stop());
         });
         mediaStreamsRef.current = [];
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
+        mediaRecorderRef.current = null;
     };
-
+    
     const resetState = () => {
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.onstop = null; // Prevent onstop from firing on manual reset
-            mediaRecorder.stop();
-        }
         cleanup();
         if (recordedVideoUrl) {
             URL.revokeObjectURL(recordedVideoUrl);
@@ -120,13 +118,16 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         setRecordedVideoUrl(null);
         setRecordedChunks([]);
         setError(null);
-        setStream(null);
-        setMediaRecorder(null);
     };
-    
+
     useEffect(() => {
+        // Full cleanup when the dialog is closed, regardless of how.
         if (!open) {
             resetState();
+        }
+        // Ensure unmount cleanup
+        return () => {
+          cleanup();
         }
     }, [open]);
 
@@ -194,15 +195,13 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                 }
             }
 
-            setStream(displayStream);
-            
             if (videoRef.current) {
                 videoRef.current.srcObject = displayStream;
                 videoRef.current.play().catch(e => console.error("Video play failed", e));
             }
 
             const recorder = new MediaRecorder(recorderStream, { mimeType: 'video/webm' });
-            setMediaRecorder(recorder);
+            mediaRecorderRef.current = recorder;
             
             recorder.ondataavailable = (e) => {
                 if (e.data.size > 0) {
@@ -221,7 +220,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     setRecordedVideoUrl(url);
                     setStep('preview');
                     cleanup();
-                    return []; // Reset chunks after processing
+                    return [];
                 });
             };
 
@@ -237,7 +236,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     };
     
     const stopRecording = () => {
-        mediaRecorder?.stop();
+        mediaRecorderRef.current?.stop();
     };
 
     const handleSave = (e: FormEvent) => {
@@ -250,7 +249,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             const newVideo = {
                 id: `vid-${Date.now()}`,
                 title: title || 'Unbenanntes Video',
-                duration: '0:42', // Mock
+                duration: '0:42',
                 uploader: 'Dr. Müller',
                 date: new Date().toLocaleDateString('de-DE')
             };
@@ -387,19 +386,17 @@ const QOnboardingView = () => (
     </div>
 );
 
-const CoursesView = () => (
+const CoursesView = ({ onCreate }: { onCreate: () => void }) => (
     <div>
-        <div className="flex justify-between items-center mb-6">
-             <Tabs defaultValue="unternehmenskurse">
+        <Tabs defaultValue="unternehmenskurse" className="w-full">
+            <div className="flex justify-between items-center mb-6">
                 <TabsList>
                     <TabsTrigger value="q-kurse">Q-Kurse</TabsTrigger>
                     <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
                     <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
                 </TabsList>
-            </Tabs>
-            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
-        </div>
-        <Tabs defaultValue="unternehmenskurse">
+                <Button variant="outline" onClick={onCreate}><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
+            </div>
             <TabsContent value="q-kurse">
                 <div className="text-center py-12 text-muted-foreground italic">Keine Q-Kurse verfügbar.</div>
             </TabsContent>
@@ -434,10 +431,10 @@ const CoursesView = () => (
     </div>
 );
 
-const InhalteView = ({videos, setVideos, onRecordVideo}: {videos: any[], setVideos: any, onRecordVideo: () => void}) => (
+const InhalteView = ({videos, setVideos, onRecordVideo, onUploadVideo, onUploadDoc, onCreateWissen}: {videos: any[], setVideos: any, onRecordVideo: () => void, onUploadVideo: () => void, onUploadDoc: () => void, onCreateWissen: () => void}) => (
     <div>
          <div className="flex justify-between items-center mb-6">
-            <Tabs defaultValue="videos">
+            <Tabs defaultValue="videos" className="w-full">
                 <TabsList>
                     <TabsTrigger value="videos">Videos</TabsTrigger>
                     <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
@@ -452,10 +449,10 @@ const InhalteView = ({videos, setVideos, onRecordVideo}: {videos: any[], setVide
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Video hochladen</DropdownMenuItem>
-                    <DropdownMenuItem onSelect={onRecordVideo}>Video aufnehmen</DropdownMenuItem>
-                    <DropdownMenuItem>Dokument hochladen</DropdownMenuItem>
-                    <DropdownMenuItem>Wissensbaustein erstellen</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={onUploadVideo}><Upload className="mr-2 h-4 w-4" />Video hochladen</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={onRecordVideo}><Video className="mr-2 h-4 w-4" />Video aufnehmen</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={onUploadDoc}><FileIcon className="mr-2 h-4 w-4" />Dokument hochladen</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={onCreateWissen}><BrainCircuit className="mr-2 h-4 w-4" />Wissensbaustein erstellen</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -513,11 +510,11 @@ const InhalteView = ({videos, setVideos, onRecordVideo}: {videos: any[], setVide
     </div>
 );
 
-const LearningPathsView = () => (
+const LearningPathsView = ({ onCreate }: { onCreate: () => void }) => (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Lernpfade</CardTitle>
-            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
+            <Button variant="outline" onClick={onCreate}><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
         </CardHeader>
         <CardContent>
             <Table>
@@ -537,11 +534,11 @@ const LearningPathsView = () => (
     </Card>
 );
 
-const ParticipantsView = () => (
+const ParticipantsView = ({ onCreate }: { onCreate: () => void }) => (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Teilnehmer</CardTitle>
-            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
+            <Button variant="outline" onClick={onCreate}><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
         </CardHeader>
         <CardContent>
             <Table>
@@ -561,25 +558,16 @@ const ParticipantsView = () => (
     </Card>
 );
 
-const GenericView = ({ title }: { title: string }) => {
-    let actionButton = null;
-
-    if (title === 'Abteilungen & Rollen') {
-        actionButton = (
-            <div className="flex gap-2">
-                <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Abteilung erstellen</Button>
-                <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Rolle erstellen</Button>
-            </div>
-        );
-    } else if (title === 'Zertifikate') {
-        actionButton = <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Zertifikat erstellen</Button>;
-    }
-
+const GenericView = ({ title, onCreate }: { title: string, onCreate?: () => void }) => {
     return (
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{title}</CardTitle>
-                {actionButton}
+                {onCreate && (
+                    <Button variant="outline" onClick={onCreate}>
+                        <Plus className="mr-2 h-4 w-4" /> Erstellen
+                    </Button>
+                )}
             </CardHeader>
             <CardContent>
                 <p className="text-muted-foreground italic">Ansicht für "{title}" wird aufgebaut.</p>
@@ -592,6 +580,13 @@ const GenericView = ({ title }: { title: string }) => {
 export default function QAkademiePage() {
     const [activeModule, setActiveModule] = useState(modules[0].name);
     const [isRecordingDialogOpen, setIsRecordingDialogOpen] = useState(false);
+    const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
+    const [isCreateLpOpen, setIsCreateLpOpen] = useState(false);
+    const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
+    const [isCreateCertOpen, setIsCreateCertOpen] = useState(false);
+    const [isCreateDeptOpen, setIsCreateDeptOpen] = useState(false);
+    const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
+    
     const [videos, setVideos] = useState(mockAcademyVideos);
 
     const handleVideoSaved = (newVideo: any) => {
@@ -602,15 +597,50 @@ export default function QAkademiePage() {
         switch (activeModule) {
             case 'Übersicht': return <OverviewView />;
             case 'Q-Onboarding': return <QOnboardingView />;
-            case 'Kurse': return <CoursesView />;
-            case 'Lernpfade': return <LearningPathsView />;
-            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onRecordVideo={() => setIsRecordingDialogOpen(true)} />;
-            case 'Teilnehmer': return <ParticipantsView />;
+            case 'Kurse': return <CoursesView onCreate={() => setIsCreateCourseOpen(true)} />;
+            case 'Lernpfade': return <LearningPathsView onCreate={() => setIsCreateLpOpen(true)} />;
+            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onRecordVideo={() => setIsRecordingDialogOpen(true)} onUploadVideo={() => {}} onUploadDoc={() => {}} onCreateWissen={() => {}} />;
+            case 'Teilnehmer': return <ParticipantsView onCreate={() => setIsAddParticipantOpen(true)} />;
             case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
             case 'Fortschritt & Reports': return <GenericView title="Fortschritt & Reports" />;
-            case 'Zertifikate': return <GenericView title="Zertifikate" />;
+            case 'Zertifikate': return <GenericView title="Zertifikate" onCreate={() => setIsCreateCertOpen(true)} />;
             case 'Einstellungen': return <GenericView title="Einstellungen" />;
             default: return <OverviewView />;
+        }
+    };
+    
+     const renderHeaderActions = () => {
+        const createButton = (onClick: () => void, text: string) => (
+            <Button variant="outline" onClick={onClick}>
+                <Plus className="mr-2 h-4 w-4" /> {text}
+            </Button>
+        );
+
+        switch (activeModule) {
+            case 'Kurse': return createButton(() => setIsCreateCourseOpen(true), 'Kurs erstellen');
+            case 'Lernpfade': return createButton(() => setIsCreateLpOpen(true), 'Lernpfad erstellen');
+            case 'Inhalte': return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Inhalt erstellen</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => {}}><Upload className="mr-2 h-4 w-4" />Video hochladen</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setIsRecordingDialogOpen(true)}><Video className="mr-2 h-4 w-4" />Video aufnehmen</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {}}><FileIcon className="mr-2 h-4 w-4" />Dokument hochladen</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {}}><BrainCircuit className="mr-2 h-4 w-4" />Wissensbaustein erstellen</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
+            case 'Teilnehmer': return createButton(() => setIsAddParticipantOpen(true), 'Teilnehmer hinzufügen');
+            case 'Abteilungen & Rollen': return (
+                <div className="flex gap-2">
+                    {createButton(() => setIsCreateDeptOpen(true), 'Abteilung erstellen')}
+                    {createButton(() => setIsCreateRoleOpen(true), 'Rolle erstellen')}
+                </div>
+            );
+            case 'Zertifikate': return createButton(() => setIsCreateCertOpen(true), 'Zertifikat erstellen');
+            default: return null;
         }
     };
 
@@ -640,6 +670,7 @@ export default function QAkademiePage() {
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <Input type="text" placeholder="Kurse, Videos, Inhalte durchsuchen..." className="pl-9 bg-input" />
                     </div>
+                    {renderHeaderActions()}
                 </header>
 
                 <div className="animate-in fade-in duration-300">
@@ -647,6 +678,15 @@ export default function QAkademiePage() {
                 </div>
             </main>
             <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={handleVideoSaved} />
+            
+            {/* Placeholder Dialogs */}
+            <Dialog open={isCreateCourseOpen} onOpenChange={setIsCreateCourseOpen}><DialogContent><DialogHeader><DialogTitle>Kurs erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
+            <Dialog open={isCreateLpOpen} onOpenChange={setIsCreateLpOpen}><DialogContent><DialogHeader><DialogTitle>Lernpfad erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
+            <Dialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen}><DialogContent><DialogHeader><DialogTitle>Teilnehmer hinzufügen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
+            <Dialog open={isCreateCertOpen} onOpenChange={setIsCreateCertOpen}><DialogContent><DialogHeader><DialogTitle>Zertifikat erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
+            <Dialog open={isCreateDeptOpen} onOpenChange={setIsCreateDeptOpen}><DialogContent><DialogHeader><DialogTitle>Abteilung erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
+            <Dialog open={isCreateRoleOpen} onOpenChange={setIsCreateRoleOpen}><DialogContent><DialogHeader><DialogTitle>Rolle erstellen</DialogTitle></DialogHeader><p>Funktionalität wird aufgebaut.</p></DialogContent></Dialog>
+
         </div>
     );
 }
