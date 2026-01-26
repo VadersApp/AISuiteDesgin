@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, FormEvent } from 'react';
+import { useState, useMemo, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -71,7 +71,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockTasks, mockSops, mockProjects } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -83,8 +83,8 @@ import { useToast } from '@/hooks/use-toast';
 
 
 const modules = [
+    { name: 'Q-Chat', icon: MessageSquare },
     { name: 'Übersicht', icon: LayoutDashboard },
-    { name: 'Projekte', icon: MessageSquare },
     { name: 'Workspace', icon: Briefcase },
     { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Mitarbeiter', icon: Users },
@@ -1072,6 +1072,14 @@ export default function QSpacePage() {
   const [currentUserId, setCurrentUserId] = useState('ben-weber');
   const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
 
+  useEffect(() => {
+    if (pathname.startsWith('/q-space/chat')) {
+      if (activeModule !== 'Q-Chat') {
+          setActiveModule('Q-Chat');
+      }
+    }
+  }, [pathname, activeModule]);
+
   // DERIVED DATA BASED ON USER ROLE
   const filteredKpiMitarbeiter = useMemo(() => {
     if (!currentUser) return [];
@@ -1143,18 +1151,13 @@ export default function QSpacePage() {
           case 'KPI-Dashboard': return <KpiDashboard mitarbeiter={filteredKpiMitarbeiter} />;
           case 'Mitarbeiter': return <MitarbeiterView mitarbeiter={filteredKpiMitarbeiter} />;
           case 'System Admin (Q-Space)': return <SystemAdminView />;
+          case 'Q-Chat': return null; // Should redirect
           default: return <OverviewView currentUser={currentUser} filteredKpiMitarbeiter={filteredKpiMitarbeiter} filteredChatThreads={filteredChatThreads} filteredTasks={filteredTasks} />;
       }
   };
 
-  if (pathname.startsWith('/q-space/chat')) {
-      if (activeModule !== 'Projekte') {
-          setActiveModule('Projekte');
-      }
-  }
-
   const handleModuleClick = (moduleName: string) => {
-    if (moduleName === 'Projekte') {
+    if (moduleName === 'Q-Chat') {
         router.push('/q-space/chat');
     } else {
         if (pathname.startsWith('/q-space/chat')) {
@@ -1172,7 +1175,7 @@ export default function QSpacePage() {
             <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">Q-Space</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
-                const isChatLink = mod.name === 'Projekte';
+                const isChatLink = mod.name === 'Q-Chat';
                 const isActive = isChatLink ? pathname.startsWith('/q-space/chat') : activeModule === mod.name && !pathname.startsWith('/q-space/chat');
 
                  return (
