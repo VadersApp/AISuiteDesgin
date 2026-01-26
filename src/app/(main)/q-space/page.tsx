@@ -73,7 +73,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockTasks, mockSops, mockProjects } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -215,13 +215,13 @@ const OverviewView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads
                     <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors h-full">
                         <CardHeader className="p-0 mb-2">
                             <CardTitle className="text-base flex items-center gap-2">
-                                <MessageSquare className="w-4 h-4 text-muted-foreground" /> Offene Projekt-Threads
+                                <MessageSquare className="w-4 h-4 text-muted-foreground" /> Offene Projekte
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="space-y-1">
                                 <div className="flex justify-between items-baseline">
-                                    <p className="text-xs text-muted-foreground">Ungelesene Threads</p>
+                                    <p className="text-xs text-muted-foreground">Ungelesene Projekte</p>
                                     <p className={cn("font-bold text-lg", unreadThreads > 0 && 'text-blue-400')}>{unreadThreads}</p>
                                 </div>
                                 <div className="flex justify-between items-baseline">
@@ -1206,10 +1206,12 @@ export default function QSpacePage() {
                             <SelectValue placeholder="Angemeldeten Benutzer simulieren" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectLabel>Benutzer wechseln zur Demonstration</SelectLabel>
-                            {kpiMitarbeiter.map(m => (
-                            <SelectItem key={m.id} value={m.id}>{m.name} ({m.role})</SelectItem>
-                            ))}
+                            <SelectGroup>
+                                <SelectLabel>Benutzer wechseln zur Demonstration</SelectLabel>
+                                {kpiMitarbeiter.map(m => (
+                                <SelectItem key={m.id} value={m.id}>{m.name} ({m.role})</SelectItem>
+                                ))}
+                            </SelectGroup>
                         </SelectContent>
                     </Select>
                      <DropdownMenu>
