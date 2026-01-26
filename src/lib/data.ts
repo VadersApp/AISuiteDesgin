@@ -467,6 +467,9 @@ export const kpiMitarbeiter = [
     { id: 'anna-schmidt', role: 'Sales Manager', name: 'Anna Schmidt', abteilung: 'Vertrieb', team: 'Enterprise', mitarbeitertyp: 'Mensch', zWert: 78, status: 'Warnung', trend: 'down', letzteAbweichung: 'Zielverfehlung Q4 (-15%)', eskalation: 'Nein', prevZ: 81, activeTasks: 5, activeProjects: 3, overdueTasks: 1, blockedTasks: 0, kpiBreakdown: [{deduction: 3, reason: 'Zielverfehlung Q4 (-15%)'}] },
     { id: 'sophie-lang', role: 'Marketing Manager', name: 'Sophie Lang', abteilung: 'Marketing', team: 'Performance', mitarbeitertyp: 'Mensch', zWert: 85, status: 'Beobachtung', trend: 'up', letzteAbweichung: 'Budgetüberschreitung (+5%)', eskalation: 'Nein', prevZ: 83, activeTasks: 3, activeProjects: 1, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [{deduction: 2, reason: 'Budgetüberschreitung (+5%)'}] },
     { id: 'dr-mueller', role: 'CEO', name: 'Dr. Müller', abteilung: 'Geschäftsführung', team: 'Management', mitarbeitertyp: 'Mensch', zWert: 95, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 95, activeTasks: 2, activeProjects: 4, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
+    { id: 'sam-finance', role: 'Accountant', name: 'Sam Finance', abteilung: 'Finanzen & Controlling', team: 'Finance', mitarbeitertyp: 'Mensch', zWert: 98, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 98, activeTasks: 1, activeProjects: 0, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
+    { id: 'clara-compliance', role: 'Compliance Officer', name: 'Clara Compliance', abteilung: 'Recht & Compliance', team: 'Legal', mitarbeitertyp: 'Mensch', zWert: 99, status: 'Stabil', trend: 'stable', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 99, activeTasks: 2, activeProjects: 0, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
+    { id: 'mila-hr', role: 'HR Manager', name: 'Mila HR', abteilung: 'Personalwesen (HR)', team: 'HR', mitarbeitertyp: 'Mensch', zWert: 96, status: 'Stabil', trend: 'up', letzteAbweichung: 'Keine', eskalation: 'Nein', prevZ: 94, activeTasks: 4, activeProjects: 1, overdueTasks: 0, blockedTasks: 0, kpiBreakdown: [] },
 ].sort((a, b) => a.zWert - b.zWert);
 
 export const gesamtZufriedenheit = Math.round(kpiMitarbeiter.reduce((acc, m) => acc + m.zWert, 0) / kpiMitarbeiter.length);
@@ -651,4 +654,99 @@ export const invitesData = [
     expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8),
   },
+];
+
+export const docFolders = [
+  // 01_Unternehmensführung
+  { id: 'folder-gf', name: '01_Unternehmensführung', deptId: 'Geschäftsführung', parentFolderId: null },
+  { id: 'folder-gf-1', name: 'Strategie', deptId: 'Geschäftsführung', parentFolderId: 'folder-gf' },
+  { id: 'folder-gf-2', name: 'Ziele_KPIs', deptId: 'Geschäftsführung', parentFolderId: 'folder-gf' },
+  { id: 'folder-gf-3', name: 'Organisation_Struktur', deptId: 'Geschäftsführung', parentFolderId: 'folder-gf' },
+  { id: 'folder-gf-4', name: 'Entscheidungen', deptId: 'Geschäftsführung', parentFolderId: 'folder-gf' },
+  { id: 'folder-gf-5', name: 'Meetings_Protokolle', deptId: 'Geschäftsführung', parentFolderId: 'folder-gf' },
+  { id: 'folder-gf-6', name: 'Gesellschafter', deptId: 'Geschäftsführung', parentFolderId: 'folder-gf' },
+
+  // 02_Finanzen
+  { id: 'folder-finance', name: '02_Finanzen', deptId: 'Finanzen & Controlling', parentFolderId: null },
+  { id: 'folder-finance-1', name: 'Buchhaltung', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance' },
+  { id: 'folder-finance-1-1', name: 'Eingangsrechnungen', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance-1' },
+  { id: 'folder-finance-1-2', name: 'Ausgangsrechnungen', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance-1' },
+  { id: 'folder-finance-1-3', name: 'Belege', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance-1' },
+  { id: 'folder-finance-1-4', name: 'Abschlüsse', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance-1' },
+  { id: 'folder-finance-2', name: 'Steuern', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance' },
+  { id: 'folder-finance-3', name: 'Liquidität', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance' },
+  { id: 'folder-finance-4', name: 'Controlling', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance' },
+  { id: 'folder-finance-5', name: 'Budgets', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance' },
+  { id: 'folder-finance-6', name: 'Verträge_Finanzen', deptId: 'Finanzen & Controlling', parentFolderId: 'folder-finance' },
+
+  // 03_Vertrieb
+  { id: 'folder-sales', name: '03_Vertrieb', deptId: 'Vertrieb', parentFolderId: null },
+  { id: 'folder-sales-1', name: 'Angebote', deptId: 'Vertrieb', parentFolderId: 'folder-sales' },
+  { id: 'folder-sales-2', name: 'Präsentationen', deptId: 'Vertrieb', parentFolderId: 'folder-sales' },
+  { id: 'folder-sales-3', name: 'Preislisten', deptId: 'Vertrieb', parentFolderId: 'folder-sales' },
+  { id: 'folder-sales-4', name: 'Vertriebsprozesse', deptId: 'Vertrieb', parentFolderId: 'folder-sales' },
+  { id: 'folder-sales-5', name: 'Skripte_Leitfäden', deptId: 'Vertrieb', parentFolderId: 'folder-sales' },
+  { id: 'folder-sales-6', name: 'Abschlüsse', deptId: 'Vertrieb', parentFolderId: 'folder-sales' },
+
+  // 04_Marketing
+  { id: 'folder-marketing', name: '04_Marketing', deptId: 'Marketing', parentFolderId: null },
+  { id: 'folder-marketing-1', name: 'Kampagnen', deptId: 'Marketing', parentFolderId: 'folder-marketing' },
+  { id: 'folder-marketing-2', name: 'Inhalte_Content', deptId: 'Marketing', parentFolderId: 'folder-marketing' },
+  { id: 'folder-marketing-3', name: 'Social_Media', deptId: 'Marketing', parentFolderId: 'folder-marketing' },
+  { id: 'folder-marketing-4', name: 'Werbemittel', deptId: 'Marketing', parentFolderId: 'folder-marketing' },
+  { id: 'folder-marketing-5', name: 'Branding', deptId: 'Marketing', parentFolderId: 'folder-marketing' },
+  { id: 'folder-marketing-6', name: 'Analysen_Reportings', deptId: 'Marketing', parentFolderId: 'folder-marketing' },
+
+  // 05_Kunden
+  { id: 'folder-customers', name: '05_Kunden', deptId: 'Vertrieb', parentFolderId: null },
+  { id: 'folder-customers-1', name: 'Kundenakten', deptId: 'Vertrieb', parentFolderId: 'folder-customers' },
+  { id: 'folder-customers-2', name: 'Verträge', deptId: 'Vertrieb', parentFolderId: 'folder-customers' },
+  { id: 'folder-customers-3', name: 'Kommunikation', deptId: 'Vertrieb', parentFolderId: 'folder-customers' },
+  { id: 'folder-customers-4', name: 'Projekte_Kunden', deptId: 'Vertrieb', parentFolderId: 'folder-customers' },
+  { id: 'folder-customers-5', name: 'Feedback_Reklamationen', deptId: 'Vertrieb', parentFolderId: 'folder-customers' },
+
+  // 06_Produkte_Leistungen
+  { id: 'folder-products', name: '06_Produkte_Leistungen', deptId: 'IT', parentFolderId: null },
+  { id: 'folder-products-1', name: 'Produktbeschreibungen', deptId: 'IT', parentFolderId: 'folder-products' },
+  { id: 'folder-products-2', name: 'Leistungsübersichten', deptId: 'IT', parentFolderId: 'folder-products' },
+  { id: 'folder-products-3', name: 'Preise', deptId: 'IT', parentFolderId: 'folder-products' },
+  { id: 'folder-products-4', name: 'Weiterentwicklung', deptId: 'IT', parentFolderId: 'folder-products' },
+  { id: 'folder-products-5', name: 'Dokumentation', deptId: 'IT', parentFolderId: 'folder-products' },
+
+  // 07_Personal
+  { id: 'folder-hr', name: '07_Personal', deptId: 'Personalwesen (HR)', parentFolderId: null },
+  { id: 'folder-hr-1', name: 'Recruiting', deptId: 'Personalwesen (HR)', parentFolderId: 'folder-hr' },
+  { id: 'folder-hr-2', name: 'Onboarding', deptId: 'Personalwesen (HR)', parentFolderId: 'folder-hr' },
+  { id: 'folder-hr-3', name: 'Schulungen', deptId: 'Personalwesen (HR)', parentFolderId: 'folder-hr' },
+  { id: 'folder-hr-4', name: 'Richtlinien', deptId: 'Personalwesen (HR)', parentFolderId: 'folder-hr' },
+  { id: 'folder-hr-5', name: 'Mitarbeiterentwicklung', deptId: 'Personalwesen (HR)', parentFolderId: 'folder-hr' },
+  { id: 'folder-hr-6', name: 'Offboarding', deptId: 'Personalwesen (HR)', parentFolderId: 'folder-hr' },
+
+  // 08_Projekte
+  { id: 'folder-projects', name: '08_Projekte', deptId: 'Geschäftsführung', parentFolderId: null },
+  { id: 'folder-projects-1', name: 'Projekt_A', deptId: 'Geschäftsführung', parentFolderId: 'folder-projects' },
+  { id: 'folder-projects-2', name: 'Projekt_B', deptId: 'Geschäftsführung', parentFolderId: 'folder-projects' },
+  { id: 'folder-projects-3', name: 'Projekt_C', deptId: 'Geschäftsführung', parentFolderId: 'folder-projects' },
+
+  // 09_IT_Systeme
+  { id: 'folder-it', name: '09_IT_Systeme', deptId: 'IT', parentFolderId: null },
+  { id: 'folder-it-1', name: 'Zugänge', deptId: 'IT', parentFolderId: 'folder-it' },
+  { id: 'folder-it-2', name: 'Dokumentationen', deptId: 'IT', parentFolderId: 'folder-it' },
+  { id: 'folder-it-3', name: 'Integrationen', deptId: 'IT', parentFolderId: 'folder-it' },
+  { id: 'folder-it-4', name: 'Sicherheit', deptId: 'IT', parentFolderId: 'folder-it' },
+  { id: 'folder-it-5', name: 'Backups', deptId: 'IT', parentFolderId: 'folder-it' },
+
+  // 10_Recht_Compliance
+  { id: 'folder-legal', name: '10_Recht_Compliance', deptId: 'Recht & Compliance', parentFolderId: null },
+  { id: 'folder-legal-1', name: 'Verträge', deptId: 'Recht & Compliance', parentFolderId: 'folder-legal' },
+  { id: 'folder-legal-2', name: 'Datenschutz', deptId: 'Recht & Compliance', parentFolderId: 'folder-legal' },
+  { id: 'folder-legal-3', name: 'Richtlinien', deptId: 'Recht & Compliance', parentFolderId: 'folder-legal' },
+  { id: 'folder-legal-4', name: 'Prüfungen', deptId: 'Recht & Compliance', parentFolderId: 'folder-legal' },
+  { id: 'folder-legal-5', name: 'Versicherungen', deptId: 'Recht & Compliance', parentFolderId: 'folder-legal' },
+
+  // 99_Archiv
+  { id: 'folder-archive', name: '99_Archiv', deptId: 'Geschäftsführung', parentFolderId: null },
+  { id: 'folder-archive-1', name: 'Abgeschlossen', deptId: 'Geschäftsführung', parentFolderId: 'folder-archive' },
+  { id: 'folder-archive-2', name: 'Historisch', deptId: 'Geschäftsführung', parentFolderId: 'folder-archive' },
+  { id: 'folder-archive-3', name: 'Altversionen', deptId: 'Geschäftsführung', parentFolderId: 'folder-archive' },
 ];

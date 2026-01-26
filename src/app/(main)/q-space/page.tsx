@@ -3,7 +3,7 @@
 import { useState, useMemo, FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -68,7 +68,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -100,14 +100,6 @@ const mockSops = [
     { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
 ];
 
-const docFolders = [
-    { id: 'folder-it-1', name: 'General', deptId: 'IT', parentFolderId: null },
-    { id: 'folder-it-2', name: 'Security Policies', deptId: 'IT', parentFolderId: null },
-    { id: 'folder-sales-1', name: 'Pitches', deptId: 'Vertrieb', parentFolderId: null },
-    { id: 'folder-sales-2', name: 'Q1-2024', deptId: 'Vertrieb', parentFolderId: 'folder-sales-1' },
-    { id: 'folder-gf-1', name: 'Strategie', deptId: 'Geschäftsführung', parentFolderId: null },
-];
-
 const mockDocs = [
     { 
         id: 'doc-1',
@@ -130,7 +122,7 @@ const mockDocs = [
         ownerUserId: 'ben-weber',
         ownerName: 'Ben Weber',
         deptId: 'IT',
-        folderId: 'folder-it-2',
+        folderId: 'folder-it-4',
         tags: ['security', 'policy', 'remote'],
         status: 'active',
         versionCurrent: 1.0,
@@ -160,7 +152,7 @@ const mockDocs = [
         ownerUserId: 'ben-weber',
         ownerName: 'Ben Weber',
         deptId: 'IT',
-        folderId: 'folder-it-1',
+        folderId: 'folder-it-2',
         tags: ['it', 'general'],
         status: 'active',
         versionCurrent: 1.0,
@@ -179,8 +171,8 @@ const mockUploadJob = {
     sizeBytes: 780 * 1024,
     aiSuggestion: {
         suggestedTitle: 'Onboarding Prozess für neue Sales-Mitarbeiter',
-        deptId: 'Vertrieb',
-        folderId: 'folder-sales-1',
+        deptId: 'Personalwesen (HR)',
+        folderId: 'folder-hr-2',
         tags: ['onboarding', 'sales', 'prozess', 'hr'],
         confidence: 85,
         reason: 'Dokument enthält Begriffe wie "Sales", "Onboarding", "Neuer Mitarbeiter" und "Vertriebsprozess".'
@@ -248,7 +240,7 @@ const DocumentsView = () => {
     // Recursive function to render folders
     const renderFolders = (parentId: string | null) => {
         return docFolders
-            .filter(f => f.parentFolderId === parentId && (selectedDept === 'all' || f.deptId === selectedDept))
+            .filter(f => f.parentFolderId === parentId && (selectedDept === 'all' || f.deptId === selectedDept || f.deptId === 'company'))
             .map(folder => (
                 <div key={folder.id} className="pl-4">
                     <Button
@@ -287,9 +279,9 @@ const DocumentsView = () => {
                         {renderFolders(null)}
                     </div>
                 </ScrollArea>
-                <CardFooter className="p-2 border-t">
+                <CardContent className="p-2 border-t">
                     <Button variant="ghost" className="w-full justify-start text-sm gap-2"><FolderPlus className="w-4 h-4"/> Neuer Ordner</Button>
-                </CardFooter>
+                </CardContent>
             </Card>
 
             {/* Middle: Document List */}
@@ -344,10 +336,10 @@ const DocumentsView = () => {
                                 </Card>
                             </div>
                         </ScrollArea>
-                        <CardFooter className="p-4 border-t flex gap-2">
+                        <CardContent className="p-4 border-t flex gap-2">
                             <Button variant="outline" className="flex-1">Anpassen</Button>
                             <Button className="flex-1" onClick={handleFinalizeUpload}>Übernehmen & Fertigstellen</Button>
-                        </CardFooter>
+                        </CardContent>
                     </div>
                 )}
                 {!uploadMode && selectedDoc && (
@@ -371,9 +363,9 @@ const DocumentsView = () => {
                                 <div><Label>Zuletzt geändert</Label><p>{format(new Date(selectedDoc.updatedAt), "dd.MM.yyyy HH:mm")}</p></div>
                             </div>
                         </ScrollArea>
-                        <CardFooter className="p-4 border-t">
+                        <CardContent className="p-4 border-t">
                             <Button variant="outline"><Archive className="w-4 h-4 mr-2"/>Archivieren</Button>
-                        </CardFooter>
+                        </CardContent>
                     </div>
                 )}
                 {!uploadMode && !selectedDoc && (
