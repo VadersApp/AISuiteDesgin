@@ -85,10 +85,10 @@ const ChatContent = () => {
 
   const getContextDisplay = (contextType: string) => {
     switch (contextType) {
-      case 'task': return 'Projekt-Thread · Aufgabe';
-      case 'project': return 'Projekt-Thread · Projekt';
-      case 'escalation': return 'Projekt-Thread · Eskalation';
-      case 'thread': return 'Projekt-Thread';
+      case 'task': return 'Projekte · Aufgabe';
+      case 'project': return 'Projekte · Projekt';
+      case 'escalation': return 'Projekte · Eskalation';
+      case 'thread': return 'Projekte';
       case 'team': return 'Team-Chat';
       case 'dm': return 'Direktnachricht';
       default: return contextType;
@@ -150,7 +150,7 @@ const ChatContent = () => {
         <div className="p-4 border-b border-border">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="threads">Projekt-Threads</TabsTrigger>
+              <TabsTrigger value="threads">Projekte</TabsTrigger>
               <TabsTrigger value="teams">Teams</TabsTrigger>
               <TabsTrigger value="direkt">Direkt</TabsTrigger>
             </TabsList>
@@ -194,7 +194,7 @@ const ChatContent = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[385px]">
-              <DropdownMenuItem>Neuer Projekt-Thread</DropdownMenuItem>
+              <DropdownMenuItem>Neues Projekt</DropdownMenuItem>
               <DropdownMenuItem>Neuer Team-Chat</DropdownMenuItem>
               <DropdownMenuItem>Neue Direktnachricht</DropdownMenuItem>
             </DropdownMenuContent>
