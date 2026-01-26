@@ -59,6 +59,12 @@ import {
   CheckSquare,
   User as UserIcon,
   Calendar as CalendarIcon,
+  Upload,
+  File as FileIcon,
+  FolderPlus,
+  MoreVertical,
+  Tag,
+  Archive,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -89,12 +95,97 @@ const mockTasks = [
 const mockProjects = [
     { id: 1, name: "Rollout neue CRM-Software", owner: "Ben Weber", status: "Aktiv" }
 ];
-const mockDocuments = [
-    { id: 1, title: "Unternehmensstrategie 2025", owner: "Dr. Müller", version: "2.1" }
-];
+
 const mockSops = [
     { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv" }
 ];
+
+const docFolders = [
+    { id: 'folder-it-1', name: 'General', deptId: 'IT', parentFolderId: null },
+    { id: 'folder-it-2', name: 'Security Policies', deptId: 'IT', parentFolderId: null },
+    { id: 'folder-sales-1', name: 'Pitches', deptId: 'Vertrieb', parentFolderId: null },
+    { id: 'folder-sales-2', name: 'Q1-2024', deptId: 'Vertrieb', parentFolderId: 'folder-sales-1' },
+    { id: 'folder-gf-1', name: 'Strategie', deptId: 'Geschäftsführung', parentFolderId: null },
+];
+
+const mockDocs = [
+    { 
+        id: 'doc-1',
+        title: 'Unternehmensstrategie 2025',
+        ownerUserId: 'dr-mueller',
+        ownerName: 'Dr. Müller',
+        deptId: 'Geschäftsführung',
+        folderId: 'folder-gf-1',
+        tags: ['strategy', 'q1', 'planning'],
+        status: 'active',
+        versionCurrent: 2.1,
+        fileName: 'unternehmensstrategie_2025_v2.1.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 2.5 * 1024 * 1024,
+        updatedAt: '2024-07-20T10:00:00Z',
+    },
+    { 
+        id: 'doc-2',
+        title: 'Security Policy - Remote Work',
+        ownerUserId: 'ben-weber',
+        ownerName: 'Ben Weber',
+        deptId: 'IT',
+        folderId: 'folder-it-2',
+        tags: ['security', 'policy', 'remote'],
+        status: 'active',
+        versionCurrent: 1.0,
+        fileName: 'remote_work_policy.docx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        sizeBytes: 150 * 1024,
+        updatedAt: '2024-07-19T14:30:00Z',
+    },
+    {
+        id: 'doc-3',
+        title: 'Pitch Deck Innovatech',
+        ownerUserId: 'anna-schmidt',
+        ownerName: 'Anna Schmidt',
+        deptId: 'Vertrieb',
+        folderId: 'folder-sales-2',
+        tags: ['pitch', 'innovatech', 'q1'],
+        status: 'active',
+        versionCurrent: 1.2,
+        fileName: 'Pitch_Innovatech_final.pptx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        sizeBytes: 5.8 * 1024 * 1024,
+        updatedAt: '2024-07-21T09:00:00Z',
+    },
+    {
+        id: 'doc-4',
+        title: 'General IT Documentation',
+        ownerUserId: 'ben-weber',
+        ownerName: 'Ben Weber',
+        deptId: 'IT',
+        folderId: 'folder-it-1',
+        tags: ['it', 'general'],
+        status: 'active',
+        versionCurrent: 1.0,
+        fileName: 'it_general.docx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        sizeBytes: 50 * 1024,
+        updatedAt: '2024-06-19T14:30:00Z',
+    },
+];
+
+const mockUploadJob = {
+    uploadJobId: 'upload-xyz-123',
+    status: 'needs_review',
+    fileName: 'Onboarding_Process_New_Sales_Team.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 780 * 1024,
+    aiSuggestion: {
+        suggestedTitle: 'Onboarding Prozess für neue Sales-Mitarbeiter',
+        deptId: 'Vertrieb',
+        folderId: 'folder-sales-1',
+        tags: ['onboarding', 'sales', 'prozess', 'hr'],
+        confidence: 85,
+        reason: 'Dokument enthält Begriffe wie "Sales", "Onboarding", "Neuer Mitarbeiter" und "Vertriebsprozess".'
+    }
+};
 
 const OverviewView = () => (
     <div className="space-y-6">
@@ -130,6 +221,172 @@ const OverviewView = () => (
     </div>
 );
 
+const DocumentsView = () => {
+    const [selectedDept, setSelectedDept] = useState('all');
+    const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+    const [selectedDoc, setSelectedDoc] = useState<any | null>(mockDocs[0]);
+    const [uploadMode, setUploadMode] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const departments = useMemo(() => {
+        const depts = [...new Set(kpiMitarbeiter.map(m => m.abteilung))];
+        if (!depts.includes('Geschäftsführung')) {
+            depts.unshift('Geschäftsführung');
+        }
+        return depts;
+    }, []);
+
+    const filteredDocs = useMemo(() => {
+        return mockDocs.filter(doc => {
+            const inDept = selectedDept === 'all' || doc.deptId === selectedDept;
+            const inFolder = selectedFolderId === null || doc.folderId === selectedFolderId;
+            const matchesSearch = searchTerm === '' || doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || doc.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+            return inDept && inFolder && matchesSearch;
+        })
+    }, [selectedDept, selectedFolderId, searchTerm]);
+
+    // Recursive function to render folders
+    const renderFolders = (parentId: string | null) => {
+        return docFolders
+            .filter(f => f.parentFolderId === parentId && (selectedDept === 'all' || f.deptId === selectedDept))
+            .map(folder => (
+                <div key={folder.id} className="pl-4">
+                    <Button
+                        variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
+                        className="w-full justify-start h-8 text-sm gap-2"
+                        onClick={() => setSelectedFolderId(folder.id)}
+                    >
+                        <Folder className="w-4 h-4" />
+                        {folder.name}
+                    </Button>
+                    {renderFolders(folder.id)}
+                </div>
+            ));
+    };
+
+    const handleFinalizeUpload = () => {
+        // Mock finalization
+        setUploadMode(false);
+    }
+
+    return (
+        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-20rem)]">
+            {/* Left: Folder Tree */}
+            <Card className="col-span-3 flex flex-col">
+                <CardHeader className="p-4 border-b">
+                    <Select value={selectedDept} onValueChange={setSelectedDept}>
+                        <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Alle Bereiche</SelectItem>
+                            {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </CardHeader>
+                <ScrollArea className="flex-1 p-2">
+                    <div className="space-y-1">
+                        {renderFolders(null)}
+                    </div>
+                </ScrollArea>
+                <CardFooter className="p-2 border-t">
+                    <Button variant="ghost" className="w-full justify-start text-sm gap-2"><FolderPlus className="w-4 h-4"/> Neuer Ordner</Button>
+                </CardFooter>
+            </Card>
+
+            {/* Middle: Document List */}
+            <Card className="col-span-5 flex flex-col">
+                <CardHeader className="p-4 border-b">
+                    <div className="flex justify-between items-center">
+                        <h3 className="font-bold">Dokumente ({filteredDocs.length})</h3>
+                        <Button size="sm" onClick={() => { setUploadMode(true); setSelectedDoc(null); }}><Upload className="w-4 h-4 mr-2" /> Hochladen</Button>
+                    </div>
+                     <Input placeholder="Dokumente durchsuchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="mt-2 bg-input" />
+                </CardHeader>
+                <ScrollArea className="flex-1">
+                    <div className="p-2 space-y-2">
+                        {filteredDocs.map(doc => (
+                             <div key={doc.id} onClick={() => { setSelectedDoc(doc); setUploadMode(false); }} className={cn("p-3 rounded-lg border cursor-pointer", selectedDoc?.id === doc.id ? 'bg-muted border-primary/50' : 'bg-card hover:bg-muted/50')}>
+                                <div className="flex items-start justify-between">
+                                    <p className="font-bold text-sm text-foreground line-clamp-1 flex items-center gap-2">
+                                        <FileIcon className="w-4 h-4 text-muted-foreground" /> {doc.title}
+                                    </p>
+                                    <Badge variant={doc.status === 'active' ? 'default' : 'secondary'} className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">{doc.status}</Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1 ml-6">{doc.fileName} - {(doc.sizeBytes / (1024*1024)).toFixed(1)}MB</p>
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </Card>
+
+            {/* Right: Details / Upload Panel */}
+            <Card className="col-span-4 flex flex-col">
+                {uploadMode && (
+                    /* UPLOAD PANEL */
+                    <div className="flex flex-col h-full animate-in fade-in">
+                        <CardHeader className="p-4 border-b">
+                            <CardTitle className="text-base flex justify-between items-center">
+                                Upload-Prüfung
+                                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => setUploadMode(false)}><X className="w-4 h-4"/></Button>
+                            </CardTitle>
+                        </CardHeader>
+                        <ScrollArea className="flex-1 p-4">
+                            <div className="space-y-4">
+                                <p className="text-sm font-bold bg-muted p-2 rounded-md border">{mockUploadJob.fileName}</p>
+                                <Card className="bg-blue-950/50 border-blue-500/20">
+                                    <CardHeader><CardTitle className="text-sm text-blue-300">KI-Ablageassistent</CardTitle></CardHeader>
+                                    <CardContent className="space-y-3 text-sm">
+                                        <div><Label className="text-blue-400/80">Vorgeschlagener Titel</Label><Input className="bg-input" defaultValue={mockUploadJob.aiSuggestion.suggestedTitle}/></div>
+                                        <div><Label className="text-blue-400/80">Vorgeschlagener Bereich</Label><Select defaultValue={mockUploadJob.aiSuggestion.deptId}><SelectTrigger className="bg-input"><SelectValue/></SelectTrigger><SelectContent>{departments.map(d=><SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select></div>
+                                        <div><Label className="text-blue-400/80">Vorgeschlagener Ordner</Label><Select defaultValue={mockUploadJob.aiSuggestion.folderId}><SelectTrigger className="bg-input"><SelectValue/></SelectTrigger><SelectContent>{docFolders.map(f=><SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent></Select></div>
+                                        <div><Label className="text-blue-400/80">Vorgeschlagene Tags</Label><Input className="bg-input" defaultValue={mockUploadJob.aiSuggestion.tags.join(', ')}/></div>
+                                        <p className="text-xs text-blue-400/70 pt-2 border-t border-blue-500/20">{mockUploadJob.aiSuggestion.reason}</p>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </ScrollArea>
+                        <CardFooter className="p-4 border-t flex gap-2">
+                            <Button variant="outline" className="flex-1">Anpassen</Button>
+                            <Button className="flex-1" onClick={handleFinalizeUpload}>Übernehmen & Fertigstellen</Button>
+                        </CardFooter>
+                    </div>
+                )}
+                {!uploadMode && selectedDoc && (
+                    /* DETAILS PANEL */
+                    <div className="flex flex-col h-full animate-in fade-in">
+                         <CardHeader className="p-4 border-b">
+                            <CardTitle className="text-base flex justify-between items-center">
+                                Dokumentdetails
+                                <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => setSelectedDoc(null)}><X className="w-4 h-4"/></Button>
+                            </CardTitle>
+                        </CardHeader>
+                        <ScrollArea className="flex-1 p-4">
+                            <div className="space-y-4 text-sm">
+                                <h3 className="font-bold text-lg">{selectedDoc.title}</h3>
+                                <div><Label>Dateiname</Label><p className="font-mono text-xs p-2 bg-muted rounded-md border">{selectedDoc.fileName}</p></div>
+                                <div><Label>Owner</Label><p>{selectedDoc.ownerName}</p></div>
+                                <div><Label>Bereich</Label><p>{selectedDoc.deptId}</p></div>
+                                <div><Label>Tags</Label><div className="flex flex-wrap gap-1 mt-1">{selectedDoc.tags.map((t:string) => <Badge key={t} variant="secondary">{t}</Badge>)}</div></div>
+                                <div><Label>Version</Label><p>{selectedDoc.versionCurrent}</p></div>
+                                <div><Label>Größe</Label><p>{(selectedDoc.sizeBytes / (1024*1024)).toFixed(2)} MB</p></div>
+                                <div><Label>Zuletzt geändert</Label><p>{format(new Date(selectedDoc.updatedAt), "dd.MM.yyyy HH:mm")}</p></div>
+                            </div>
+                        </ScrollArea>
+                        <CardFooter className="p-4 border-t">
+                            <Button variant="outline"><Archive className="w-4 h-4 mr-2"/>Archivieren</Button>
+                        </CardFooter>
+                    </div>
+                )}
+                {!uploadMode && !selectedDoc && (
+                     <div className="flex items-center justify-center h-full text-muted-foreground text-center p-4">
+                        <p>Wähle ein Dokument aus oder lade ein neues hoch, um Details anzuzeigen.</p>
+                     </div>
+                )}
+            </Card>
+        </div>
+    )
+}
+
+
 const WorkspaceView = () => (
     <div>
         <h2 className="text-xl font-bold text-foreground mb-4">Workspace</h2>
@@ -155,11 +412,7 @@ const WorkspaceView = () => (
                 </CardContent></Card>
             </TabsContent>
             <TabsContent value="dokumente" className="mt-4">
-                <Card><CardHeader><CardTitle>Dokumente</CardTitle></CardHeader><CardContent>
-                    <Table><TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Version</TableHead></TableRow></TableHeader>
-                        <TableBody>{mockDocuments.map(d => (<TableRow key={d.id}><TableCell>{d.title}</TableCell><TableCell>{d.owner}</TableCell><TableCell>{d.version}</TableCell></TableRow>))}</TableBody>
-                    </Table>
-                </CardContent></Card>
+                <DocumentsView />
             </TabsContent>
             <TabsContent value="sops" className="mt-4">
                 <Card><CardHeader><CardTitle>SOPs</CardTitle></CardHeader><CardContent>
@@ -770,4 +1023,5 @@ export default function QSpacePage() {
     </>
   );
 }
+
 
