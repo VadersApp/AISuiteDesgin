@@ -324,14 +324,6 @@ const OverviewView = () => (
                 <CardContent><p className="text-4xl font-bold">15</p></CardContent>
             </Card>
         </div>
-         <div>
-            <h3 className="text-lg font-bold text-foreground mb-4">Schnellaktionen</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <Button variant="outline">Kurs erstellen</Button>
-                <Button variant="outline">Video hochladen</Button>
-                <Button variant="outline">Lernpfad anlegen</Button>
-            </div>
-        </div>
     </div>
 );
 
@@ -364,13 +356,14 @@ const QOnboardingView = () => (
 const CoursesView = () => (
     <div>
         <div className="flex justify-between items-center mb-6">
-             <Tabs defaultValue="unternehmenskurse" className="w-full">
+             <Tabs defaultValue="unternehmenskurse">
                 <TabsList>
                     <TabsTrigger value="q-kurse">Q-Kurse</TabsTrigger>
                     <TabsTrigger value="unternehmenskurse">Unternehmenskurse</TabsTrigger>
                     <TabsTrigger value="eigene-kurse">Eigene Kurse</TabsTrigger>
                 </TabsList>
             </Tabs>
+            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Kurs erstellen</Button>
         </div>
         <Tabs defaultValue="unternehmenskurse">
             <TabsContent value="q-kurse">
@@ -407,14 +400,32 @@ const CoursesView = () => (
     </div>
 );
 
-const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => (
+const InhalteView = ({videos, setVideos, onRecordVideo}: {videos: any[], setVideos: any, onRecordVideo: () => void}) => (
     <div>
+         <div className="flex justify-between items-center mb-6">
+            <Tabs defaultValue="videos">
+                <TabsList>
+                    <TabsTrigger value="videos">Videos</TabsTrigger>
+                    <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
+                    <TabsTrigger value="wissensbausteine">Wissensbausteine</TabsTrigger>
+                </TabsList>
+            </Tabs>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                   <Button variant="outline">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Inhalt erstellen
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem>Video hochladen</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={onRecordVideo}>Video aufnehmen</DropdownMenuItem>
+                    <DropdownMenuItem>Dokument hochladen</DropdownMenuItem>
+                    <DropdownMenuItem>Wissensbaustein erstellen</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
         <Tabs defaultValue="videos">
-            <TabsList className="mb-6">
-                <TabsTrigger value="videos">Videos</TabsTrigger>
-                <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
-                <TabsTrigger value="wissensbausteine">Wissensbausteine</TabsTrigger>
-            </TabsList>
             <TabsContent value="videos">
                 <Card>
                     <CardHeader></CardHeader>
@@ -470,7 +481,10 @@ const InhalteView = ({videos, setVideos}: {videos: any[], setVideos: any}) => (
 
 const LearningPathsView = () => (
     <Card>
-        <CardHeader><CardTitle>Lernpfade</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Lernpfade</CardTitle>
+            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Lernpfad erstellen</Button>
+        </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Anzahl Kurse</TableHead><TableHead>Zugewiesen an</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
@@ -491,7 +505,10 @@ const LearningPathsView = () => (
 
 const ParticipantsView = () => (
     <Card>
-        <CardHeader><CardTitle>Teilnehmer</CardTitle></CardHeader>
+        <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Teilnehmer</CardTitle>
+            <Button variant="outline"><Plus className="mr-2 h-4 w-4"/> Teilnehmer hinzufügen</Button>
+        </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Abteilung</TableHead><TableHead>Kurse</TableHead><TableHead>Fortschritt</TableHead></TableRow></TableHeader>
@@ -510,16 +527,32 @@ const ParticipantsView = () => (
     </Card>
 );
 
-const GenericView = ({ title }: { title: string }) => (
-    <Card>
-        <CardHeader>
-            <CardTitle>{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground italic">Ansicht für "{title}" wird aufgebaut.</p>
-        </CardContent>
-    </Card>
-);
+const GenericView = ({ title }: { title: string }) => {
+    let actionButton = null;
+
+    if (title === 'Abteilungen & Rollen') {
+        actionButton = (
+            <div className="flex gap-2">
+                <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Abteilung erstellen</Button>
+                <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Rolle erstellen</Button>
+            </div>
+        );
+    } else if (title === 'Zertifikate') {
+        actionButton = <Button variant="outline"><Plus className="mr-2 h-4 w-4" /> Zertifikat erstellen</Button>;
+    }
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>{title}</CardTitle>
+                {actionButton}
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground italic">Ansicht für "{title}" wird aufgebaut.</p>
+            </CardContent>
+        </Card>
+    );
+};
 
 
 export default function QAkademiePage() {
@@ -537,7 +570,7 @@ export default function QAkademiePage() {
             case 'Q-Onboarding': return <QOnboardingView />;
             case 'Kurse': return <CoursesView />;
             case 'Lernpfade': return <LearningPathsView />;
-            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} />;
+            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onRecordVideo={() => setIsRecordingDialogOpen(true)} />;
             case 'Teilnehmer': return <ParticipantsView />;
             case 'Abteilungen & Rollen': return <GenericView title="Abteilungen & Rollen" />;
             case 'Fortschritt & Reports': return <GenericView title="Fortschritt & Reports" />;
@@ -572,24 +605,6 @@ export default function QAkademiePage() {
                      <div className="relative w-96">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <Input type="text" placeholder="Kurse, Videos, Inhalte durchsuchen..." className="pl-9 bg-input" />
-                    </div>
-                    <div className="flex items-center gap-3">
-                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                               <Button>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Erstellen
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Kurs erstellen</DropdownMenuItem>
-                                <DropdownMenuItem>Lernpfad erstellen</DropdownMenuItem>
-                                <DropdownMenuItem>Video hochladen</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setIsRecordingDialogOpen(true)}>Video aufnehmen</DropdownMenuItem>
-                                <DropdownMenuItem>Dokument hochladen</DropdownMenuItem>
-                                <DropdownMenuItem>Wissensbaustein erstellen</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
                     </div>
                 </header>
 
