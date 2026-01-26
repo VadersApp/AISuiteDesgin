@@ -901,5 +901,12 @@ export const mockTasks = Object.values(tasksMockByDepartment).flat().map((task, 
 }));
 
 export const mockSops = [
-    { id: 1, title: "Prozess für neue Kundenanfragen", status: "Aktiv", deptId: "Vertrieb" }
+    { id: 1, title: 'Prozess für neue Kundenanfragen', status: 'Aktiv', deptId: 'Vertrieb' }
+];
+
+export const mockProjects = [
+    { id: 'proj-strategie-2025', name: 'Unternehmensstrategie 2025', owner: 'Dr. Müller', status: 'Aktiv' },
+    { id: 'proj-innovatech-deal', name: 'Innovatech Deal Q1', owner: 'Anna Schmidt', status: 'Aktiv' },
+    { id: 'proj-1', name: 'Core-Backend Refactoring', owner: 'Ben Weber', status: 'Abgeschlossen' },
+    { id: 'phoenix-project', name: 'Projekt Phoenix', owner: 'Dr. Müller', status: 'Planung' },
 ];
