@@ -83,6 +83,18 @@ const ChatContent = () => {
     }
   };
 
+  const getContextDisplay = (contextType: string) => {
+    switch (contextType) {
+      case 'task': return 'Projekt-Thread · Aufgabe';
+      case 'project': return 'Projekt-Thread · Projekt';
+      case 'escalation': return 'Projekt-Thread · Eskalation';
+      case 'thread': return 'Projekt-Thread';
+      case 'team': return 'Team-Chat';
+      case 'dm': return 'Direktnachricht';
+      default: return contextType;
+    }
+  };
+
   const getContextUrl = (thread: (typeof threads)[0] | undefined) => {
       if (!thread) return '/q-space';
       switch (thread.contextType) {
@@ -138,7 +150,7 @@ const ChatContent = () => {
         <div className="p-4 border-b border-border">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="threads">Threads</TabsTrigger>
+              <TabsTrigger value="threads">Projekt-Threads</TabsTrigger>
               <TabsTrigger value="teams">Teams</TabsTrigger>
               <TabsTrigger value="direkt">Direkt</TabsTrigger>
             </TabsList>
@@ -182,7 +194,7 @@ const ChatContent = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[385px]">
-              <DropdownMenuItem>Neuer Arbeits-Thread</DropdownMenuItem>
+              <DropdownMenuItem>Neuer Projekt-Thread</DropdownMenuItem>
               <DropdownMenuItem>Neuer Team-Chat</DropdownMenuItem>
               <DropdownMenuItem>Neue Direktnachricht</DropdownMenuItem>
             </DropdownMenuContent>
@@ -197,8 +209,8 @@ const ChatContent = () => {
             <CardHeader className="p-4 border-b border-border flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base">{activeThread.title}</CardTitle>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {activeThread.contextType}
+                <p className="text-xs text-muted-foreground">
+                  {getContextDisplay(activeThread.contextType)}
                 </p>
               </div>
               <Button asChild variant="outline">
