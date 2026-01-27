@@ -461,6 +461,25 @@ export function getDynamicQalenderBookings() {
     ];
 }
 
+export const mockContacts = [
+    { id: 1, name: 'John Doe', company: 'Innovate GmbH', email: 'john.doe@innovate.de', status: 'Neu', owner: 'Leo Sales' },
+    { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', status: 'Qualifiziert', owner: 'Leo Sales' }
+];
+
+export const mockCompanies = [
+    { id: 1, name: 'Innovate GmbH', industry: 'Technologie', owner: 'Leo Sales' },
+    { id: 2, name: 'Data Corp', industry: 'Datenanalyse', owner: 'Leo Sales' }
+];
+
+export const mockDeals = [
+    { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen' },
+    { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'in 3 Tagen', inactiveDays: 5, nextStep: 'Bedarf klären' },
+    { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen' },
+    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: null, inactiveDays: 0, nextStep: 'Vertrag senden' }
+];
+
+export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
+
 
 export const kpiMitarbeiter = [
     { id: 'ben-weber', role: 'Developer', name: 'Ben Weber', abteilung: 'IT', team: 'Core-Backend', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72, activeTasks: 8, activeProjects: 2, overdueTasks: 3, blockedTasks: 1, kpiBreakdown: [{deduction: 7, reason: 'Deployment-Verzug (+3 Tage)'}, {deduction: 2, reason: '2 überfällige Aufgaben'}] },

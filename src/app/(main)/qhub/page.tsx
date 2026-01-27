@@ -46,7 +46,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData, processKpiData, agentPerformanceData, attributionData } from '@/lib/data';
+import { mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData } from '@/lib/data';
 
 
 const modules = [
@@ -317,7 +317,7 @@ const ReportsView = () => {
                         'TrendingUp': TrendingUp,
                         'Flame': Flame,
                         'Workflow': Workflow
-                    }[kpi.icon] || Info;
+                    }[kpi.icon] || HeartPulse;
                      return (
                         <Card key={kpi.title} className="p-4 bg-card/50">
                             <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
