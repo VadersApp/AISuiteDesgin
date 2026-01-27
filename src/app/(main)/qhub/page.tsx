@@ -82,6 +82,7 @@ import {
   CalendarDays,
   Clock,
   History,
+  GitBranch,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -382,7 +383,7 @@ const CompaniesView = () => {
                     return true;
             }
         });
-    }, [filter, searchTerm, mockCompanies]);
+    }, [filter, searchTerm]);
 
     const getPriorityClass = (priority?: string) => {
         switch (priority) {
