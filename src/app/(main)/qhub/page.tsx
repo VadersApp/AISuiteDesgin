@@ -121,14 +121,12 @@ const modules = [
 
 const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
     
-    // ZONE A Data
     const geschaeftsueberblickData = [
         { title: "Pipeline-Gesamtwert", value: "€90.000", subtitle: "Summe aller aktiven Verkaufschancen" },
         { title: "Aktive Deals", value: "4", subtitle: "Derzeit in Bearbeitung" },
         { title: "Neue Kontakte (30 Tage)", value: "12", subtitle: "Neu erfasste Kontakte" },
     ];
 
-    // ZONE B Data
     const handlungsbedarfData = [
       { title: "Eskalationen aktiv", value: 2, icon: Flame, color: 'rose', tooltip: "Erfordert sofortige Prüfung" },
       { title: "Entscheidungen offen", value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
@@ -136,7 +134,6 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
       { title: "KI-Aktionen heute", value: 128, icon: BotIcon, color: 'emerald', tooltip: "Durch KI-Mitarbeiter ausgeführt" },
     ];
 
-    // ZONE C Data
     const vertriebsKpiData = [
         { title: "Deals in Bearbeitung", value: "4" },
         { title: "Pipeline-Wert", value: "€90.000" },
@@ -406,7 +403,7 @@ const CompaniesView = () => {
                     return true;
             }
         });
-    }, [filter, searchTerm, mockCompanies]);
+    }, [filter, searchTerm]);
 
     const getPriorityClass = (priority?: string) => {
         switch (priority) {
@@ -568,7 +565,6 @@ const DealsView = () => {
 };
 
 const PipelineView = () => {
-    // Helper function for formatting currency
     const formatCurrency = (valueStr: string) => {
         const number = parseInt(valueStr.replace(/[^0-9]/g, ''), 10);
         return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
@@ -885,7 +881,7 @@ const ActivityItem = ({ activity }: { activity: any }) => {
     
   const Icon = {
       Aufgabe: CheckSquare,
-      Termin: Calendar,
+      Termin: CalendarIcon,
       Rückruf: Phone,
       Verkaufschance: Handshake,
       Servicefall: Ticket,
