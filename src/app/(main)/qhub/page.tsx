@@ -77,10 +77,11 @@ import {
   Phone,
   TrendingUp,
   DollarSign,
+  GitBranch,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -108,7 +109,8 @@ const modules = [
     { name: 'Reports', icon: BarChart3 },
 ];
 
-const DashboardView = () => {
+const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
+    
     const kpiCardsData = [
         // From Step 2 & others
         { title: 'Eskalationen aktiv', value: 2, icon: Flame, color: 'rose' },
@@ -386,63 +388,228 @@ const GenericView = ({ title }: { title: string }) => (
     </Card>
 );
 
+const SystemAdminView = () => {
+    const adminTabs = [
+        { value: 'overview', label: 'Übersicht' },
+        { value: 'users', label: 'Benutzer' },
+        { value: 'teams-depts', label: 'Teams & Bereiche' },
+        { value: 'roles-rights', label: 'Rollen & Rechte' },
+        { value: 'feature-flags', label: 'Feature Flags'},
+        { value: 'kpi-policies', label: 'KPI-Richtlinien' },
+        { value: 'security', label: 'Sicherheit' },
+        { value: 'system-health', label: 'Systemzustand' },
+    ];
+    return (
+        <div>
+            <header className="mb-6">
+                <h2 className="text-xl font-bold text-foreground">System Admin (Q-Space)</h2>
+                <p className="text-sm text-muted-foreground">Administrative Steuerung von Q-Space.</p>
+            </header>
+            <Tabs defaultValue="overview" className="w-full">
+                <TabsList className="mb-4 flex-wrap h-auto justify-start">
+                    {adminTabs.map(tab => (
+                        <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                    ))}
+                </TabsList>
+
+                <TabsContent value="overview">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Card><CardHeader><CardTitle>Aktive Nutzer</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{kpiMitarbeiter.length}</p></CardContent></Card>
+                        <Card><CardHeader><CardTitle>Teams</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.team))].length}</p></CardContent></Card>
+                        <Card><CardHeader><CardTitle>Bereiche</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.abteilung))].length}</p></CardContent></Card>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="users">
+                    <Card>
+                        <CardHeader><CardTitle>Benutzerverwaltung</CardTitle></CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Rolle</TableHead><TableHead>Team</TableHead><TableHead>Bereich</TableHead><TableHead>Aktiv</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    {kpiMitarbeiter.map(user => (
+                                        <TableRow key={user.id}>
+                                            <TableCell>{user.name}</TableCell>
+                                            <TableCell><Select defaultValue={user.role}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Mitarbeiter">Mitarbeiter</SelectItem><SelectItem value="Teamleiter">Teamleiter</SelectItem></SelectContent></Select></TableCell>
+                                            <TableCell><Select defaultValue={user.team}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Core-Backend">Core-Backend</SelectItem><SelectItem value="Enterprise">Enterprise</SelectItem></SelectContent></Select></TableCell>
+                                            <TableCell><Select defaultValue={user.abteilung}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="IT">IT</SelectItem><SelectItem value="Vertrieb">Vertrieb</SelectItem></SelectContent></Select></TableCell>
+                                            <TableCell><Switch defaultChecked={true} /></TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="teams-depts">
+                    <div className="grid grid-cols-2 gap-6">
+                        <Card><CardHeader><CardTitle>Bereiche</CardTitle><Button size="sm" className="mt-2">Neuer Bereich</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Bereiche...</p></CardContent></Card>
+                        <Card><CardHeader><CardTitle>Teams</CardTitle><Button size="sm" className="mt-2">Neues Team</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Teams...</p></CardContent></Card>
+                    </div>
+                </TabsContent>
+
+                 <TabsContent value="roles-rights">
+                    <Card><CardHeader><CardTitle>Rollen & Rechte (Read-only)</CardTitle></CardHeader>
+                        <CardContent><p className="text-muted-foreground">Hier würde eine schreibgeschützte Übersicht der Berechtigungen pro Rolle angezeigt.</p></CardContent>
+                    </Card>
+                </TabsContent>
+                
+                 <TabsContent value="feature-flags">
+                    <Card>
+                        <CardHeader>
+                          <CardTitle>Feature Flags &amp; Systemsteuerung</CardTitle>
+                          <CardDescription>Aktivieren oder deaktivieren Sie Q-Hub-Module.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <Alert variant="destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Globaler System-Schalter</AlertTitle>
+                                <AlertDescription>
+                                    <div className="flex items-center justify-between mt-2">
+                                        <div>
+                                            <p className="font-bold">Q-Hub Subsystem aktivieren</p>
+                                            <p className="text-xs">Deaktivieren stoppt alle Q-Hub Prozesse sofort.</p>
+                                        </div>
+                                        <Switch defaultChecked={true} />
+                                    </div>
+                                </AlertDescription>
+                            </Alert>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[
+                                    {id: 'leadRouting', label: 'Lead Routing'},
+                                    {id: 'salesCycle', label: 'Sales Cycle (Deals)'},
+                                    {id: 'supportFlow', label: 'Support Flow (Tickets)'},
+                                    {id: 'marketingNurture', label: 'Marketing Nurture'},
+                                    {id: 'reportingStreams', label: 'Echtzeit-Reporting'},
+                                    {id: 'agentActions', label: 'KI-Agenten-Aktionen'},
+                                ].map(feature => (
+                                     <div key={feature.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+                                        <Label htmlFor={feature.id} className="text-sm font-medium">{feature.label}</Label>
+                                        <Switch id={feature.id} defaultChecked={true} />
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                
+                <TabsContent value="kpi-policies">
+                    <Card>
+                        <CardHeader><CardTitle>KPI-Richtlinien</CardTitle><p className="text-sm text-muted-foreground">Nur für `exec` Rolle sichtbar/bearbeitbar.</p></CardHeader>
+                        <CardContent className="space-y-4">
+                           <div className="grid grid-cols-3 gap-4">
+                                <div><Label>OK-Schwelle (≥)</Label><Input type="number" defaultValue="90" className="bg-input"/></div>
+                                <div><Label>Beobachtungs-Schwelle (≥)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
+                                <div><Label>Eskalations-Schwelle (&lt;)</Label><Input type="number" defaultValue="70" className="bg-input"/></div>
+                           </div>
+                           <h4 className="font-bold">Abzugsparameter</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div><Label>Überfällig</Label><Input type="number" defaultValue="2" className="bg-input"/></div>
+                                <div><Label>Verspätet</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
+                                <div><Label>Blockiert</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
+                                <div><Label>Abweichung Arbeitsanweisung</Label><Input type="number" defaultValue="3" className="bg-input"/></div>
+                                <div><Label>Projektverzug</Label><Input type="number" defaultValue="4" className="bg-input"/></div>
+                           </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="security">
+                     <Card>
+                        <CardHeader><CardTitle>Sicherheit</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Card className="p-4"><h4 className="font-bold">Rollenverteilung</h4><p>5 Mitarbeiter, 2 Teamleiter...</p></Card>
+                                <Card className="p-4"><h4 className="font-bold">Letztes Audit-Event</h4><p>Nutzer `space_admin` hat Rolle von `Ben Weber` geändert.</p></Card>
+                            </div>
+                        </CardContent>
+                     </Card>
+                </TabsContent>
+
+                 <TabsContent value="system-health">
+                     <Card>
+                        <CardHeader><CardTitle>Systemzustand</CardTitle></CardHeader>
+                        <CardContent className="grid grid-cols-3 gap-4">
+                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">KPI Engine</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
+                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Eskalations-Service</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
+                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Datenkonsistenz</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
+                        </CardContent>
+                     </Card>
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+}
+
 export default function QhubPage() {
-    const [activeModule, setActiveModule] = useState(modules[0].name);
-    const [isClient, setIsClient] = useState(false);
+  const [activeModule, setActiveModule] = useState(modules[0].name);
+  const [isClient, setIsClient] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-    const renderModule = () => {
-        switch (activeModule) {
-            case 'Dashboard': return <DashboardView />;
-            case 'Kontakte': return <ContactsView />;
-            case 'Firmen': return <CompaniesView />;
-            case 'Deals': return <DealsView />;
-            case 'Pipeline': return <PipelineView />;
-            case 'Aktivitäten': return <GenericView title="Aktivitäten" />;
-            case 'Aufgaben': return <GenericView title="Aufgaben" />;
-            case 'Notizen': return <GenericView title="Notizen" />;
-            case 'E-Mails': return <GenericView title="E-Mails" />;
-            case 'Anrufe': return <GenericView title="Anrufe" />;
-            case 'Termine': return <GenericView title="Termine" />;
-            case 'Reports': return <ReportsView />;
-            default: return <DashboardView />;
-        }
-    };
+  const [currentUserId, setCurrentUserId] = useState('dr-mueller');
+  const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
+
+  if (!currentUser) {
+    return <div className="p-8">Benutzer wird geladen oder konnte nicht gefunden werden...</div>;
+  }
+
+  const renderModule = () => {
+      switch (activeModule) {
+          case 'Dashboard': return <DashboardView currentUser={currentUser} filteredKpiMitarbeiter={kpiMitarbeiter} filteredChatThreads={chatThreads} filteredTasks={mockTasks} />;
+          case 'Kontakte': return <ContactsView />;
+          case 'Firmen': return <CompaniesView />;
+          case 'Deals': return <DealsView />;
+          case 'Pipeline': return <PipelineView />;
+          case 'Reports': return <ReportsView />;
+          case 'System Admin (Q-Space)': return <SystemAdminView />;
+          default: return <GenericView title={activeModule} />;
+      }
+  };
+
+  const handleModuleClick = (moduleName: string) => {
+    setActiveModule(moduleName);
+  };
 
   return (
+    <>
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
         {/* Left Sidebar for Modules */}
         <aside className="w-56 border-r border-border pr-4 space-y-1">
             <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">CRM Module</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
-                return (
-                    <Button
-                        key={mod.name}
-                        variant={activeModule === mod.name ? 'secondary' : 'ghost'}
-                        onClick={() => setActiveModule(mod.name)}
-                        className="w-full justify-start text-sm"
-                    >
-                        <Icon className="mr-2 h-4 w-4" />
-                        {mod.name}
-                    </Button>
+                const isActive = activeModule === mod.name;
+
+                 return (
+                    <div key={mod.name} className="relative">
+                        <Button
+                            variant={isActive ? 'secondary' : 'ghost'}
+                            onClick={() => handleModuleClick(mod.name)}
+                            className="w-full justify-start text-sm"
+                        >
+                            <Icon className="mr-2 h-4 w-4" />
+                            {mod.name}
+                        </Button>
+                    </div>
                 )
             })}
         </aside>
 
         {/* Main Area */}
         <main className="flex-1 pl-6 space-y-6">
-            {/* Topbar */}
-            <header className="flex justify-between items-center">
+             <header className="flex justify-between items-center">
                  <div className="relative w-96">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input type="text" placeholder="Kontakte, Firmen, Deals durchsuchen..." className="pl-9 bg-input" />
                 </div>
                 <div className="flex items-center gap-3">
-                     {isClient && <DropdownMenu>
+                    {isClient && <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                            <Button>
                                 <Plus className="mr-2 h-4 w-4" />
@@ -459,12 +626,11 @@ export default function QhubPage() {
                     </DropdownMenu>}
                 </div>
             </header>
-
-            {/* Module Content */}
             <div className="animate-in fade-in duration-300">
                 {renderModule()}
             </div>
         </main>
     </div>
+    </>
   );
 }
