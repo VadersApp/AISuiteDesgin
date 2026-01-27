@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { usePathname } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -103,7 +104,6 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const { toast } = useToast();
     const [step, setStep] = useState<'mode-selection' | 'recording' | 'preview' | 'uploading'>('mode-selection');
     const [recordingMode, setRecordingMode] = useState<RecordingMode | null>(null);
-    const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
@@ -134,7 +134,6 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         setStep('mode-selection');
         setRecordingMode(null);
         setRecordedVideoUrl(null);
-        setRecordedChunks([]);
         setError(null);
     }, [cleanup, recordedVideoUrl]);
 
@@ -157,6 +156,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         try {
             let displayStream: MediaStream;
             let recorderStream: MediaStream;
+            let recordedChunks: Blob[] = [];
 
             if (recordingMode === 'camera') {
                 const cameraAudioStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -224,25 +224,20 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             
             recorder.ondataavailable = (e) => {
                 if (e.data.size > 0) {
-                    setRecordedChunks(prev => [...prev, e.data]);
+                    recordedChunks.push(e.data);
                 }
             };
             
             recorder.onstop = () => {
                 cleanup();
-                setRecordedChunks(currentChunks => {
-                    if (currentChunks.length === 0) {
-                        return [];
-                    }
-                    const blob = new Blob(currentChunks, { type: 'video/webm' });
+                if (recordedChunks.length > 0) {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
                     setRecordedVideoUrl(url);
                     setStep('preview');
-                    return [];
-                });
+                }
             };
 
-            setRecordedChunks([]);
             recorder.start();
             setStep('recording');
 
@@ -1126,6 +1121,7 @@ const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void 
 
 
 export default function QAkademiePage() {
+    const pathname = usePathname();
     const [activeModule, setActiveModule] = useState(modules[0].name);
     const [activeCourse, setActiveCourse] = useState<any | null>(null);
     const [videos, setVideos] = useState(mockAcademyVideos);
@@ -1141,6 +1137,18 @@ export default function QAkademiePage() {
     const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
     const [isCreateCertificateOpen, setIsCreateCertificateOpen] = useState(false);
     
+    useEffect(() => {
+        setIsCreateCourseOpen(false);
+        setIsCreateLernpfadOpen(false);
+        setIsRecordingDialogOpen(false);
+        setIsVideoUploadOpen(false);
+        setIsWissensbausteinOpen(false);
+        setIsAddParticipantOpen(false);
+        setIsCreateDepartmentOpen(false);
+        setIsCreateRoleOpen(false);
+        setIsCreateCertificateOpen(false);
+    }, [pathname]);
+
     const renderModule = () => {
         switch (activeModule) {
             case 'Übersicht': return <OverviewView />;
