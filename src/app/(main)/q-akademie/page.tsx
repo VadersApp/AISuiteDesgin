@@ -1184,20 +1184,15 @@ export default function QAkademiePage() {
     });
     
     const setDialogOpen = (dialog: keyof typeof dialogStates, isOpen: boolean) => {
-        // Close all other dialogs when one is opened.
+        // This is a simplified state management. In a real app, you'd want something more robust
+        // especially if multiple dialogs can be stacked. For this case, we close all others.
         if (isOpen) {
-            setDialogStates({
-                isCreateCourseOpen: false,
-                isCreateLernpfadOpen: false,
-                isRecordingDialogOpen: false,
-                isVideoUploadOpen: false,
-                isWissensbausteinOpen: false,
-                isAddParticipantOpen: false,
-                isCreateDepartmentOpen: false,
-                isCreateRoleOpen: false,
-                isCreateCertificateOpen: false,
-                [dialog]: true,
-            });
+            const newStates = Object.keys(dialogStates).reduce((acc, key) => {
+                acc[key as keyof typeof dialogStates] = false;
+                return acc;
+            }, {} as typeof dialogStates);
+            newStates[dialog] = true;
+            setDialogStates(newStates);
         } else {
              setDialogStates(prev => ({ ...prev, [dialog]: false }));
         }
@@ -1279,5 +1274,3 @@ export default function QAkademiePage() {
         </div>
     );
 }
-
-    
