@@ -111,42 +111,32 @@ const modules = [
 
 const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
     
-    const kpiCardsData = [
-        // From Step 2 & others
-        { title: 'Eskalationen aktiv', value: 2, icon: Flame, color: 'rose' },
-        { title: 'Entscheidungen warten', value: 5, icon: GitBranch, color: 'amber' },
-        { title: 'Laufende Prozesse', value: 18, icon: Workflow, color: 'blue' },
-        { title: 'KI-Aktionen heute', value: 128, icon: BotIcon, color: 'emerald' },
-        // From Step 3
-        { title: 'Offene Tickets', value: '43', icon: FileText, color: 'blue' },
-        { title: 'SLA Breaches', value: '3', icon: AlertTriangle, color: 'rose' },
-        { title: 'Urgent Tickets', value: '7', icon: Flame, color: 'amber' },
-        { title: 'AVA Antworten heute', value: '76', icon: MessageSquare, color: 'emerald' },
-        // From Step 4
+    const marketingKpiData = [
         { title: 'Aktive Nurture-Kontakte', value: '124', icon: Users, color: 'blue' },
         { title: 'M→S Übergaben', value: '8', icon: Handshake, color: 'emerald' },
         { title: 'Top Social Engagements', value: '1.2k', icon: TrendingUp, color: 'purple' },
         { title: 'Email Performance', value: '42%', icon: Mail, color: 'amber' },
     ];
-    return (
-        <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardHeader><CardTitle>Neue Kontakte (30T)</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold">12</p></CardContent>
-                </Card>
-                <Card>
-                    <CardHeader><CardTitle>Deals in Pipeline</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold">4</p></CardContent>
-                </Card>
-                <Card>
-                    <CardHeader><CardTitle>Pipeline-Wert</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold">€90.000</p></CardContent>
-                </Card>
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {kpiCardsData.map(kpi => {
+    
+    const serviceKpiData = [
+        { title: 'Offene Tickets', value: '43', icon: FileText, color: 'blue' },
+        { title: 'SLA Breaches', value: '3', icon: AlertTriangle, color: 'rose' },
+        { title: 'Urgent Tickets', value: '7', icon: Flame, color: 'amber' },
+        { title: 'AVA Antworten heute', value: '76', icon: MessageSquare, color: 'emerald' },
+    ];
+
+    const systemStatusKpiData = [
+        { title: 'Eskalationen aktiv', value: 2, icon: Flame, color: 'rose' },
+        { title: 'Entscheidungen warten', value: 5, icon: GitBranch, color: 'amber' },
+        { title: 'Laufende Prozesse', value: 18, icon: Workflow, color: 'blue' },
+        { title: 'KI-Aktionen heute', value: 128, icon: BotIcon, color: 'emerald' },
+    ];
+
+    const renderKpiGrid = (data: any[], title: string) => (
+        <div className="space-y-4">
+             <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {data.map(kpi => {
                     const Icon = kpi.icon;
                     return (
                         <Card key={kpi.title} className="p-4 bg-card/50">
@@ -161,6 +151,31 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                     )
                 })}
             </div>
+        </div>
+    );
+
+    return (
+        <div className="space-y-8">
+            <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                    <CardHeader><CardTitle>Neue Kontakte (30T)</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold">12</p></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>Deals in Pipeline</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold">4</p></CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>Pipeline-Wert</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold">€90.000</p></CardContent>
+                </Card>
+            </div>
+            
+            {renderKpiGrid(systemStatusKpiData, 'System-Status & Entscheidungen')}
+            {renderKpiGrid(serviceKpiData, 'Service-Status')}
+            {renderKpiGrid(marketingKpiData, 'Marketing & Nurture Status')}
+            
         </div>
     );
 };
@@ -179,6 +194,7 @@ const ContactsView = () => (
                         <TableHead>Email</TableHead>
                         <TableHead>Lead-Status</TableHead>
                         <TableHead>Owner</TableHead>
+                         <TableHead>Status</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -187,8 +203,9 @@ const ContactsView = () => (
                             <TableCell className="font-medium">{c.name}</TableCell>
                             <TableCell>{c.company}</TableCell>
                             <TableCell>{c.email}</TableCell>
-                            <TableCell><Badge variant="outline">{c.status}</Badge></TableCell>
+                            <TableCell><Badge variant="outline">{c.leadStatus}</Badge></TableCell>
                             <TableCell>{c.owner}</TableCell>
+                            <TableCell><Badge variant="secondary">{c.status}</Badge></TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -197,7 +214,16 @@ const ContactsView = () => (
     </Card>
 );
 
-const CompaniesView = () => (
+const CompaniesView = () => {
+    const mockCompanies = [...new Set(mockContacts.map(c => c.company))].map((companyName, index) => ({
+        id: index + 1,
+        name: companyName,
+        industry: 'Technologie', // Placeholder
+        owner: 'Leo Sales', // Placeholder
+        status: 'Aktiv' // Placeholder
+    }));
+
+    return (
      <Card>
         <CardHeader>
             <CardTitle>Firmen</CardTitle>
@@ -209,6 +235,7 @@ const CompaniesView = () => (
                         <TableHead>Firmenname</TableHead>
                         <TableHead>Branche</TableHead>
                         <TableHead>Owner</TableHead>
+                        <TableHead>Status</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -217,13 +244,15 @@ const CompaniesView = () => (
                             <TableCell className="font-medium">{c.name}</TableCell>
                             <TableCell>{c.industry}</TableCell>
                             <TableCell>{c.owner}</TableCell>
+                            <TableCell><Badge variant="secondary">{c.status}</Badge></TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
         </CardContent>
     </Card>
-);
+    );
+};
 
 const DealsView = () => (
      <Card>
@@ -238,6 +267,8 @@ const DealsView = () => (
                         <TableHead>Phase</TableHead>
                         <TableHead>Wert</TableHead>
                         <TableHead>Owner</TableHead>
+                        <TableHead>SLA-Status</TableHead>
+                        <TableHead>Nächster Schritt</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -247,6 +278,8 @@ const DealsView = () => (
                             <TableCell><Badge variant="secondary">{d.stage}</Badge></TableCell>
                             <TableCell>{d.value}</TableCell>
                             <TableCell>{d.owner}</TableCell>
+                            <TableCell><Badge variant="outline" className={d.slaDue === 'heute' ? 'border-rose-500/50 text-rose-400' : ''}>{d.slaDue}</Badge></TableCell>
+                            <TableCell className="text-xs">{d.nextStep}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -567,7 +600,6 @@ export default function QhubPage() {
           case 'Deals': return <DealsView />;
           case 'Pipeline': return <PipelineView />;
           case 'Reports': return <ReportsView />;
-          case 'System Admin (Q-Space)': return <SystemAdminView />;
           default: return <GenericView title={activeModule} />;
       }
   };

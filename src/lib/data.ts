@@ -462,13 +462,8 @@ export function getDynamicQalenderBookings() {
 }
 
 export const mockContacts = [
-    { id: 1, name: 'John Doe', company: 'Innovate GmbH', email: 'john.doe@innovate.de', status: 'Neu', owner: 'Leo Sales' },
-    { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', status: 'Qualifiziert', owner: 'Leo Sales' }
-];
-
-export const mockCompanies = [
-    { id: 1, name: 'Innovate GmbH', industry: 'Technologie', owner: 'Leo Sales' },
-    { id: 2, name: 'Data Corp', industry: 'Datenanalyse', owner: 'Leo Sales' }
+    { id: 1, name: 'John Doe', company: 'Innovate GmbH', email: 'john.doe@innovate.de', leadStatus: 'Neu', owner: 'Leo Sales', status: 'Aktiv' },
+    { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', leadStatus: 'Qualifiziert', owner: 'Leo Sales', status: 'Aktiv' }
 ];
 
 export const mockDeals = [
