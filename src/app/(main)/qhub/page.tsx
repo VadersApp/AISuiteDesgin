@@ -590,7 +590,7 @@ const PipelineView = () => {
                             <div className="text-center p-4 border-b border-border">
                                 <h3 className="text-base font-bold text-foreground">{phase}</h3>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {phaseDealCount} {phaseDealCount === 1 ? 'Verkaufschance' : 'Verkaufschancen'} · {formatCurrency(phaseTotalValue.toString())}
+                                    {phaseDealCount} Verkaufschance{phaseDealCount !== 1 ? 'n' : ''} · {formatCurrency(phaseTotalValue.toString())}
                                 </p>
                             </div>
                             <div className="space-y-3 p-3 flex-1">
@@ -1156,6 +1156,14 @@ export default function QhubPage() {
 
         {/* Main Area */}
         <main className="flex-1 pl-6 space-y-6">
+             <header>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">
+                    Q-Hub
+                </h1>
+                <p className="text-muted-foreground">
+                    Zentrale für Kunden, Vertrieb & Service
+                </p>
+            </header>
              <header className="flex justify-between items-center">
                  <div className="relative w-96">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
