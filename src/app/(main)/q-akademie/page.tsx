@@ -113,44 +113,42 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const recordedChunksRef = useRef<Blob[]>([]);
 
-    useEffect(() => {
-        const cleanup = () => {
-            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-                mediaRecorderRef.current.stop();
-            }
-            mediaRecorderRef.current = null;
-
-            if (animationFrameId.current) {
-                cancelAnimationFrame(animationFrameId.current);
-                animationFrameId.current = null;
-            }
-
-            mediaStreamsRef.current.forEach(stream => {
-                stream.getTracks().forEach(track => track.stop());
-            });
-            mediaStreamsRef.current = [];
-
-            if (videoRef.current?.srcObject) {
-                (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
-                videoRef.current.srcObject = null;
-            }
-
-            if (recordedVideoUrl) {
-                URL.revokeObjectURL(recordedVideoUrl);
-            }
-        };
-
-        if (!open) {
-            cleanup();
-            setStep('mode-selection');
-            setRecordingMode(null);
-            setRecordedVideoUrl(null);
-            setError(null);
-            recordedChunksRef.current = [];
+    const cleanup = useCallback(() => {
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+            animationFrameId.current = null;
         }
 
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+            mediaRecorderRef.current.stop();
+        }
+        mediaRecorderRef.current = null;
+
+        mediaStreamsRef.current.forEach(stream => {
+            stream.getTracks().forEach(track => track.stop());
+        });
+        mediaStreamsRef.current = [];
+
+        if (videoRef.current?.srcObject) {
+            (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+
+        if (recordedVideoUrl) {
+            URL.revokeObjectURL(recordedVideoUrl);
+        }
+        
+        setRecordedVideoUrl(null);
+        setRecordingMode(null);
+        setStep('mode-selection');
+        recordedChunksRef.current = [];
+        setError(null);
+    }, [recordedVideoUrl]);
+
+    useEffect(() => {
+        // Return cleanup function to be called on unmount
         return cleanup;
-    }, [open, recordedVideoUrl]);
+    }, [cleanup]);
     
     const handleStartRecording = async () => {
         if (!recordingMode) return;
@@ -170,7 +168,11 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                 const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: true });
                 mediaStreamsRef.current.push(screenStream);
                 
-                recorderStream = new MediaStream(screenStream.getTracks());
+                const audioTracks = screenStream.getAudioTracks();
+                recorderStream = new MediaStream(screenStream.getVideoTracks());
+                if (audioTracks.length > 0) {
+                    recorderStream.addTrack(audioTracks[0]);
+                }
 
                 if (recordingMode === 'screen-cam') {
                     const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 180 }, audio: false });
@@ -199,10 +201,12 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     canvas.height = screenVideo.videoHeight;
                     
                     const draw = () => {
-                        ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
-                        const camWidth = canvas.width / 6;
-                        const camHeight = (camVideo.videoHeight / camVideo.videoWidth) * camWidth;
-                        ctx.drawImage(camVideo, canvas.width - camWidth - 20, canvas.height - camHeight - 20, camWidth, camHeight);
+                        if (ctx) {
+                            ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
+                            const camWidth = canvas.width / 6;
+                            const camHeight = (camVideo.videoHeight / camVideo.videoWidth) * camWidth;
+                            ctx.drawImage(camVideo, canvas.width - camWidth - 20, canvas.height - camHeight - 20, camWidth, camHeight);
+                        }
                         animationFrameId.current = requestAnimationFrame(draw);
                     };
                     draw();
@@ -1188,23 +1192,19 @@ export default function QAkademiePage() {
     };
     
     useEffect(() => {
-        const resetDialogs = () => {
-             setDialogStates({
-                isCreateCourseOpen: false,
-                isCreateLernpfadOpen: false,
-                isRecordingDialogOpen: false,
-                isVideoUploadOpen: false,
-                isWissensbausteinOpen: false,
-                isAddParticipantOpen: false,
-                isCreateDepartmentOpen: false,
-                isCreateRoleOpen: false,
-                isCreateCertificateOpen: false,
-            });
-        };
-        
-        // This is a simplified way to detect navigation.
-        // In a real Next.js app, you might use router events.
-        resetDialogs();
+        // This is a simple way to reset dialogs on navigation.
+        // A more robust solution might involve a layout effect or router events.
+        setDialogStates({
+            isCreateCourseOpen: false,
+            isCreateLernpfadOpen: false,
+            isRecordingDialogOpen: false,
+            isVideoUploadOpen: false,
+            isWissensbausteinOpen: false,
+            isAddParticipantOpen: false,
+            isCreateDepartmentOpen: false,
+            isCreateRoleOpen: false,
+            isCreateCertificateOpen: false,
+        });
     }, [pathname]);
 
 
@@ -1266,14 +1266,13 @@ export default function QAkademiePage() {
                 </div>
             </main>
 
-            <VideoRecorderDialog open={dialogStates.isRecordingDialogOpen} onOpenChange={(isOpen) => setDialogOpen('isRecordingDialogOpen', isOpen)} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />
-            
+            {dialogStates.isRecordingDialogOpen && <VideoRecorderDialog open={dialogStates.isRecordingDialogOpen} onOpenChange={(isOpen) => setDialogOpen('isRecordingDialogOpen', isOpen)} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />}
             {dialogStates.isCreateCourseOpen && <GenericCreateDialog open={dialogStates.isCreateCourseOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCourseOpen', isOpen)} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />}
             {dialogStates.isCreateLernpfadOpen && <GenericCreateDialog open={dialogStates.isCreateLernpfadOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateLernpfadOpen', isOpen)} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />}
             {dialogStates.isCreateCertificateOpen && <GenericCreateDialog open={dialogStates.isCreateCertificateOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCertificateOpen', isOpen)} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />}
             {dialogStates.isAddParticipantOpen && <GenericCreateDialog open={dialogStates.isAddParticipantOpen} onOpenChange={(isOpen) => setDialogOpen('isAddParticipantOpen', isOpen)} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />}
             {dialogStates.isCreateDepartmentOpen && <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title="Abteilung erstellen" description="Hier wird die Funktion zum Erstellen von Abteilungen verwaltet."/>}
-            {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."/>}
+            {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."}/>}
             {dialogStates.isVideoUploadOpen && <GenericCreateDialog open={dialogStates.isVideoUploadOpen} onOpenChange={(isOpen) => setDialogOpen('isVideoUploadOpen', isOpen)} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />}
             {dialogStates.isWissensbausteinOpen && <GenericCreateDialog open={dialogStates.isWissensbausteinOpen} onOpenChange={(isOpen) => setDialogOpen('isWissensbausteinOpen', isOpen)} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />}
         </div>
