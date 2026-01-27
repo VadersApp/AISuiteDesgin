@@ -403,7 +403,7 @@ const CompaniesView = () => {
                     return true;
             }
         });
-    }, [filter, searchTerm]);
+    }, [filter, searchTerm, mockCompanies]);
 
     const getPriorityClass = (priority?: string) => {
         switch (priority) {
@@ -501,8 +501,7 @@ const DealsView = () => {
     const formatSlaStatus = (slaDue: string | null) => {
         if (!slaDue) return "Im Plan";
         if (slaDue === 'überschritten') return "SLA überschritten";
-        if (slaDue === 'heute' || slaDue === 'morgen') return `SLA ${slaDue} fällig`;
-        return `SLA ${slaDue}`;
+        return `SLA ${slaDue} fällig`;
     };
 
     return (
@@ -550,6 +549,7 @@ const DealsView = () => {
                             <TableCell>{d.value}</TableCell>
                             <TableCell>
                                 <Badge variant="outline" className={cn(
+                                    'text-xs',
                                     d.slaDue === 'überschritten' && 'border-rose-500/50 text-rose-400',
                                     (d.slaDue === 'heute' || d.slaDue === 'morgen') && 'border-amber-500/50 text-amber-400',
                                 )}>{formatSlaStatus(d.slaDue)}</Badge>
@@ -571,6 +571,12 @@ const PipelineView = () => {
         return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
     };
 
+    const formatSlaStatus = (slaDue: string | null): string => {
+        if (!slaDue) return "";
+        if (slaDue === 'überschritten') return "SLA überschritten";
+        return `SLA ${slaDue} fällig`;
+    };
+
     return (
         <div>
             <h2 className="text-2xl font-bold text-foreground mb-4">Sales Pipeline</h2>
@@ -581,47 +587,49 @@ const PipelineView = () => {
                     const phaseDealCount = dealsInPhase.length;
 
                     return (
-                        <div key={phase} className="bg-muted/50 rounded-xl p-4 flex flex-col h-full">
-                            <div className="text-center pb-3 mb-3 border-b border-border">
+                        <div key={phase} className="bg-muted/50 rounded-xl flex flex-col h-full">
+                            <div className="text-center p-4 border-b border-border">
                                 <h3 className="text-base font-bold text-foreground">{phase}</h3>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground mt-1">
                                     {phaseDealCount} {phaseDealCount === 1 ? 'Verkaufschance' : 'Verkaufschancen'} · {formatCurrency(phaseTotalValue.toString())}
                                 </p>
                             </div>
-                            <div className="space-y-4 flex-1">
+                            <div className="space-y-3 p-3 flex-1">
                                 {dealsInPhase.map(deal => {
-                                    const isSlaCritical = deal.slaDue === 'heute' || deal.slaDue === 'überschritten';
-                                    const isInactiveWarn = deal.inactiveDays > 3;
+                                    const isCritical = deal.slaDue === 'überschritten';
+                                    const isAttention = deal.slaDue === 'heute' || deal.slaDue === 'morgen';
+                                    
+                                    const cardClasses = cn(
+                                        "p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all border",
+                                        isCritical ? 'bg-rose-500/5 border-rose-500/20' : 
+                                        isAttention ? 'bg-amber-500/5 border-amber-500/20' : 
+                                        'bg-card border-border'
+                                    );
 
                                     return (
-                                        <Card key={deal.id} className="p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow bg-card">
+                                        <Card key={deal.id} className={cardClasses}>
                                             {/* 1. Kopfbereich */}
-                                            <div className="pb-2">
+                                            <div>
                                                 <h4 className="font-bold text-foreground truncate">{deal.name}</h4>
-                                                <p className="text-sm font-semibold text-muted-foreground">{formatCurrency(deal.value)}</p>
+                                                <p className="text-sm text-muted-foreground">{formatCurrency(deal.value)}</p>
                                             </div>
-
+                                            
                                             {/* 2. Status-Bereich */}
-                                            <div className="text-xs space-y-1 my-2 border-y border-border py-2">
-                                                {deal.inactiveDays > 0 && (
-                                                    <div className={cn("flex items-center gap-1.5", isInactiveWarn && !isSlaCritical ? "text-amber-500" : "text-muted-foreground")}>
-                                                        <Timer className="w-3.5 h-3.5" />
-                                                        <span>{deal.inactiveDays} Tage ohne Aktivität</span>
+                                            <div className="my-2 py-2 border-t border-b border-border/50 text-xs">
+                                                {deal.slaDue && (
+                                                    <div className={cn("flex items-center gap-1.5 font-medium", isCritical ? "text-rose-500" : isAttention ? "text-amber-500" : "text-muted-foreground")}>
+                                                        <AlertTriangle className="w-3.5 h-3.5" />
+                                                        <span>{formatSlaStatus(deal.slaDue)}</span>
                                                     </div>
                                                 )}
-                                                {deal.slaDue && (
-                                                    <div className={cn("flex items-center gap-1.5", isSlaCritical ? "text-rose-500 font-bold" : "text-muted-foreground")}>
-                                                        <AlertTriangle className="w-3.5 h-3.5" />
-                                                        <span>
-                                                          {deal.slaDue === 'überschritten' ? 'SLA überschritten' : `SLA ${deal.slaDue} fällig`}
-                                                        </span>
-                                                    </div>
+                                                {deal.inactiveDays > 0 && (
+                                                    <p className="text-muted-foreground/80 mt-1">{deal.inactiveDays} Tage ohne Aktivität</p>
                                                 )}
                                             </div>
 
                                             {/* 3. Handlungsbereich */}
                                             <div className="bg-primary/10 p-2 rounded-md text-center mt-2">
-                                                <p className="text-[10px] font-bold text-primary/80 uppercase">Nächster Schritt:</p>
+                                                <p className="text-[9px] font-bold text-primary/80 uppercase">Nächster Schritt:</p>
                                                 <p className="text-sm font-bold text-primary">{deal.nextStep}</p>
                                             </div>
                                         </Card>
