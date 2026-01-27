@@ -84,7 +84,8 @@ import {
   DollarSign,
   ChevronDown,
   CheckCircle2,
-  Circle
+  Circle,
+  GitBranch
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -880,7 +881,7 @@ const ActivityItem = ({ activity }: { activity: any }) => {
     
   const Icon = {
       Aufgabe: CheckSquare,
-      Termin: CalendarIcon,
+      Termin: Calendar,
       Rückruf: Phone,
       Verkaufschance: Handshake,
       Servicefall: Ticket,
@@ -969,7 +970,7 @@ const ActivitiesView = () => {
         <Collapsible>
           <CollapsibleTrigger asChild>
             <div className="flex items-center gap-2 text-muted-foreground cursor-pointer hover:text-foreground">
-                <h2 className="text-lg font-bold">Abgeschlossen</h2>
+                <h2 className="text-lg font-bold">Erledigte Aufgaben</h2>
                 <ChevronDown className="w-5 h-5"/>
             </div>
           </CollapsibleTrigger>
