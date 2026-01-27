@@ -466,6 +466,15 @@ export const mockContacts = [
     { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', leadStatus: 'Qualifiziert', owner: 'Leo Sales', status: 'Aktiv' }
 ];
 
+export const mockCompanies = [...new Set(mockContacts.map(c => c.company))].map((companyName, index) => ({
+    id: index + 1,
+    name: companyName,
+    industry: 'Technologie', // Placeholder
+    owner: 'Leo Sales', // Placeholder
+    status: 'Aktiv' // Placeholder
+}));
+
+
 export const mockDeals = [
     { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen' },
     { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'in 3 Tagen', inactiveDays: 5, nextStep: 'Bedarf klären' },
@@ -1053,3 +1062,134 @@ export const execKpiData = {
         ]
     }
 };
+
+export const featureFlags = {
+  qhubEnabled: true,
+  leadRouting: true,
+  salesCycle: true,
+  supportFlow: true,
+  marketingNurture: true,
+  reportingStreams: true,
+  agentActions: true
+};
+
+export const qhubAgents = {
+  AVA: {
+    key: "AVA",
+    enabled: true,
+    domains: ["service", "inbound"],
+    skills: [
+      { key: "first_response", name: "Erstantwort Kundenservice", description: "Bearbeitet Inbound-Anfragen & Tickets." }
+    ],
+    limits: { maxActionsPerHour: 60, requiresHumanApprovalFor: ["refund", "legal_commitment"] }
+  },
+  LEO: {
+    key: "LEO",
+    enabled: true,
+    domains: ["sales", "outbound"],
+    skills: [
+      { key: "start_sequence", name: "Sales Follow-up Sequenz", description: "Startet Follow-up Sequenzen (E-Mail/Call) nach Sales-Routing." }
+    ],
+    limits: { maxActionsPerHour: 80, requiresHumanApprovalFor: ["close_deal_high_value", "send_contract"] }
+  },
+  SOPHIE: {
+    key: "SOPHIE",
+    enabled: true,
+    domains: ["marketing", "brand"],
+    skills: [
+      { key: "enter_nurture", name: "Nurture Einstieg", description: "Startet Nurture-Strecken und E-Mail-Content." }
+    ],
+    limits: { maxActionsPerHour: 120, requiresHumanApprovalFor: ["mass_email_over_threshold"] }
+  },
+  NOVA: {
+    key: "NOVA",
+    enabled: true,
+    domains: ["social"],
+    skills: [
+      { key: "social_touch", name: "Social Touch", description: "Erzeugt Social-Events/Touchpoints." }
+    ],
+    limits: { maxActionsPerHour: 120, requiresHumanApprovalFor: [] }
+  }
+};
+
+export const processTemplate_leadRoutingV1 = {
+  key: "lead.routing.v1",
+  name: "Lead Routing (V1)",
+  version: 1,
+  enabled: true,
+  states: ["new", "enriched", "qualified_check", "routed", "done", "failed"],
+  transitions: [
+    { from: "new", to: "enriched", onEventTypes: ["lead.created"] },
+    { from: "enriched", to: "qualified_check", onEventTypes: ["lead.enriched"] },
+    { from: "qualified_check", to: "routed", onEventTypes: ["decision.made"] },
+    { from: "routed", to: "done", onEventTypes: ["lead.routed.completed"] },
+    { from: "new", to: "failed", onEventTypes: ["process.error"] },
+    { from: "enriched", to: "failed", onEventTypes: ["process.error"] },
+    { from: "qualified_check", to: "failed", onEventTypes: ["process.error"] },
+    { from: "routed", to: "failed", onEventTypes: ["process.error"] }
+  ],
+  actions: [
+    { atState: "new", actionType: "enqueue_enrichment", config: { mode: "rules_basic" } },
+    { atState: "enriched", actionType: "run_qualification_rules", config: { decisionKey: "route_lead" } },
+    { atState: "routed", actionType: "execute_routing_actions", config: { createDealOnSales: true } }
+  ]
+};
+
+export const leadRoutingPolicy = {
+  thresholds: { sales: 65, nurture: 35 },
+  freemailDomains: ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "gmx.de", "web.de"],
+  negativeKeywords: ["bewerbung", "job", "praktikum", "spam"],
+  buyIntentKeywords: ["angebot", "preis", "demo", "beratung", "start", "sofort", "termin"],
+  topicKeywords: ["automatisierung", "ki", "prozess", "sales", "marketing"],
+  blacklistDomains: [],
+  targetCountries: ["DE", "AT", "CH"],
+  targetIndustries: []
+};
+
+export const testLeads = [
+  {
+    id: "lead_test_sales",
+    status: "new",
+    leadScore: 0,
+    routedTo: null,
+    raw: {
+      name: "Max Mustermann",
+      email: "max@beispiel-firma.de",
+      phone: "+49 170 1234567",
+      companyName: "Beispiel Firma GmbH",
+      message: "Wir möchten eine Demo und Preise für euer System. Bitte Termin."
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "lead_test_nurture",
+    status: "new",
+    leadScore: 0,
+    routedTo: null,
+    raw: {
+      name: "Laura Beispiel",
+      email: "laura@gmail.com",
+      phone: "",
+      companyName: "",
+      message: "Spannend, wir informieren uns gerade über KI & Automatisierung."
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "lead_test_discard",
+    status: "new",
+    leadScore: 0,
+    routedTo: null,
+    raw: {
+      name: "Tom",
+      email: "",
+      phone: "",
+      companyName: "",
+      message: "Bewerbung Praktikum"
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
