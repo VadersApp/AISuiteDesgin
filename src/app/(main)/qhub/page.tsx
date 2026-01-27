@@ -81,7 +81,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -92,6 +92,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 
 const modules = [
@@ -111,74 +113,156 @@ const modules = [
 
 const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
     
+    // ZONE A Data
+    const geschaeftsueberblickData = [
+        { title: "Pipeline-Gesamtwert", value: "€90.000", subtitle: "Summe aller aktiven Verkaufschancen" },
+        { title: "Aktive Deals", value: "4", subtitle: "Derzeit in Bearbeitung" },
+        { title: "Neue Kontakte (30 Tage)", value: "12", subtitle: "Neu erfasste Kontakte" },
+    ];
+
+    // ZONE B Data
+    const handlungsbedarfData = [
+        { title: "Eskalationen aktiv", value: 2, icon: Flame, color: 'rose', tooltip: "Erfordert sofortige Prüfung" },
+        { title: "Entscheidungen offen", value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
+        { title: "Laufende Prozesse", value: 18, icon: Workflow, color: 'blue', tooltip: "Automatisierungen in Bearbeitung" },
+        { title: "KI-Aktionen heute", value: 128, icon: BotIcon, color: 'emerald', tooltip: "Durch KI-Mitarbeiter ausgeführt" },
+    ];
+
+    // ZONE C Data
+    const vertriebsKpiData = [
+        { title: "Deals in Bearbeitung", value: "4" },
+        { title: "Pipeline-Wert", value: "€90.000" },
+        { title: "Übergaben aus Marketing", value: "8" },
+    ];
+
+    const kundenserviceKpiData = [
+        { title: "Offene Tickets", value: "43" },
+        { title: "Dringende Tickets", value: "7" },
+        { title: "SLA-Verstöße", value: "3" },
+        { title: "AVA-Antworten heute", value: "76" },
+    ];
+
     const marketingKpiData = [
-        { title: 'Aktive Nurture-Kontakte', value: '124', icon: Users, color: 'blue' },
-        { title: 'M→S Übergaben', value: '8', icon: Handshake, color: 'emerald' },
-        { title: 'Top Social Engagements', value: '1.2k', icon: TrendingUp, color: 'purple' },
-        { title: 'Email Performance', value: '42%', icon: Mail, color: 'amber' },
+        { title: "Aktive Nurture-Kontakte", value: '124' },
+        { title: "Übergaben an Vertrieb", value: '8' },
+        { title: "Soziale Interaktionen", value: '1.2k' },
+        { title: "E-Mail-Wirkung", value: '42%', tooltip: "Öffnungen und Klicks zusammengefasst" },
     ];
-    
-    const serviceKpiData = [
-        { title: 'Offene Tickets', value: '43', icon: FileText, color: 'blue' },
-        { title: 'SLA Breaches', value: '3', icon: AlertTriangle, color: 'rose' },
-        { title: 'Urgent Tickets', value: '7', icon: Flame, color: 'amber' },
-        { title: 'AVA Antworten heute', value: '76', icon: MessageSquare, color: 'emerald' },
-    ];
-
-    const systemStatusKpiData = [
-        { title: 'Eskalationen aktiv', value: 2, icon: Flame, color: 'rose' },
-        { title: 'Entscheidungen warten', value: 5, icon: GitBranch, color: 'amber' },
-        { title: 'Laufende Prozesse', value: 18, icon: Workflow, color: 'blue' },
-        { title: 'KI-Aktionen heute', value: 128, icon: BotIcon, color: 'emerald' },
-    ];
-
-    const renderKpiGrid = (data: any[], title: string) => (
-        <div className="space-y-4">
-             <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {data.map(kpi => {
-                    const Icon = kpi.icon;
-                    return (
-                        <Card key={kpi.title} className="p-4 bg-card/50">
-                            <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                                <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
-                            </CardHeader>
-                            <CardContent className="p-2 pt-0">
-                                <div className="text-2xl font-bold">{kpi.value}</div>
-                            </CardContent>
-                        </Card>
-                    )
-                })}
-            </div>
-        </div>
-    );
 
     return (
         <div className="space-y-8">
             <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardHeader><CardTitle>Neue Kontakte (30T)</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold">12</p></CardContent>
-                </Card>
-                <Card>
-                    <CardHeader><CardTitle>Deals in Pipeline</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold">4</p></CardContent>
-                </Card>
-                <Card>
-                    <CardHeader><CardTitle>Pipeline-Wert</CardTitle></CardHeader>
-                    <CardContent><p className="text-4xl font-bold">€90.000</p></CardContent>
-                </Card>
+            
+            {/* ZONE A: Geschäftsüberblick */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {geschaeftsueberblickData.map(item => (
+                    <Card key={item.title}>
+                        <CardHeader>
+                            <CardTitle className="text-base">{item.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-4xl font-bold">{item.value}</p>
+                            <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            {/* ZONE B: Handlungsbedarf & Systemzustand */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {handlungsbedarfData.map(item => {
+                    const Icon = item.icon;
+                    return (
+                        <Card key={item.title} className={`p-4 bg-card/50 border-l-4 border-${item.color}-500/50`}>
+                             <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="flex items-center gap-4">
+                                            <Icon className={`h-6 w-6 text-${item.color}-400`} />
+                                            <div>
+                                                <p className="text-2xl font-bold">{item.value}</p>
+                                                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                                            </div>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{item.tooltip}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </Card>
+                    );
+                })}
             </div>
             
-            {renderKpiGrid(systemStatusKpiData, 'System-Status & Entscheidungen')}
-            {renderKpiGrid(serviceKpiData, 'Service-Status')}
-            {renderKpiGrid(marketingKpiData, 'Marketing & Nurture Status')}
-            
+            {/* ZONE C: Operative Bereiche */}
+            <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Vertrieb – aktueller Status</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {vertriebsKpiData.map(kpi => (
+                             <Card key={kpi.title} className="p-4 bg-muted/50">
+                                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+                                <p className="text-3xl font-bold">{kpi.value}</p>
+                             </Card>
+                        ))}
+                    </CardContent>
+                    <CardFooter>
+                         <Button variant="link" className="p-0 h-auto text-primary">Zur Pipeline →</Button>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Kundenservice – aktuelle Lage</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {kundenserviceKpiData.map(kpi => (
+                             <Card key={kpi.title} className="p-4 bg-muted/50">
+                                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+                                <p className="text-3xl font-bold">{kpi.value}</p>
+                             </Card>
+                        ))}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Marketing & Kundenentwicklung</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                         {marketingKpiData.map(kpi => (
+                             <Card key={kpi.title} className="p-4 bg-muted/50">
+                                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+                                <p className="text-3xl font-bold">{kpi.value}</p>
+                             </Card>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* ZONE D: Analyse & Wirkung */}
+            <Collapsible>
+                <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Analyse & Wirkung anzeigen
+                    </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4">
+                    <Card className="p-6">
+                        <CardTitle>Analyse & Wirkung</CardTitle>
+                        <p className="text-muted-foreground mt-2">Detaillierte Auswertungen zu Trends, Prozess-Durchlaufzeiten und KI-Leistung.</p>
+                         <div className="text-center py-12 text-muted-foreground italic">Inhalt für Analyse & Wirkung wird hier angezeigt.</div>
+                    </Card>
+                </CollapsibleContent>
+            </Collapsible>
         </div>
     );
 };
+
 
 const ContactsView = () => (
     <Card>
@@ -215,14 +299,6 @@ const ContactsView = () => (
 );
 
 const CompaniesView = () => {
-    const mockCompanies = [...new Set(mockContacts.map(c => c.company))].map((companyName, index) => ({
-        id: index + 1,
-        name: companyName,
-        industry: 'Technologie', // Placeholder
-        owner: 'Leo Sales', // Placeholder
-        status: 'Aktiv' // Placeholder
-    }));
-
     return (
      <Card>
         <CardHeader>
@@ -435,8 +511,8 @@ const SystemAdminView = () => {
     return (
         <div>
             <header className="mb-6">
-                <h2 className="text-xl font-bold text-foreground">System Admin (Q-Space)</h2>
-                <p className="text-sm text-muted-foreground">Administrative Steuerung von Q-Space.</p>
+                <h2 className="text-xl font-bold text-foreground">System Admin (Q-Hub)</h2>
+                <p className="text-sm text-muted-foreground">Administrative Steuerung von Q-Hub.</p>
             </header>
             <Tabs defaultValue="overview" className="w-full">
                 <TabsList className="mb-4 flex-wrap h-auto justify-start">
@@ -509,17 +585,10 @@ const SystemAdminView = () => {
                                 </AlertDescription>
                             </Alert>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {[
-                                    {id: 'leadRouting', label: 'Lead Routing'},
-                                    {id: 'salesCycle', label: 'Sales Cycle (Deals)'},
-                                    {id: 'supportFlow', label: 'Support Flow (Tickets)'},
-                                    {id: 'marketingNurture', label: 'Marketing Nurture'},
-                                    {id: 'reportingStreams', label: 'Echtzeit-Reporting'},
-                                    {id: 'agentActions', label: 'KI-Agenten-Aktionen'},
-                                ].map(feature => (
-                                     <div key={feature.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
-                                        <Label htmlFor={feature.id} className="text-sm font-medium">{feature.label}</Label>
-                                        <Switch id={feature.id} defaultChecked={true} />
+                                {Object.entries(featureFlags).filter(([key]) => key !== 'qhubEnabled').map(([key, value]) => (
+                                     <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+                                        <Label htmlFor={key} className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</Label>
+                                        <Switch id={key} defaultChecked={value as boolean} />
                                     </div>
                                 ))}
                             </div>
