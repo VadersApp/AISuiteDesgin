@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, FormEvent, useEffect } from 'react';
@@ -86,6 +87,7 @@ import {
   CheckCircle2,
   Circle,
   GitBranch,
+  Info,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -1306,3 +1308,4 @@ export default function QhubPage() {
     </>
   );
 }
+
