@@ -82,7 +82,6 @@ import {
   Clock,
   History,
   DollarSign,
-  GitBranch,
   ChevronDown,
   CheckCircle2,
   Circle
@@ -986,6 +985,104 @@ const ActivitiesView = () => {
   );
 }
 
+const AufgabenView = () => {
+
+    type TaskStatus = 'Offen' | 'Erledigt';
+
+    const [tasks, setTasks] = useState(mockTasks.map(t => ({...t, status: t.status as TaskStatus})));
+
+    const handleSetDone = (taskId: string) => {
+        setTasks(currentTasks => currentTasks.map(t => t.id === taskId ? {...t, status: 'Erledigt'} : t));
+    };
+
+    const priorityOrder: { [key: string]: number } = { 'Hoch': 1, 'Mittel': 2, 'Niedrig': 3 };
+
+    const getDueDate = (dueString: string): Date => {
+        const now = new Date();
+        if (dueString === 'Heute') return startOfToday();
+        if (dueString === 'Morgen') return addDays(startOfToday(), 1);
+        if (dueString === 'Diese Woche') return addDays(startOfToday(), 3);
+        if (dueString === 'Nächste Woche') return addDays(startOfToday(), 7);
+        if (dueString === 'Sofort') return subDays(startOfToday(), 1);
+        return addDays(startOfToday(), 14); // Default
+    };
+
+    const isOverdue = (dueString: string) => {
+        const dueDate = getDueDate(dueString);
+        return isPast(dueDate) && !isToday(dueDate);
+    }
+    
+    const overdueTasks = tasks.filter(t => t.status === 'Offen' && isOverdue(t.due));
+    const openTasks = tasks.filter(t => t.status === 'Offen' && !isOverdue(t.due)).sort((a, b) => priorityOrder[a.prio] - priorityOrder[b.prio]);
+    const doneTasks = tasks.filter(t => t.status === 'Erledigt');
+
+    const TaskRow = ({ task }: { task: any }) => {
+        const overdue = isOverdue(task.due);
+        let priorityClass = 'bg-blue-500';
+        if (overdue) {
+            priorityClass = 'bg-rose-500';
+        } else if (task.prio === 'Hoch') {
+            priorityClass = 'bg-amber-500';
+        }
+        
+        return (
+            <div className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-accent/50">
+                <div className={cn("w-2 h-2 rounded-full shrink-0", priorityClass)}></div>
+                <div className="flex-1 font-bold text-foreground">{task.title}</div>
+                <div className="text-sm text-muted-foreground w-48">{task.desc}</div>
+                <div className="w-24 text-sm">{overdue ? 'Überfällig' : task.due}</div>
+                <div className="w-24 text-sm">{task.prio}</div>
+                <Button variant="outline" size="sm" onClick={() => handleSetDone(task.id)}>Erledigen</Button>
+            </div>
+        )
+    };
+
+    return (
+        <div className="space-y-8">
+            <header>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">Aufgaben</h1>
+                <p className="text-muted-foreground">Ihre persönliche To-do-Zentrale mit Verantwortung.</p>
+            </header>
+
+            <div className="space-y-6">
+                <div>
+                    <h2 className="text-xl font-bold text-foreground mb-4">Meine offenen Aufgaben</h2>
+                    <div className="space-y-3">
+                        {openTasks.length > 0 ? openTasks.map(task => <TaskRow key={task.id} task={task} />) : <p className="text-muted-foreground italic">Keine offenen Aufgaben.</p>}
+                    </div>
+                </div>
+
+                <div>
+                    <h2 className="text-xl font-bold text-rose-400 mb-4">Überfällige Aufgaben</h2>
+                    <div className="space-y-3">
+                         {overdueTasks.length > 0 ? overdueTasks.map(task => <TaskRow key={task.id} task={task} />) : <p className="text-muted-foreground italic">Sehr gut! Nichts ist überfällig.</p>}
+                    </div>
+                </div>
+
+                <Collapsible>
+                    <CollapsibleTrigger asChild>
+                         <div className="flex items-center gap-2 text-muted-foreground cursor-pointer hover:text-foreground">
+                            <h2 className="text-xl font-bold">Erledigte Aufgaben</h2>
+                            <ChevronDown className="w-5 h-5"/>
+                        </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-4 animate-in fade-in">
+                        <div className="space-y-3">
+                            {doneTasks.map(task => (
+                                <div key={task.id} className="flex items-center gap-4 p-3 rounded-lg border border-border bg-muted/50 text-muted-foreground">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></div>
+                                    <div className="flex-1 line-through">{task.title}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </CollapsibleContent>
+                </Collapsible>
+            </div>
+        </div>
+    );
+};
+
+
 export default function QhubPage() {
   const router = useRouter();
   const searchParams = usePathname();
@@ -1018,6 +1115,7 @@ export default function QhubPage() {
           case 'Deals': return <DealsView />;
           case 'Pipeline': return <PipelineView />;
           case 'Aktivitäten': return <ActivitiesView />;
+          case 'Aufgaben': return <AufgabenView />;
           case 'Reports': return <ReportsView />;
           default: return <GenericView title={activeModule} />;
       }
