@@ -123,7 +123,7 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
     // ZONE B Data
     const handlungsbedarfData = [
         { title: "Eskalationen aktiv", value: 2, icon: Flame, color: 'rose', tooltip: "Erfordert sofortige Prüfung" },
-        { title: 'Entscheidungen warten', value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
+        { title: 'Entscheidungen offen', value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
         { title: "Laufende Prozesse", value: 18, icon: Workflow, color: 'blue', tooltip: "Automatisierungen in Bearbeitung" },
         { title: "KI-Aktionen heute", value: 128, icon: BotIcon, color: 'emerald', tooltip: "Durch KI-Mitarbeiter ausgeführt" },
     ];
@@ -138,8 +138,8 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
     const kundenserviceKpiData = [
         { title: "Offene Tickets", value: "43" },
         { title: "Dringende Tickets", value: "7" },
-        { title: "SLA-Verstöße", value: "3" },
-        { title: "AVA-Antworten heute", value: "76" },
+        { title: "SLA-Verstöße", value: "3", tooltip: "Service-Level-Agreement-Verstöße" },
+        { title: "AVA-Antworten heute", value: "76", tooltip: "AVA ist Ihre Kundenservice-KI" },
     ];
 
     const marketingKpiData = [
@@ -220,10 +220,17 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {kundenserviceKpiData.map(kpi => (
-                             <Card key={kpi.title} className="p-4 bg-muted/50">
-                                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                                <p className="text-3xl font-bold">{kpi.value}</p>
-                             </Card>
+                            <TooltipProvider key={kpi.title}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Card className="p-4 bg-muted/50">
+                                            <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+                                            <p className="text-3xl font-bold">{kpi.value}</p>
+                                        </Card>
+                                    </TooltipTrigger>
+                                    {kpi.tooltip && <TooltipContent><p>{kpi.tooltip}</p></TooltipContent>}
+                                </Tooltip>
+                            </TooltipProvider>
                         ))}
                     </CardContent>
                 </Card>
@@ -234,10 +241,17 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
                          {marketingKpiData.map(kpi => (
-                             <Card key={kpi.title} className="p-4 bg-muted/50">
-                                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                                <p className="text-3xl font-bold">{kpi.value}</p>
-                             </Card>
+                             <TooltipProvider key={kpi.title}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                         <Card className="p-4 bg-muted/50">
+                                            <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+                                            <p className="text-3xl font-bold">{kpi.value}</p>
+                                         </Card>
+                                    </TooltipTrigger>
+                                    {kpi.tooltip && <TooltipContent><p>{kpi.tooltip}</p></TooltipContent>}
+                                </Tooltip>
+                            </TooltipProvider>
                         ))}
                     </CardContent>
                 </Card>
@@ -364,46 +378,77 @@ const DealsView = () => (
     </Card>
 );
 
-const PipelineView = () => (
-    <div>
-        <h2 className="text-2xl font-bold text-foreground mb-4">Sales Pipeline</h2>
-        <div className="grid grid-cols-6 gap-4 items-start min-h-[60vh]">
-            {pipelineStages.map(stage => (
-                <div key={stage} className="bg-muted/50 rounded-lg p-3 space-y-3 h-full">
-                    <h3 className="text-sm font-bold text-center text-foreground pb-2 border-b border-border">{stage}</h3>
-                    <div className="space-y-3">
-                        {mockDeals.filter(d => d.stage === stage).map(deal => (
-                            <Card key={deal.id} className="p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow">
-                                <p className="text-sm font-bold">{deal.name}</p>
-                                <p className="text-xs text-muted-foreground">{deal.value}</p>
-                                <div className="mt-3 pt-3 border-t border-border/50 space-y-2 text-xs">
-                                    {deal.slaDue && (
-                                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                                            <Timer className="w-3 h-3" />
-                                            <span>SLA: <span className={cn('font-bold', deal.slaDue === 'heute' && 'text-rose-400')}>{deal.slaDue}</span></span>
-                                        </div>
-                                    )}
-                                    {deal.inactiveDays > 0 && (
-                                        <div className="flex items-center gap-1.5 text-amber-400">
-                                            <AlertTriangle className="w-3 h-3" />
-                                            <span>Inaktiv seit {deal.inactiveDays} Tag(en)</span>
-                                        </div>
-                                    )}
-                                    {deal.nextStep && (
-                                         <div className="flex items-center gap-1.5 text-muted-foreground">
-                                            <ChevronRight className="w-3 h-3" />
-                                            <span>Nächster Schritt: <span className="font-bold text-foreground">{deal.nextStep}</span></span>
-                                        </div>
-                                    )}
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
-            ))}
+const PipelineView = () => {
+    // Helper function for formatting currency
+    const formatCurrency = (valueStr: string) => {
+        const number = parseInt(valueStr.replace(/[^0-9]/g, ''), 10);
+        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
+    };
+
+    return (
+        <div>
+            <h2 className="text-2xl font-bold text-foreground mb-4">Sales Pipeline</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start min-h-[60vh]">
+                {pipelineStages.map(phase => {
+                    const dealsInPhase = mockDeals.filter(d => d.stage === phase);
+                    const phaseTotalValue = dealsInPhase.reduce((sum, deal) => sum + parseInt(deal.value.replace(/[^0-9]/g, ''), 10), 0);
+                    const phaseDealCount = dealsInPhase.length;
+
+                    return (
+                        <div key={phase} className="bg-muted/50 rounded-xl p-4 flex flex-col h-full">
+                            <div className="text-center pb-3 mb-3 border-b border-border">
+                                <h3 className="text-base font-bold text-foreground">{phase}</h3>
+                                <p className="text-xs text-muted-foreground">
+                                    {phaseDealCount} {phaseDealCount === 1 ? 'Verkaufschance' : 'Verkaufschancen'} · {formatCurrency(phaseTotalValue.toString())}
+                                </p>
+                            </div>
+                            <div className="space-y-4 flex-1">
+                                {dealsInPhase.map(deal => {
+                                    const isSlaCritical = deal.slaDue === 'heute';
+                                    const isInactiveWarn = deal.inactiveDays > 3;
+
+                                    return (
+                                        <Card key={deal.id} className="p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow bg-card">
+                                            {/* 1. Kopfbereich */}
+                                            <div className="pb-2">
+                                                <h4 className="font-bold text-foreground truncate">{deal.name}</h4>
+                                                <p className="text-sm font-semibold text-muted-foreground">{formatCurrency(deal.value)}</p>
+                                            </div>
+
+                                            {/* 2. Status-Bereich */}
+                                            <div className="text-xs space-y-1 my-2 border-y border-border py-2">
+                                                {deal.inactiveDays > 0 && (
+                                                    <div className={cn("flex items-center gap-1.5", isInactiveWarn && !isSlaCritical ? "text-amber-500" : "text-muted-foreground")}>
+                                                        <AlertTriangle className="w-3.5 h-3.5" />
+                                                        <span>{deal.inactiveDays} {deal.inactiveDays === 1 ? 'Tag' : 'Tage'} ohne Aktivität</span>
+                                                    </div>
+                                                )}
+                                                {deal.slaDue && (
+                                                    <div className={cn("flex items-center gap-1.5", isSlaCritical ? "text-rose-500 font-bold" : "text-muted-foreground")}>
+                                                        <Timer className="w-3.5 h-3.5" />
+                                                        <span>
+                                                            {isSlaCritical ? "SLA heute fällig" : `Reaktion in ${deal.slaDue}`}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* 3. Handlungsbereich */}
+                                            <div className="bg-primary/10 p-2 rounded-md text-center mt-2">
+                                                <p className="text-[10px] font-bold text-primary/80 uppercase">Nächster Schritt</p>
+                                                <p className="text-sm font-bold text-primary">{deal.nextStep}</p>
+                                            </div>
+                                        </Card>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const ReportsView = () => {
     const { kpis: execKpis, processKpis, agentKpis, attribution } = execKpiData;
