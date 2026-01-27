@@ -100,7 +100,7 @@ const DashboardView = () => (
                     <Flame className="h-4 w-4 text-rose-400" />
                 </CardHeader>
                 <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold text-rose-400">2</div>
+                    <div className="text-2xl font-bold">2</div>
                 </CardContent>
             </Card>
             <Card className="p-4 bg-card/50">
@@ -109,7 +109,7 @@ const DashboardView = () => (
                     <GitBranch className="h-4 w-4 text-amber-400" />
                 </CardHeader>
                 <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold text-amber-400">5</div>
+                    <div className="text-2xl font-bold">5</div>
                 </CardContent>
             </Card>
             <Card className="p-4 bg-card/50">
@@ -128,6 +128,44 @@ const DashboardView = () => (
                 </CardHeader>
                 <CardContent className="p-2 pt-0">
                     <div className="text-2xl font-bold">128</div>
+                </CardContent>
+            </Card>
+        </div>
+         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Offene Tickets</CardTitle>
+                    <FileText className="h-4 w-4 text-blue-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">32</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">SLA Breaches</CardTitle>
+                    <AlertCircle className="h-4 w-4 text-rose-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">3</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Dringende Tickets</CardTitle>
+                    <Flame className="h-4 w-4 text-amber-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">7</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">AVA Antworten heute</CardTitle>
+                    <Bot className="h-4 w-4 text-emerald-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">89</div>
                 </CardContent>
             </Card>
         </div>
