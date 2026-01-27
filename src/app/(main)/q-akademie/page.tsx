@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useState, useRef, useEffect, type FormEvent } from 'react';
-import { usePathname } from 'next/navigation';
+import { useState, useRef, useEffect, type FormEvent, useCallback } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,11 +107,13 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [error, setError] = useState<string | null>(null);
+    
+    // Refs to hold resources that need cleanup
     const animationFrameId = useRef<number | null>(null);
     const mediaStreamsRef = useRef<MediaStream[]>([]);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    
-    const cleanup = React.useCallback(() => {
+
+    const cleanupResources = useCallback(() => {
         if (animationFrameId.current) {
             cancelAnimationFrame(animationFrameId.current);
             animationFrameId.current = null;
@@ -119,35 +121,33 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             mediaRecorderRef.current.stop();
         }
-        mediaStreamsRef.current.forEach(s => {
-            s.getTracks().forEach(track => track.stop());
+        mediaStreamsRef.current.forEach(stream => {
+            stream.getTracks().forEach(track => track.stop());
         });
         mediaStreamsRef.current = [];
         mediaRecorderRef.current = null;
+        
+        setRecordedVideoUrl(currentUrl => {
+            if (currentUrl) {
+                URL.revokeObjectURL(currentUrl);
+            }
+            return null;
+        });
     }, []);
-    
-    const resetState = React.useCallback(() => {
-        cleanup();
-        if (recordedVideoUrl) {
-            URL.revokeObjectURL(recordedVideoUrl);
-        }
-        setStep('mode-selection');
-        setRecordingMode(null);
-        setRecordedVideoUrl(null);
-        setError(null);
-    }, [cleanup, recordedVideoUrl]);
 
-    useEffect(() => {
-        if (!open) {
-            resetState();
-        }
-    }, [open, resetState]);
-
+    // Single cleanup effect on unmount
     useEffect(() => {
         return () => {
-            cleanup();
+            cleanupResources();
         };
-    }, [cleanup]);
+    }, [cleanupResources]);
+
+    const handleResetAndRecordAgain = () => {
+        cleanupResources();
+        setStep('mode-selection');
+        setRecordingMode(null);
+        setError(null);
+    };
 
     const handleStartRecording = async () => {
         if (!recordingMode) return;
@@ -229,7 +229,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             };
             
             recorder.onstop = () => {
-                cleanup();
+                cleanupResources();
                 if (recordedChunks.length > 0) {
                     const blob = new Blob(recordedChunks, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
@@ -244,7 +244,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         } catch (err: any) {
             console.error('Error accessing media devices.', err);
             setError(`Zugriff auf Medien verweigert: ${err.message}. Bitte Berechtigungen in den Browsereinstellungen prüfen.`);
-            resetState();
+            cleanupResources();
         }
     };
     
@@ -273,10 +273,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     };
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => {
-            if (!isOpen) resetState();
-            onOpenChange(isOpen);
-        }}>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Video aufnehmen</DialogTitle>
@@ -332,7 +329,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                            <Textarea id="description" name="description" placeholder="Kurze Beschreibung des Videoinhalts..." className="bg-input" />
                         </div>
                          <div className="flex justify-end gap-2">
-                            <Button type="button" variant="outline" onClick={() => { resetState(); setStep('mode-selection'); }}>Erneut aufnehmen</Button>
+                            <Button type="button" variant="outline" onClick={handleResetAndRecordAgain}>Erneut aufnehmen</Button>
                             <Button type="submit">Speichern & Hochladen</Button>
                         </div>
                     </form>
@@ -1158,32 +1155,48 @@ const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void 
 
 export default function QAkademiePage() {
     const pathname = usePathname();
+    const router = useRouter();
     const [activeModule, setActiveModule] = useState(modules[0].name);
     const [activeCourse, setActiveCourse] = useState<any | null>(null);
     const [videos, setVideos] = useState(mockAcademyVideos);
+    const [dialogStates, setDialogStates] = useState({
+        isCreateCourseOpen: false,
+        isCreateLernpfadOpen: false,
+        isRecordingDialogOpen: false,
+        isVideoUploadOpen: false,
+        isWissensbausteinOpen: false,
+        isAddParticipantOpen: false,
+        isCreateDepartmentOpen: false,
+        isCreateRoleOpen: false,
+        isCreateCertificateOpen: false,
+    });
+    
+    const closeAllDialogs = useCallback(() => {
+        setDialogStates({
+            isCreateCourseOpen: false,
+            isCreateLernpfadOpen: false,
+            isRecordingDialogOpen: false,
+            isVideoUploadOpen: false,
+            isWissensbausteinOpen: false,
+            isAddParticipantOpen: false,
+            isCreateDepartmentOpen: false,
+            isCreateRoleOpen: false,
+            isCreateCertificateOpen: false,
+        });
+    }, []);
 
-    // Create Dialog States
-    const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
-    const [isCreateLernpfadOpen, setIsCreateLernpfadOpen] = useState(false);
-    const [isRecordingDialogOpen, setIsRecordingDialogOpen] = useState(false);
-    const [isVideoUploadOpen, setIsVideoUploadOpen] = useState(false);
-    const [isWissensbausteinOpen, setIsWissensbausteinOpen] = useState(false);
-    const [isAddParticipantOpen, setIsAddParticipantOpen] = useState(false);
-    const [isCreateDepartmentOpen, setIsCreateDepartmentOpen] = useState(false);
-    const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
-    const [isCreateCertificateOpen, setIsCreateCertificateOpen] = useState(false);
+    const setDialogOpen = (dialog: keyof typeof dialogStates, isOpen: boolean) => {
+        if (isOpen) {
+            closeAllDialogs();
+            setDialogStates(prev => ({ ...prev, [dialog]: true }));
+        } else {
+            setDialogStates(prev => ({ ...prev, [dialog]: false }));
+        }
+    };
     
     useEffect(() => {
-        setIsCreateCourseOpen(false);
-        setIsCreateLernpfadOpen(false);
-        setIsRecordingDialogOpen(false);
-        setIsVideoUploadOpen(false);
-        setIsWissensbausteinOpen(false);
-        setIsAddParticipantOpen(false);
-        setIsCreateDepartmentOpen(false);
-        setIsCreateRoleOpen(false);
-        setIsCreateCertificateOpen(false);
-    }, [pathname]);
+        closeAllDialogs();
+    }, [pathname, closeAllDialogs]);
 
     const renderModule = () => {
         switch (activeModule) {
@@ -1193,13 +1206,13 @@ export default function QAkademiePage() {
                 if (activeCourse) {
                     return <CourseDetailView course={activeCourse} onBack={() => setActiveCourse(null)} />;
                 }
-                return <CoursesView onCourseSelect={setActiveCourse} onOpenCreateDialog={() => setIsCreateCourseOpen(true)} />;
-            case 'Lernpfade': return <LearningPathsView onOpenCreateDialog={() => setIsCreateLernpfadOpen(true)}/>;
-            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onOpenRecordDialog={() => setIsRecordingDialogOpen(true)} onOpenUploadDialog={()=> setIsVideoUploadOpen(true)} onOpenWissensbausteinDialog={() => setIsWissensbausteinOpen(true)} />;
-            case 'Teilnehmer': return <ParticipantsView onOpenCreateDialog={() => setIsAddParticipantOpen(true)}/>;
-            case 'Abteilungen & Rollen': return <DepartmentsAndRolesView onOpenCreateDepartmentDialog={() => setIsCreateDepartmentOpen(true)} onOpenCreateRoleDialog={() => setIsCreateRoleOpen(true)} />;
+                return <CoursesView onCourseSelect={setActiveCourse} onOpenCreateDialog={() => setDialogOpen('isCreateCourseOpen', true)} />;
+            case 'Lernpfade': return <LearningPathsView onOpenCreateDialog={() => setDialogOpen('isCreateLernpfadOpen', true)}/>;
+            case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onOpenRecordDialog={() => setDialogOpen('isRecordingDialogOpen', true)} onOpenUploadDialog={()=> setDialogOpen('isVideoUploadOpen', true)} onOpenWissensbausteinDialog={() => setDialogOpen('isWissensbausteinOpen', true)} />;
+            case 'Teilnehmer': return <ParticipantsView onOpenCreateDialog={() => setDialogOpen('isAddParticipantOpen', true)}/>;
+            case 'Abteilungen & Rollen': return <DepartmentsAndRolesView onOpenCreateDepartmentDialog={() => setDialogOpen('isCreateDepartmentOpen', true)} onOpenCreateRoleDialog={() => setDialogOpen('isCreateRoleOpen', true)} />;
             case 'Fortschritt & Reports': return <ReportingView />;
-            case 'Zertifikate': return <CertificatesView onOpenCreateDialog={() => setIsCreateCertificateOpen(true)} />;
+            case 'Zertifikate': return <CertificatesView onOpenCreateDialog={() => setDialogOpen('isCreateCertificateOpen', true)} />;
             case 'Einstellungen': return <SettingsView />;
             default: return <OverviewView />;
         }
@@ -1243,18 +1256,18 @@ export default function QAkademiePage() {
                 </div>
             </main>
              
-            {isCreateCourseOpen && <GenericCreateDialog open={isCreateCourseOpen} onOpenChange={setIsCreateCourseOpen} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />}
-            {isCreateLernpfadOpen && <GenericCreateDialog open={isCreateLernpfadOpen} onOpenChange={setIsCreateLernpfadOpen} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />}
-            {isCreateCertificateOpen && <GenericCreateDialog open={isCreateCertificateOpen} onOpenChange={setIsCreateCertificateOpen} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />}
-            {isAddParticipantOpen && <GenericCreateDialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />}
-            {isVideoUploadOpen && <GenericCreateDialog open={isVideoUploadOpen} onOpenChange={setIsVideoUploadOpen} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />}
-            {isWissensbausteinOpen && <GenericCreateDialog open={isWissensbausteinOpen} onOpenChange={setIsWissensbausteinOpen} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />}
-            {isRecordingDialogOpen && <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />}
+            {dialogStates.isCreateCourseOpen && <GenericCreateDialog open={dialogStates.isCreateCourseOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCourseOpen', isOpen)} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />}
+            {dialogStates.isCreateLernpfadOpen && <GenericCreateDialog open={dialogStates.isCreateLernpfadOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateLernpfadOpen', isOpen)} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />}
+            {dialogStates.isCreateCertificateOpen && <GenericCreateDialog open={dialogStates.isCreateCertificateOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCertificateOpen', isOpen)} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />}
+            {dialogStates.isAddParticipantOpen && <GenericCreateDialog open={dialogStates.isAddParticipantOpen} onOpenChange={(isOpen) => setDialogOpen('isAddParticipantOpen', isOpen)} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />}
+            {dialogStates.isVideoUploadOpen && <GenericCreateDialog open={dialogStates.isVideoUploadOpen} onOpenChange={(isOpen) => setDialogOpen('isVideoUploadOpen', isOpen)} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />}
+            {dialogStates.isWissensbausteinOpen && <GenericCreateDialog open={dialogStates.isWissensbausteinOpen} onOpenChange={(isOpen) => setDialogOpen('isWissensbausteinOpen', isOpen)} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />}
+            {dialogStates.isRecordingDialogOpen && <VideoRecorderDialog open={dialogStates.isRecordingDialogOpen} onOpenChange={(isOpen) => setDialogOpen('isRecordingDialogOpen', isOpen)} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />}
             
             {activeModule === 'Abteilungen & Rollen' && (
                 <>
-                {isCreateDepartmentOpen && <GenericCreateDialog open={isCreateDepartmentOpen} onOpenChange={setIsCreateDepartmentOpen} title='Abteilung erstellen' description='Hier wird die Funktion zum Erstellen von Abteilungen verwaltet.'/>}
-                {isCreateRoleOpen && <GenericCreateDialog open={isCreateRoleOpen} onOpenChange={setIsCreateRoleOpen} title='Rolle erstellen' description='Hier wird die Funktion zum Erstellen von Rollen verwaltet.'/>}
+                {dialogStates.isCreateDepartmentOpen && <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title='Abteilung erstellen' description='Hier wird die Funktion zum Erstellen von Abteilungen verwaltet.'/>}
+                {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title='Rolle erstellen' description='Hier wird die Funktion zum Erstellen von Rollen verwaltet.'/>}
                 </>
             )}
         </div>
