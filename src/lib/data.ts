@@ -1267,3 +1267,51 @@ export const allActivities = [
         }
     })
 ];
+
+export const mockNotes = [
+    {
+        id: 'note-1',
+        title: 'Kickoff-Gespräch',
+        content: 'Der Kunde (Innovate GmbH) möchte die Hauptfunktionalität bis Ende Q3 live sehen. Budget ist bestätigt. Nächster Schritt: Detail-Workshop planen.',
+        contextType: 'Deal',
+        contextName: 'Innovate GmbH - Q1 Projekt',
+        createdBy: 'Anna Schmidt',
+        createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+    },
+    {
+        id: 'note-2',
+        title: 'Telefonat mit John Doe',
+        content: 'John ist unzufrieden mit der letzten Lieferung. Servicefall #SF-123 erstellt. Ava Assist soll sich darum kümmern.',
+        contextType: 'Kontakt',
+        contextName: 'John Doe',
+        createdBy: 'Dr. Müller',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+    },
+    {
+        id: 'note-3',
+        title: 'Interne Abstimmung Marketing',
+        content: 'Budget für die Q3-Kampagne wurde um 10% erhöht. Sophie kümmert sich um die Anpassung der Ads.',
+        contextType: 'Intern',
+        contextName: null,
+        createdBy: 'Sophie Lang',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+    },
+    {
+        id: 'note-4',
+        title: 'Follow-up Data Corp',
+        content: 'Data Corp hat unser Angebot erhalten. Bisher keine Rückmeldung. Leo Sales wird am Freitag nachfassen.',
+        contextType: 'Firma',
+        contextName: 'Data Corp',
+        createdBy: 'Leo Sales',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8), // 8 days ago
+    },
+    {
+        id: 'note-5',
+        title: 'Altes Projektmeeting',
+        content: 'Protokoll vom alten Projekt. Alle Aufgaben wurden erledigt.',
+        contextType: 'Intern',
+        contextName: null,
+        createdBy: 'Dr. Müller',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 40), // 40 days ago
+    },
+];

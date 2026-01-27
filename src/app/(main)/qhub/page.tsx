@@ -85,11 +85,11 @@ import {
   ChevronDown,
   CheckCircle2,
   Circle,
-  GitBranch
+  GitBranch,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -881,7 +881,7 @@ const ActivityItem = ({ activity }: { activity: any }) => {
     
   const Icon = {
       Aufgabe: CheckSquare,
-      Termin: Calendar,
+      Termin: CalendarIcon,
       Rückruf: Phone,
       Verkaufschance: Handshake,
       Servicefall: Ticket,
@@ -1083,6 +1083,116 @@ const AufgabenView = () => {
     );
 };
 
+const NotesView = () => {
+    const [filter, setFilter] = useState('Alle');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredNotes = useMemo(() => {
+        return mockNotes.filter(n => {
+            const matchesSearch = searchTerm === '' ||
+                (n.title && n.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                n.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (n.contextName && n.contextName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            if (!matchesSearch) return false;
+
+            switch (filter) {
+                case 'Zu Deals':
+                    return n.contextType === 'Deal';
+                case 'Zu Kontakten':
+                    return n.contextType === 'Kontakt';
+                case 'Intern':
+                    return n.contextType === 'Intern';
+                case 'Alle':
+                default:
+                    return true;
+            }
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [filter, searchTerm]);
+
+    const sevenDaysAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
+    const aktuelleNotizen = filteredNotes.filter(n => new Date(n.createdAt) > sevenDaysAgo);
+    const aeltereNotizen = filteredNotes.filter(n => new Date(n.createdAt) <= sevenDaysAgo);
+
+    const NoteCard = ({ note }: { note: any }) => {
+        const contextIcons: { [key: string]: React.ElementType } = {
+            Deal: Handshake,
+            Kontakt: UserIcon,
+            Firma: Building2,
+            Intern: Info,
+        };
+        const ContextIcon = contextIcons[note.contextType as keyof typeof contextIcons] || Info;
+
+        return (
+            <Card className="p-4">
+                <div className="flex justify-between items-start">
+                    <div>
+                        {note.title && <CardTitle className="text-base mb-2">{note.title}</CardTitle>}
+                        <p className="text-sm text-muted-foreground">{note.content}</p>
+                    </div>
+                     <div className="text-right flex-shrink-0 ml-4">
+                        <p className="text-xs font-bold text-foreground">{note.createdBy}</p>
+                        <p className="text-xs text-muted-foreground">{format(new Date(note.createdAt), "dd.MM.yyyy, HH:mm")}</p>
+                    </div>
+                </div>
+                {note.contextType !== 'Intern' && (
+                     <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
+                        <ContextIcon className="w-3.5 h-3.5" />
+                        <span>{note.contextType}: {note.contextName}</span>
+                     </div>
+                )}
+            </Card>
+        )
+    }
+
+    return (
+        <div className="space-y-8">
+             <header>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">Notizen</h1>
+                <p className="text-muted-foreground">Alle wichtigen Festhaltungen im Überblick.</p>
+            </header>
+
+            <div className="flex justify-between items-center">
+                 <Tabs value={filter} onValueChange={setFilter}>
+                    <TabsList>
+                        <TabsTrigger value="Alle">Alle</TabsTrigger>
+                        <TabsTrigger value="Zu Deals">Zu Deals</TabsTrigger>
+                        <TabsTrigger value="Zu Kontakten">Zu Kontakten</TabsTrigger>
+                        <TabsTrigger value="Intern">Intern</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+                <div className="flex items-center gap-2">
+                    <Input placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-48 bg-input" />
+                    <Button><Plus className="mr-2 h-4 w-4" /> Notiz erstellen</Button>
+                </div>
+            </div>
+
+            {/* Aktuelle Notizen */}
+            <div>
+                 <h2 className="text-xl font-bold text-foreground mb-4">Aktuelle Notizen</h2>
+                 <div className="space-y-4">
+                    {aktuelleNotizen.length > 0 ? aktuelleNotizen.map(note => <NoteCard key={note.id} note={note}/>) : <p className="text-muted-foreground italic">Keine aktuellen Notizen.</p>}
+                 </div>
+            </div>
+            
+            {/* Ältere Notizen */}
+            <Collapsible>
+                <CollapsibleTrigger asChild>
+                     <div className="flex items-center gap-2 text-muted-foreground cursor-pointer hover:text-foreground">
+                        <h2 className="text-xl font-bold">Ältere Notizen</h2>
+                        <ChevronDown className="w-5 h-5"/>
+                    </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4 animate-in fade-in">
+                    <div className="space-y-4">
+                        {aeltereNotizen.length > 0 ? aeltereNotizen.map(note => <NoteCard key={note.id} note={note}/>) : <p className="text-muted-foreground italic">Keine älteren Notizen.</p>}
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
+        </div>
+    );
+};
+
 
 export default function QhubPage() {
   const router = useRouter();
@@ -1117,6 +1227,7 @@ export default function QhubPage() {
           case 'Pipeline': return <PipelineView />;
           case 'Aktivitäten': return <ActivitiesView />;
           case 'Aufgaben': return <AufgabenView />;
+          case 'Notizen': return <NotesView />;
           case 'Reports': return <ReportsView />;
           default: return <GenericView title={activeModule} />;
       }
