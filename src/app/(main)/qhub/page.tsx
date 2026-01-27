@@ -492,16 +492,17 @@ const DealsView = () => {
     const [filter, setFilter] = useState('Alle');
 
     const filteredDeals = useMemo(() => {
+        let deals = mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren');
         switch (filter) {
             case 'Mit Handlungsbedarf':
-                return mockDeals.filter(d => d.slaDue === 'heute' || d.slaDue === 'morgen' || d.slaDue === 'überschritten');
+                return deals.filter(d => d.slaDue === 'heute' || d.slaDue === 'morgen' || d.slaDue === 'überschritten');
             case 'SLA kritisch':
-                return mockDeals.filter(d => d.slaDue === 'überschritten');
+                return deals.filter(d => d.slaDue === 'überschritten');
             case 'In Verhandlung':
-                return mockDeals.filter(d => d.stage === 'Verhandlung');
+                return deals.filter(d => d.stage === 'Verhandlung');
             case 'Alle':
             default:
-                return mockDeals;
+                return deals;
         }
     }, [filter]);
 
@@ -551,7 +552,7 @@ const DealsView = () => {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Deal-Name</TableHead>
+                        <TableHead className="font-bold">Deal-Name</TableHead>
                         <TableHead>Nächster Schritt</TableHead>
                         <TableHead>Phase</TableHead>
                         <TableHead>Wert</TableHead>
@@ -562,7 +563,7 @@ const DealsView = () => {
                 <TableBody>
                     {filteredDeals.map(d => (
                         <TableRow key={d.id} className={cn("cursor-pointer", getPriorityClass(d.slaDue))}>
-                            <TableCell className="font-semibold">{d.name}</TableCell>
+                            <TableCell className="font-semibold text-foreground">{d.name}</TableCell>
                             <TableCell className="text-primary font-medium">{d.nextStep}</TableCell>
                             <TableCell><Badge variant="secondary">{d.stage}</Badge></TableCell>
                             <TableCell>{d.value}</TableCell>
@@ -605,10 +606,10 @@ const PipelineView = () => {
 
                     return (
                         <div key={phase} className="bg-muted/50 rounded-xl flex flex-col h-full">
-                            <div className="text-center p-4 border-b border-border">
+                            <div className="text-left p-4 border-b border-border">
                                 <h3 className="text-base font-bold text-foreground">{phase}</h3>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {phaseDealCount} Verkaufschance{phaseDealCount !== 1 ? 'n' : ''} · {formatCurrency(phaseTotalValue.toString())}
+                                    {phaseDealCount} Verkaufschance{phaseDealCount !== 1 ? 'n' : ''} <span className="mx-1">•</span> {formatCurrency(phaseTotalValue.toString())}
                                 </p>
                             </div>
                             <div className="space-y-3 p-3 flex-1">
@@ -899,7 +900,7 @@ const ActivityItem = ({ activity }: { activity: any }) => {
     
   const Icon = {
       Aufgabe: CheckSquare,
-      Termin: CalendarIcon,
+      Termin: CalendarDays,
       Rückruf: Phone,
       Verkaufschance: Handshake,
       Servicefall: Ticket,
@@ -1376,7 +1377,9 @@ const AnrufeView = () => {
                            <Badge variant="outline" className={cn('capitalize', statusBadgeColors[call.status])}>{call.status}</Badge>
                         </div>
                     </div>
-                     <Button variant="outline" size="sm">In Q-Call öffnen</Button>
+                     <Button asChild variant="outline" size="sm">
+                        <Link href="/qsales">In Q-Sales öffnen</Link>
+                     </Button>
                 </div>
             </Card>
         );
@@ -1387,6 +1390,13 @@ const AnrufeView = () => {
             <header>
                 <h1 className="text-3xl font-bold text-foreground tracking-tight">Anrufe</h1>
                 <p className="text-muted-foreground">Zentrale Übersicht für telefonische Kundenkommunikation.</p>
+                <Alert className="mt-4 bg-blue-500/10 border-blue-500/20 text-blue-300 [&>svg]:text-blue-400">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle className="font-bold">Hinweis</AlertTitle>
+                    <AlertDescription>
+                        Telefonieren erfolgt über <Link href="/qsales" className="font-bold underline hover:text-blue-200">Q-Sales</Link>. Q-Call unterstützt als Telefon-KI.
+                    </AlertDescription>
+                </Alert>
             </header>
 
             {/* Offene & Kritische Anrufe */}
