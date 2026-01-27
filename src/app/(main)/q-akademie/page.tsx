@@ -167,9 +167,9 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         try {
             let streamToRecord: MediaStream;
             let streamToDisplay: MediaStream;
-
+    
             recordedChunksRef.current = [];
-
+    
             if (recordingMode === 'camera') {
                 const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 mediaStreamsRef.current = [cameraStream];
@@ -184,14 +184,14 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                 if (recordingMode === 'screen-cam') {
                     const cameraStream = await navigator.mediaDevices.getUserMedia({
                         video: { width: 320, height: 180 },
-                        audio: false
+                        audio: true 
                     });
                     mediaStreamsRef.current = [screenStream, cameraStream];
-
+    
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     if (!ctx) throw new Error('Canvas context not available');
-
+    
                     const screenVideo = document.createElement('video');
                     screenVideo.srcObject = screenStream;
                     screenVideo.muted = true;
@@ -199,7 +199,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     const camVideo = document.createElement('video');
                     camVideo.srcObject = cameraStream;
                     camVideo.muted = true;
-
+    
                     await Promise.all([
                         new Promise<void>(resolve => screenVideo.onloadedmetadata = () => resolve()),
                         new Promise<void>(resolve => camVideo.onloadedmetadata = () => resolve())
@@ -207,15 +207,14 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     
                     await screenVideo.play();
                     await camVideo.play();
-
+    
                     canvas.width = screenVideo.videoWidth;
                     canvas.height = screenVideo.videoHeight;
                     
                     const draw = () => {
-                        // Ensure video has data
                         if (ctx && screenVideo.readyState >= 2 && camVideo.readyState >= 2) {
                             ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
-                            const camWidth = canvas.width / 5; // make it a bit bigger
+                            const camWidth = canvas.width / 5;
                             const camHeight = (camVideo.videoHeight / camVideo.videoWidth) * camWidth;
                             ctx.drawImage(camVideo, canvas.width - camWidth - 20, canvas.height - camHeight - 20, camWidth, camHeight);
                         }
@@ -224,13 +223,27 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     draw();
                     
                     const canvasStream = canvas.captureStream(30);
-                    const screenAudioTracks = screenStream.getAudioTracks();
-                    if (screenAudioTracks.length > 0) {
-                        canvasStream.addTrack(screenAudioTracks[0].clone());
-                    }
                     
+                    // Combine audio tracks
+                    const audioContext = new AudioContext();
+                    const destination = audioContext.createMediaStreamDestination();
+
+                    if (screenStream.getAudioTracks().length > 0) {
+                        const screenAudioSource = audioContext.createMediaStreamSource(screenStream);
+                        screenAudioSource.connect(destination);
+                    }
+                    if (cameraStream.getAudioTracks().length > 0) {
+                        const camAudioSource = audioContext.createMediaStreamSource(cameraStream);
+                        camAudioSource.connect(destination);
+                    }
+
+                    if (destination.stream.getAudioTracks().length > 0) {
+                         canvasStream.addTrack(destination.stream.getAudioTracks()[0]);
+                    }
+
                     streamToRecord = canvasStream;
-                    streamToDisplay = new MediaStream(canvasStream.getVideoTracks()); // Display only video to prevent audio feedback
+                    streamToDisplay = new MediaStream([screenStream.getVideoTracks()[0], cameraStream.getVideoTracks()[0]]);
+
                 } else { // screen only
                     mediaStreamsRef.current = [screenStream];
                     streamToDisplay = screenStream;
@@ -239,11 +252,19 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             }
             
             if (videoRef.current) {
-                videoRef.current.srcObject = streamToDisplay;
+                // For combined screen and cam, we need a different display logic
+                if(recordingMode === 'screen-cam') {
+                    // We can't directly display the combined canvas stream as it causes issues.
+                    // A simpler approach is to just show the screen share.
+                    const displayStream = new MediaStream(mediaStreamsRef.current[0].getVideoTracks());
+                    videoRef.current.srcObject = displayStream;
+
+                } else {
+                    videoRef.current.srcObject = streamToDisplay;
+                }
                 videoRef.current.play().catch(e => console.error("Video play failed", e));
             }
             
-            // Check if there are any tracks to record
             if (streamToRecord.getTracks().length === 0) {
                 throw new Error("Stream has no tracks to record.");
             }
@@ -272,7 +293,8 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             console.error('Error accessing media devices.', err);
             setError(`Zugriff auf Medien verweigert oder Fehler: ${err.message}. Bitte Berechtigungen prüfen.`);
             cleanup();
-            onOpenChange(false);
+            // Do not close dialog on error, let the user see the message
+            // onOpenChange(false);
         }
     };
     
@@ -1209,19 +1231,20 @@ export default function QAkademiePage() {
     };
     
     useEffect(() => {
-        // This is a simple way to reset dialogs on navigation.
-        // A more robust solution might involve a layout effect or router events.
-        setDialogStates({
-            isCreateCourseOpen: false,
-            isCreateLernpfadOpen: false,
-            isRecordingDialogOpen: false,
-            isVideoUploadOpen: false,
-            isWissensbausteinOpen: false,
-            isAddParticipantOpen: false,
-            isCreateDepartmentOpen: false,
-            isCreateRoleOpen: false,
-            isCreateCertificateOpen: false,
-        });
+        const resetDialogs = () => {
+             setDialogStates({
+                isCreateCourseOpen: false,
+                isCreateLernpfadOpen: false,
+                isRecordingDialogOpen: false,
+                isVideoUploadOpen: false,
+                isWissensbausteinOpen: false,
+                isAddParticipantOpen: false,
+                isCreateDepartmentOpen: false,
+                isCreateRoleOpen: false,
+                isCreateCertificateOpen: false,
+            });
+        }
+        resetDialogs();
     }, [pathname]);
 
 
@@ -1289,7 +1312,7 @@ export default function QAkademiePage() {
             {dialogStates.isCreateCertificateOpen && <GenericCreateDialog open={dialogStates.isCreateCertificateOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCertificateOpen', isOpen)} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />}
             {dialogStates.isAddParticipantOpen && <GenericCreateDialog open={dialogStates.isAddParticipantOpen} onOpenChange={(isOpen) => setDialogOpen('isAddParticipantOpen', isOpen)} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />}
             {dialogStates.isCreateDepartmentOpen && <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title="Abteilung erstellen" description="Hier wird die Funktion zum Erstellen von Abteilungen verwaltet."/>}
-            {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."}/>}
+            {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."/>}
             {dialogStates.isVideoUploadOpen && <GenericCreateDialog open={dialogStates.isVideoUploadOpen} onOpenChange={(isOpen) => setDialogOpen('isVideoUploadOpen', isOpen)} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />}
             {dialogStates.isWissensbausteinOpen && <GenericCreateDialog open={dialogStates.isWissensbausteinOpen} onOpenChange={(isOpen) => setDialogOpen('isWissensbausteinOpen', isOpen)} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />}
         </div>
