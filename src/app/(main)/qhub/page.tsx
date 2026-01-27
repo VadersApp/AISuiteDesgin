@@ -169,6 +169,45 @@ const DashboardView = () => (
                 </CardContent>
             </Card>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Aktive Nurture-Kontakte</CardTitle>
+                    <Users className="h-4 w-4 text-purple-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">145</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">M → S Übergaben</CardTitle>
+                    <GitBranch className="h-4 w-4 text-emerald-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">8</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Top Social Engagement</CardTitle>
+                    <Activity className="h-4 w-4 text-blue-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">1.2k</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Email Performance</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-amber-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">42%</div>
+                    <p className="text-xs text-muted-foreground">Open Rate</p>
+                </CardContent>
+            </Card>
+        </div>
     </div>
 );
 
