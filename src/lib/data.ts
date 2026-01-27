@@ -1315,3 +1315,61 @@ export const mockNotes = [
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 40), // 40 days ago
     },
 ];
+
+export const mockEmails = [
+    {
+        id: 'email-1',
+        subject: 'Frage zu Ihrer Rechnung #2024-582',
+        direction: 'Eingehend',
+        contactName: 'Max Mustermann',
+        companyName: 'Innovate GmbH',
+        contextType: 'Kontakt',
+        contextName: 'Max Mustermann',
+        createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
+        status: 'Antwort offen',
+    },
+    {
+        id: 'email-2',
+        subject: 'AW: Ihr Angebot für Projekt "Phoenix"',
+        direction: 'Ausgehend',
+        contactName: 'Erika Musterfrau',
+        companyName: 'Data Corp',
+        contextType: 'Deal',
+        contextName: 'Data Corp - Analyse-Software',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        status: 'Beantwortet',
+    },
+    {
+        id: 'email-3',
+        subject: 'Informationen zu unserem neuen Feature',
+        direction: 'Ausgehend',
+        contactName: 'Peter Jones',
+        companyName: 'Tech Solutions',
+        contextType: 'Kontakt',
+        contextName: 'Peter Jones',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString(), // 1 day ago
+        status: 'Beantwortet',
+    },
+    {
+        id: 'email-4',
+        subject: 'Dringend: Probleme mit Ihrem letzten Update',
+        direction: 'Eingehend',
+        contactName: 'Maria Garcia',
+        companyName: 'Global Exports',
+        contextType: 'Firma',
+        contextName: 'Global Exports',
+        createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
+        status: 'Neu eingegangen',
+    },
+     {
+        id: 'email-5',
+        subject: 'Ihr Termin morgen um 10:00 Uhr',
+        direction: 'Ausgehend',
+        contactName: 'Hans Guck',
+        companyName: 'Himmel AG',
+        contextType: 'Kontakt',
+        contextName: 'Hans Guck',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 9).toISOString(), // 9 days ago
+        status: 'Beantwortet',
+    },
+];

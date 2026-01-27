@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import {
   LayoutDashboard,
@@ -51,9 +51,8 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowRight,
-  MessageSquare,
   ArrowLeft,
-  Search as SearchIcon,
+  MessageSquare,
   Bot as BotIcon,
   X,
   MoreHorizontal,
@@ -70,6 +69,7 @@ import {
   Send,
   BrainCircuit,
   ChevronRight,
+  ChevronDown,
   Timer,
   Workflow,
   Building2,
@@ -83,15 +83,14 @@ import {
   Clock,
   History,
   DollarSign,
-  ChevronDown,
-  CheckCircle2,
-  Circle,
   GitBranch,
   Info,
+  CheckCircle2,
+  Circle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -120,6 +119,22 @@ const modules = [
     { name: 'Anrufe', icon: Phone },
     { name: 'Reports', icon: BarChart3 },
 ];
+
+const mockUploadJob = {
+    uploadJobId: 'upload-xyz-123',
+    status: 'needs_review',
+    fileName: 'Onboarding_Process_New_Sales_Team.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 780 * 1024,
+    aiSuggestion: {
+        suggestedTitle: 'Onboarding Prozess für neue Sales-Mitarbeiter',
+        deptId: 'Personalwesen (HR)',
+        folderId: 'folder-hr-2',
+        tags: ['onboarding', 'sales', 'prozess', 'hr'],
+        confidence: 85,
+        reason: 'Dokument enthält Begriffe wie "Sales", "Onboarding", "Neuer Mitarbeiter" und "Vertriebsprozess".'
+    }
+};
 
 const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
     
@@ -158,7 +173,6 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
 
     return (
         <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
             
             {/* ZONE A: Geschäftsüberblick */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -580,7 +594,6 @@ const PipelineView = () => {
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Sales Pipeline</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start min-h-[60vh]">
                 {pipelineStages.map(phase => {
                     const dealsInPhase = mockDeals.filter(d => d.stage === phase);
@@ -843,7 +856,7 @@ const TerminboardView = () => {
                               {pastBookings.length > 0 ? pastBookings.map(b => (
                                 <Card key={b.bookingId} className="p-3 bg-muted/50">
                                     <p className="font-bold text-xs text-muted-foreground">{b.eventTypeName}</p>
-                                    <p className="text-xs text-muted-foreground/70">{b.guestName} • {format(b.date, 'dd.MM.yyyy')}</p>
+                                    <p className="text-xs text-muted-foreground/70">{b.guestName} • {format(new Date(b.startAt), 'dd.MM.yyyy')}</p>
                                 </Card>
                              )) : <p className="text-sm text-muted-foreground italic text-center py-4">Keine vergangenen Termine.</p>}
                         </CollapsibleContent>
@@ -1149,7 +1162,7 @@ const NotesView = () => {
 
     return (
         <div className="space-y-8">
-             <header>
+            <header>
                 <h1 className="text-3xl font-bold text-foreground tracking-tight">Notizen</h1>
                 <p className="text-muted-foreground">Alle wichtigen Festhaltungen im Überblick.</p>
             </header>
@@ -1195,6 +1208,99 @@ const NotesView = () => {
     );
 };
 
+const EmailsView = () => {
+    const sortedEmails = useMemo(() => 
+        mockEmails.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    , []);
+    
+    const openEmails = useMemo(() => sortedEmails.filter(e => e.status === 'Antwort offen'), [sortedEmails]);
+    
+    const recentEmails = useMemo(() => 
+        sortedEmails.filter(e => e.status !== 'Antwort offen' && new Date(e.createdAt) > new Date(Date.now() - 1000 * 60 * 60 * 24 * 7))
+    , [sortedEmails]);
+    
+    const olderEmails = useMemo(() => 
+        sortedEmails.filter(e => e.status !== 'Antwort offen' && new Date(e.createdAt) <= new Date(Date.now() - 1000 * 60 * 60 * 24 * 7))
+    , [sortedEmails]);
+
+    const EmailRow = ({ email }: { email: any }) => {
+        const contextIcons: { [key: string]: React.ElementType } = {
+            Deal: Handshake,
+            Kontakt: UserIcon,
+            Firma: Building2,
+        };
+        const ContextIcon = contextIcons[email.contextType as keyof typeof contextIcons] || Briefcase;
+
+        return (
+            <div className="flex items-center gap-4 p-4 border-b border-border hover:bg-muted/50 cursor-pointer">
+                <div className="flex-1">
+                    <p className="font-bold text-sm text-foreground">{email.subject}</p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                        <span className="flex items-center gap-1.5">
+                            {email.direction === 'Eingehend' ? <ArrowRight className="w-3 h-3 text-emerald-400" /> : <ArrowLeft className="w-3 h-3 text-blue-400" />}
+                            {email.direction}
+                        </span>
+                        <span>{email.contactName} ({email.companyName})</span>
+                        <span className="flex items-center gap-1.5"><ContextIcon className="w-3 h-3"/> {email.contextType}: {email.contextName}</span>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <Badge variant={email.status === 'Antwort offen' ? 'destructive' : 'secondary'} className="capitalize">{email.status}</Badge>
+                    <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(email.createdAt), { addSuffix: true, locale: de })}</p>
+                </div>
+                <Button variant="outline" size="sm">In Q-Mail öffnen</Button>
+            </div>
+        );
+    };
+
+    return (
+        <div className="space-y-8">
+             <header>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">E-Mails</h1>
+                <p className="text-muted-foreground">Übersicht der kundenbezogenen Kommunikation.</p>
+            </header>
+            
+            {/* Offene E-Mails */}
+            {openEmails.length > 0 && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Mail className="w-5 h-5 text-rose-400"/>Offene E-Mails</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                         {openEmails.map(email => <EmailRow key={email.id} email={email} />)}
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Letzte Kommunikation */}
+            <Card>
+                <CardHeader><CardTitle>Letzte Kundenkommunikation</CardTitle></CardHeader>
+                <CardContent className="p-0">
+                     {recentEmails.length > 0 ? recentEmails.map(email => <EmailRow key={email.id} email={email} />) : <p className="p-6 text-sm text-muted-foreground italic">Keine kürzlichen E-Mails.</p>}
+                </CardContent>
+            </Card>
+
+            {/* Ältere E-Mails */}
+            <Collapsible>
+                <CollapsibleTrigger asChild>
+                     <div className="flex items-center gap-2 text-muted-foreground cursor-pointer hover:text-foreground">
+                        <h2 className="text-xl font-bold">Ältere E-Mails</h2>
+                        <ChevronDown className="w-5 h-5"/>
+                    </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4 animate-in fade-in">
+                    <Card>
+                        <CardContent className="p-0">
+                             {olderEmails.length > 0 ? olderEmails.map(email => <EmailRow key={email.id} email={email} />) : <p className="p-6 text-sm text-muted-foreground italic">Keine älteren E-Mails.</p>}
+                        </CardContent>
+                    </Card>
+                </CollapsibleContent>
+            </Collapsible>
+
+        </div>
+    );
+};
+
 
 export default function QhubPage() {
   const router = useRouter();
@@ -1230,6 +1336,7 @@ export default function QhubPage() {
           case 'Aktivitäten': return <ActivitiesView />;
           case 'Aufgaben': return <AufgabenView />;
           case 'Notizen': return <NotesView />;
+          case 'E-Mails': return <EmailsView />;
           case 'Reports': return <ReportsView />;
           default: return <GenericView title={activeModule} />;
       }
@@ -1269,20 +1376,20 @@ export default function QhubPage() {
 
         {/* Main Area */}
         <main className="flex-1 pl-6 space-y-6">
-             <header>
-                <h1 className="text-3xl font-bold text-foreground tracking-tight">
-                    Q-Hub
-                </h1>
-                <p className="text-muted-foreground">
-                    Zentrale für Kunden, Vertrieb & Service
-                </p>
-            </header>
              <header className="flex justify-between items-center">
-                 <div className="relative w-96">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input type="text" placeholder="Kontakte, Firmen, Deals durchsuchen..." className="pl-9 bg-input" />
+                 <div>
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight">
+                        Q-Hub
+                    </h1>
+                    <p className="text-muted-foreground">
+                        Zentrale für Kunden, Vertrieb & Service
+                    </p>
                 </div>
                  {isClient && <div className="flex items-center gap-3">
+                    <div className="relative w-96">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <Input type="text" placeholder="Kontakte, Firmen, Deals durchsuchen..." className="pl-9 bg-input" />
+                    </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                            <Button>
@@ -1308,4 +1415,3 @@ export default function QhubPage() {
     </>
   );
 }
-
