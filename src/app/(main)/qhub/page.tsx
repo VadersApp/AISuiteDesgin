@@ -33,8 +33,16 @@ import {
   BarChart3,
   Search,
   Plus,
+  Flame,
+  GitBranch,
+  Workflow,
+  Bot,
+  Timer,
+  AlertCircle,
+  ChevronRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from "@/lib/utils";
 
 
 const modules = [
@@ -61,9 +69,9 @@ const mockCompanies = [
     { id: 2, name: 'Quantum Solutions', industry: 'Forschung', owner: 'Leo Sales' },
 ];
 const mockDeals = [
-    { id: 1, name: 'Innovatech - Q3 Projekt', stage: 'Qualifizierung', value: '25.000€', owner: 'Leo Sales' },
-    { id: 2, name: 'Quantum - Jahreslizenz', stage: 'Verhandlung', value: '50.000€', owner: 'Leo Sales' },
-    { id: 3, name: 'Data Core - Integration', stage: 'Neu', value: '15.000€', owner: 'Leo Sales' },
+    { id: 1, name: 'Innovatech - Q3 Projekt', stage: 'Qualifizierung', value: '25.000€', owner: 'Leo Sales', slaDue: 'in 2 Tagen', inactiveDays: 1, nextStep: 'Anrufen' },
+    { id: 2, name: 'Quantum - Jahreslizenz', stage: 'Verhandlung', value: '50.000€', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 0, nextStep: 'Angebot finalisieren' },
+    { id: 3, name: 'Data Core - Integration', stage: 'Neu', value: '15.000€', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Erstkontakt' },
 ];
 const pipelineStages = ['Neu', 'Qualifizierung', 'Präsentation', 'Verhandlung', 'Gewonnen', 'Verloren'];
 
@@ -83,6 +91,44 @@ const DashboardView = () => (
              <Card>
                 <CardHeader><CardTitle>Pipeline-Wert</CardTitle></CardHeader>
                 <CardContent><p className="text-4xl font-bold">€90.000</p></CardContent>
+            </Card>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Eskalationen aktiv</CardTitle>
+                    <Flame className="h-4 w-4 text-rose-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold text-rose-400">2</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Entscheidungen warten</CardTitle>
+                    <GitBranch className="h-4 w-4 text-amber-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold text-amber-400">5</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">Laufende Prozesse</CardTitle>
+                    <Workflow className="h-4 w-4 text-blue-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">18</div>
+                </CardContent>
+            </Card>
+            <Card className="p-4 bg-card/50">
+                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                    <CardTitle className="text-sm font-medium">KI-Aktionen heute</CardTitle>
+                    <Bot className="h-4 w-4 text-emerald-400" />
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                    <div className="text-2xl font-bold">128</div>
+                </CardContent>
             </Card>
         </div>
     </div>
@@ -190,6 +236,26 @@ const PipelineView = () => (
                             <Card key={deal.id} className="p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow">
                                 <p className="text-sm font-bold">{deal.name}</p>
                                 <p className="text-xs text-muted-foreground">{deal.value}</p>
+                                <div className="mt-3 pt-3 border-t border-border/50 space-y-2 text-xs">
+                                    {deal.slaDue && (
+                                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                                            <Timer className="w-3 h-3" />
+                                            <span>SLA: <span className={cn('font-bold', deal.slaDue === 'heute' && 'text-rose-400')}>{deal.slaDue}</span></span>
+                                        </div>
+                                    )}
+                                    {deal.inactiveDays > 0 && (
+                                        <div className="flex items-center gap-1.5 text-amber-400">
+                                            <AlertCircle className="w-3 h-3" />
+                                            <span>Inaktiv seit {deal.inactiveDays} Tag(en)</span>
+                                        </div>
+                                    )}
+                                    {deal.nextStep && (
+                                         <div className="flex items-center gap-1.5 text-muted-foreground">
+                                            <ChevronRight className="w-3 h-3" />
+                                            <span>Nächster Schritt: <span className="font-bold text-foreground">{deal.nextStep}</span></span>
+                                        </div>
+                                    )}
+                                </div>
                             </Card>
                         ))}
                     </div>
