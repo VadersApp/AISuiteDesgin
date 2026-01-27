@@ -130,9 +130,17 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         mediaStreamsRef.current = [];
 
         if (videoRef.current?.srcObject) {
-            (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+            try {
+                const srcObject = videoRef.current.srcObject;
+                if (srcObject instanceof MediaStream) {
+                    srcObject.getTracks().forEach(track => track.stop());
+                }
+            } catch (e) {
+                console.error("Error stopping video srcObject tracks:", e);
+            }
             videoRef.current.srcObject = null;
         }
+
 
         if (recordedVideoUrl) {
             URL.revokeObjectURL(recordedVideoUrl);
@@ -145,9 +153,11 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         setError(null);
     }, [recordedVideoUrl]);
 
+
     useEffect(() => {
-        // Return cleanup function to be called on unmount
-        return cleanup;
+        return () => {
+            cleanup();
+        };
     }, [cleanup]);
     
     const handleStartRecording = async () => {
@@ -155,29 +165,29 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         setError(null);
         
         try {
-            let displayStream: MediaStream;
-            let recorderStream: MediaStream;
+            let streamToRecord: MediaStream;
+            let streamToDisplay: MediaStream;
+
             recordedChunksRef.current = [];
 
             if (recordingMode === 'camera') {
-                const cameraAudioStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                mediaStreamsRef.current.push(cameraAudioStream);
-                displayStream = cameraAudioStream;
-                recorderStream = cameraAudioStream;
-            } else {
-                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: true });
-                mediaStreamsRef.current.push(screenStream);
+                const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                mediaStreamsRef.current = [cameraStream];
+                streamToDisplay = cameraStream;
+                streamToRecord = cameraStream;
+            } else { // screen or screen-cam
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: "always" },
+                    audio: true,
+                });
                 
-                const audioTracks = screenStream.getAudioTracks();
-                recorderStream = new MediaStream(screenStream.getVideoTracks());
-                if (audioTracks.length > 0) {
-                    recorderStream.addTrack(audioTracks[0]);
-                }
-
                 if (recordingMode === 'screen-cam') {
-                    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 180 }, audio: false });
-                    mediaStreamsRef.current.push(cameraStream);
-                    
+                    const cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 320, height: 180 },
+                        audio: false
+                    });
+                    mediaStreamsRef.current = [screenStream, cameraStream];
+
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     if (!ctx) throw new Error('Canvas context not available');
@@ -185,25 +195,27 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     const screenVideo = document.createElement('video');
                     screenVideo.srcObject = screenStream;
                     screenVideo.muted = true;
-                    screenVideo.play();
-
+                    
                     const camVideo = document.createElement('video');
                     camVideo.srcObject = cameraStream;
                     camVideo.muted = true;
-                    camVideo.play();
 
                     await Promise.all([
                         new Promise<void>(resolve => screenVideo.onloadedmetadata = () => resolve()),
                         new Promise<void>(resolve => camVideo.onloadedmetadata = () => resolve())
                     ]);
                     
+                    await screenVideo.play();
+                    await camVideo.play();
+
                     canvas.width = screenVideo.videoWidth;
                     canvas.height = screenVideo.videoHeight;
                     
                     const draw = () => {
-                        if (ctx) {
+                        // Ensure video has data
+                        if (ctx && screenVideo.readyState >= 2 && camVideo.readyState >= 2) {
                             ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
-                            const camWidth = canvas.width / 6;
+                            const camWidth = canvas.width / 5; // make it a bit bigger
                             const camHeight = (camVideo.videoHeight / camVideo.videoWidth) * camWidth;
                             ctx.drawImage(camVideo, canvas.width - camWidth - 20, canvas.height - camHeight - 20, camWidth, camHeight);
                         }
@@ -212,29 +224,39 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     draw();
                     
                     const canvasStream = canvas.captureStream(30);
-                    mediaStreamsRef.current.push(canvasStream);
-                    canvasStream.getVideoTracks().forEach(track => recorderStream.addTrack(track));
-                    displayStream = canvasStream;
-                } else {
-                    displayStream = screenStream;
+                    const screenAudioTracks = screenStream.getAudioTracks();
+                    if (screenAudioTracks.length > 0) {
+                        canvasStream.addTrack(screenAudioTracks[0].clone());
+                    }
+                    
+                    streamToRecord = canvasStream;
+                    streamToDisplay = new MediaStream(canvasStream.getVideoTracks()); // Display only video to prevent audio feedback
+                } else { // screen only
+                    mediaStreamsRef.current = [screenStream];
+                    streamToDisplay = screenStream;
+                    streamToRecord = screenStream;
                 }
             }
-
+            
             if (videoRef.current) {
-                videoRef.current.srcObject = displayStream;
+                videoRef.current.srcObject = streamToDisplay;
                 videoRef.current.play().catch(e => console.error("Video play failed", e));
             }
-
-            const recorder = new MediaRecorder(recorderStream, { mimeType: 'video/webm' });
-            mediaRecorderRef.current = recorder;
             
-            recorder.ondataavailable = (e) => {
+            // Check if there are any tracks to record
+            if (streamToRecord.getTracks().length === 0) {
+                throw new Error("Stream has no tracks to record.");
+            }
+
+            mediaRecorderRef.current = new MediaRecorder(streamToRecord, { mimeType: 'video/webm' });
+            
+            mediaRecorderRef.current.ondataavailable = (e) => {
                 if (e.data.size > 0) {
                     recordedChunksRef.current.push(e.data);
                 }
             };
             
-            recorder.onstop = () => {
+            mediaRecorderRef.current.onstop = () => {
                 if (recordedChunksRef.current.length > 0) {
                     const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
@@ -243,12 +265,13 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                 setStep('preview');
             };
 
-            recorder.start();
+            mediaRecorderRef.current.start();
             setStep('recording');
 
         } catch (err: any) {
             console.error('Error accessing media devices.', err);
-            setError(`Zugriff auf Medien verweigert: ${err.message}. Bitte Berechtigungen in den Browsereinstellungen prüfen.`);
+            setError(`Zugriff auf Medien verweigert oder Fehler: ${err.message}. Bitte Berechtigungen prüfen.`);
+            cleanup();
             onOpenChange(false);
         }
     };
@@ -257,6 +280,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         if (mediaRecorderRef.current?.state === 'recording') {
             mediaRecorderRef.current.stop();
         }
+        cleanup();
     };
 
     const handleSave = (e: FormEvent) => {
@@ -280,14 +304,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     };
 
      const handleResetAndRecordAgain = () => {
-        setStep('mode-selection');
-        setRecordingMode(null);
-        setRecordedVideoUrl(null);
-        setError(null);
-        recordedChunksRef.current = [];
-        if (recordedVideoUrl) {
-            URL.revokeObjectURL(recordedVideoUrl);
-        }
+        cleanup();
      };
 
     return (
@@ -323,7 +340,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                 {(step === 'recording' || step === 'preview') && (
                     <div className="bg-black rounded-lg aspect-video relative flex items-center justify-center">
                         <video ref={videoRef} className={cn("w-full h-full", step !== 'recording' && 'hidden')} autoPlay muted />
-                        {step === 'preview' && recordedVideoUrl && <video src={recordedVideoUrl} className="w-full h-full" controls />}
+                        {step === 'preview' && recordedVideoUrl && <video src={recordedVideoUrl} className="w-full h-full" controls autoPlay loop/>}
                     </div>
                 )}
                 
@@ -1272,7 +1289,7 @@ export default function QAkademiePage() {
             {dialogStates.isCreateCertificateOpen && <GenericCreateDialog open={dialogStates.isCreateCertificateOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCertificateOpen', isOpen)} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />}
             {dialogStates.isAddParticipantOpen && <GenericCreateDialog open={dialogStates.isAddParticipantOpen} onOpenChange={(isOpen) => setDialogOpen('isAddParticipantOpen', isOpen)} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />}
             {dialogStates.isCreateDepartmentOpen && <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title="Abteilung erstellen" description="Hier wird die Funktion zum Erstellen von Abteilungen verwaltet."/>}
-            {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."/>}
+            {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."}/>}
             {dialogStates.isVideoUploadOpen && <GenericCreateDialog open={dialogStates.isVideoUploadOpen} onOpenChange={(isOpen) => setDialogOpen('isVideoUploadOpen', isOpen)} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />}
             {dialogStates.isWissensbausteinOpen && <GenericCreateDialog open={dialogStates.isWissensbausteinOpen} onOpenChange={(isOpen) => setDialogOpen('isWissensbausteinOpen', isOpen)} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />}
         </div>
