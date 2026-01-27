@@ -77,16 +77,14 @@ import {
   Mail,
   Phone,
   TrendingUp,
-  DollarSign,
   Ticket,
   CalendarDays,
   Clock,
   History,
-  GitBranch,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -215,7 +213,9 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                         ))}
                     </CardContent>
                     <CardFooter>
-                         <Button variant="link" className="p-0 h-auto text-primary">Zur Pipeline →</Button>
+                         <Button variant="link" className="p-0 h-auto text-primary" asChild>
+                            <Link href="/qhub?module=Pipeline">Zur Pipeline →</Link>
+                         </Button>
                     </CardFooter>
                 </Card>
 
@@ -285,14 +285,32 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
 
 const ContactsView = () => {
     const [filter, setFilter] = useState('Alle');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const filteredContacts = useMemo(() => {
-        if (filter === 'Alle') return mockContacts;
-        if (filter === 'Aktiv') return mockContacts.filter(c => c.status === 'Aktiv');
-        if (filter === 'Mit Handlungsbedarf') return mockContacts.filter(c => c.priority === 'critical' || c.priority === 'attention');
-        if (filter === 'Kunden') return mockContacts.filter(c => c.leadStatus === 'Kunde' || c.leadStatus === 'In Betreuung');
-        return mockContacts;
-    }, [filter]);
+        let contacts = mockContacts;
+
+        if (searchTerm) {
+            const lowercasedFilter = searchTerm.toLowerCase();
+            contacts = contacts.filter(c => 
+                c.name.toLowerCase().includes(lowercasedFilter) ||
+                c.company.toLowerCase().includes(lowercasedFilter) ||
+                c.email.toLowerCase().includes(lowercasedFilter)
+            );
+        }
+        
+        switch (filter) {
+            case 'Aktiv':
+                return contacts.filter(c => c.status === 'Aktiv');
+            case 'Mit Handlungsbedarf':
+                return contacts.filter(c => c.priority === 'critical' || c.priority === 'attention');
+            case 'Kunden':
+                return contacts.filter(c => c.leadStatus === 'Kunde' || c.leadStatus === 'In Betreuung');
+            case 'Alle':
+            default:
+                return contacts;
+        }
+    }, [filter, searchTerm]);
 
     const getPriorityClass = (priority: string | undefined) => {
         switch (priority) {
@@ -311,7 +329,7 @@ const ContactsView = () => {
                         <CardDescription>Alle bekannten Personen im System</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Input placeholder="Suchen..." className="w-48 bg-input" />
+                        <Input placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-48 bg-input" />
                         <Button><Plus className="mr-2 h-4 w-4" /> Kontakt erstellen</Button>
                     </div>
                 </div>
@@ -421,7 +439,7 @@ const CompaniesView = () => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Firmenname</TableHead>
+                            <TableHead className="font-semibold">Firmenname</TableHead>
                             <TableHead>Branche</TableHead>
                             <TableHead>Zuständig</TableHead>
                             <TableHead>Firma aktiv</TableHead>
@@ -449,39 +467,100 @@ const CompaniesView = () => {
     );
 };
 
-const DealsView = () => (
+const DealsView = () => {
+    const [filter, setFilter] = useState('Alle');
+
+    const filteredDeals = useMemo(() => {
+        switch (filter) {
+            case 'Mit Handlungsbedarf':
+                return mockDeals.filter(d => d.slaDue === 'heute' || d.slaDue === 'morgen' || d.slaDue === 'überschritten');
+            case 'SLA kritisch':
+                return mockDeals.filter(d => d.slaDue === 'überschritten');
+            case 'In Verhandlung':
+                return mockDeals.filter(d => d.stage === 'Verhandlung');
+            case 'Alle':
+            default:
+                return mockDeals;
+        }
+    }, [filter]);
+
+    const getPriorityClass = (slaStatus?: string | null) => {
+        switch (slaStatus) {
+            case 'überschritten':
+                return 'bg-rose-500/5 hover:bg-rose-500/10';
+            case 'heute':
+            case 'morgen':
+                return 'bg-amber-500/5 hover:bg-amber-500/10';
+            default:
+                return 'hover:bg-muted/50';
+        }
+    };
+    
+    const formatSlaStatus = (slaDue: string | null) => {
+        if (!slaDue) return "Im Plan";
+        if (slaDue === 'überschritten') return "SLA überschritten";
+        if (slaDue === 'heute' || slaDue === 'morgen') return `SLA ${slaDue} fällig`;
+        return `SLA ${slaDue}`;
+    };
+
+    return (
      <Card>
         <CardHeader>
-            <CardTitle>Deals</CardTitle>
+            <div className="flex justify-between items-center">
+                <div>
+                    <CardTitle>Deals</CardTitle>
+                    <CardDescription>Alle laufenden Verkaufschancen</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Input placeholder="Suchen..." className="w-48 bg-input" />
+                    <Button><Plus className="mr-2 h-4 w-4" /> Deal erstellen</Button>
+                </div>
+            </div>
+            <div className="pt-4">
+                <Tabs value={filter} onValueChange={setFilter}>
+                    <TabsList>
+                        <TabsTrigger value="Alle">Alle</TabsTrigger>
+                        <TabsTrigger value="Mit Handlungsbedarf">Mit Handlungsbedarf</TabsTrigger>
+                        <TabsTrigger value="SLA kritisch">SLA kritisch</TabsTrigger>
+                        <TabsTrigger value="In Verhandlung">In Verhandlung</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
         </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Deal-Name</TableHead>
+                        <TableHead>Nächster Schritt</TableHead>
                         <TableHead>Phase</TableHead>
                         <TableHead>Wert</TableHead>
-                        <TableHead>Zuständig</TableHead>
                         <TableHead>SLA-Status</TableHead>
-                        <TableHead>Nächster Schritt</TableHead>
+                        <TableHead>Zuständig</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {mockDeals.map(d => (
-                        <TableRow key={d.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{d.name}</TableCell>
+                    {filteredDeals.map(d => (
+                        <TableRow key={d.id} className={cn("cursor-pointer", getPriorityClass(d.slaDue))}>
+                            <TableCell className="font-semibold">{d.name}</TableCell>
+                            <TableCell className="text-primary font-medium">{d.nextStep}</TableCell>
                             <TableCell><Badge variant="secondary">{d.stage}</Badge></TableCell>
                             <TableCell>{d.value}</TableCell>
+                            <TableCell>
+                                <Badge variant="outline" className={cn(
+                                    d.slaDue === 'überschritten' && 'border-rose-500/50 text-rose-400',
+                                    (d.slaDue === 'heute' || d.slaDue === 'morgen') && 'border-amber-500/50 text-amber-400',
+                                )}>{formatSlaStatus(d.slaDue)}</Badge>
+                            </TableCell>
                             <TableCell>{d.owner}</TableCell>
-                             <TableCell><Badge variant="outline" className={d.slaDue === 'heute' ? 'border-rose-500/50 text-rose-400' : ''}>{d.slaDue || 'im Plan'}</Badge></TableCell>
-                            <TableCell className="text-xs">{d.nextStep}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
         </CardContent>
     </Card>
-);
+    );
+};
 
 const PipelineView = () => {
     // Helper function for formatting currency
@@ -509,7 +588,7 @@ const PipelineView = () => {
                             </div>
                             <div className="space-y-4 flex-1">
                                 {dealsInPhase.map(deal => {
-                                    const isSlaCritical = deal.slaDue === 'heute';
+                                    const isSlaCritical = deal.slaDue === 'heute' || deal.slaDue === 'überschritten';
                                     const isInactiveWarn = deal.inactiveDays > 3;
 
                                     return (
@@ -524,15 +603,15 @@ const PipelineView = () => {
                                             <div className="text-xs space-y-1 my-2 border-y border-border py-2">
                                                 {deal.inactiveDays > 0 && (
                                                     <div className={cn("flex items-center gap-1.5", isInactiveWarn && !isSlaCritical ? "text-amber-500" : "text-muted-foreground")}>
-                                                        <AlertTriangle className="w-3.5 h-3.5" />
-                                                        <span>{deal.inactiveDays} {deal.inactiveDays === 1 ? 'Tag' : 'Tage'} ohne Aktivität</span>
+                                                        <Timer className="w-3.5 h-3.5" />
+                                                        <span>{deal.inactiveDays} Tage ohne Aktivität</span>
                                                     </div>
                                                 )}
                                                 {deal.slaDue && (
                                                     <div className={cn("flex items-center gap-1.5", isSlaCritical ? "text-rose-500 font-bold" : "text-muted-foreground")}>
-                                                        <Timer className="w-3.5 h-3.5" />
+                                                        <AlertTriangle className="w-3.5 h-3.5" />
                                                         <span>
-                                                            {isSlaCritical ? "SLA heute fällig" : `Reaktion in ${deal.slaDue}`}
+                                                          {deal.slaDue === 'überschritten' ? 'SLA überschritten' : `SLA ${deal.slaDue} fällig`}
                                                         </span>
                                                     </div>
                                                 )}
@@ -540,7 +619,7 @@ const PipelineView = () => {
 
                                             {/* 3. Handlungsbereich */}
                                             <div className="bg-primary/10 p-2 rounded-md text-center mt-2">
-                                                <p className="text-[10px] font-bold text-primary/80 uppercase">Nächster Schritt</p>
+                                                <p className="text-[10px] font-bold text-primary/80 uppercase">Nächster Schritt:</p>
                                                 <p className="text-sm font-bold text-primary">{deal.nextStep}</p>
                                             </div>
                                         </Card>
@@ -567,7 +646,7 @@ const ReportsView = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {execKpis.map(kpi => {
                     const Icon = {
-                        'DollarSign': DollarSign,
+                        'DollarSign': TrendingUp,
                         'TrendingUp': TrendingUp,
                         'Flame': Flame,
                         'Workflow': Workflow
@@ -659,7 +738,7 @@ const TerminboardView = () => {
     const pastBookings = useMemo(() => allBookings.filter(b => isPast(b.date) && b.status === 'erledigt'), [allBookings]);
 
     const contextIcons: { [key: string]: React.ElementType } = {
-        Verkaufschance: DollarSign,
+        Verkaufschance: Handshake,
         Ticket: Ticket,
         Projekt: Briefcase,
     };
@@ -779,13 +858,19 @@ const GenericView = ({ title }: { title: string }) => (
 );
 
 export default function QhubPage() {
+  const router = useRouter();
+  const searchParams = usePathname();
+  
   const [activeModule, setActiveModule] = useState(modules[0].name);
   const [isClient, setIsClient] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
-
+  
   useEffect(() => {
     setIsClient(true);
+    const urlParams = new URLSearchParams(window.location.search);
+    const moduleParam = urlParams.get('module');
+    if (moduleParam && modules.some(m => m.name === moduleParam)) {
+        setActiveModule(moduleParam);
+    }
   }, []);
 
   const [currentUserId, setCurrentUserId] = useState('dr-mueller');
@@ -810,6 +895,9 @@ export default function QhubPage() {
 
   const handleModuleClick = (moduleName: string) => {
     setActiveModule(moduleName);
+    const newSearchParams = new URLSearchParams(window.location.search);
+    newSearchParams.set('module', moduleName);
+    router.replace(`/qhub?${newSearchParams.toString()}`);
   };
 
   return (

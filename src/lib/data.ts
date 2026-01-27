@@ -484,9 +484,9 @@ export const mockCompanies = [
 
 export const mockDeals = [
     { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen' },
-    { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'in 3 Tagen', inactiveDays: 5, nextStep: 'Bedarf klären' },
+    { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 5, nextStep: 'Bedarf klären' },
     { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen' },
-    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: null, inactiveDays: 0, nextStep: 'Vertrag senden' }
+    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden' }
 ];
 
 export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
