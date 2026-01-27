@@ -107,111 +107,49 @@ const modules = [
     { name: 'Reports', icon: BarChart3 },
 ];
 
-const kpiCards = [
-    { title: "Offene Tickets", value: "32", icon: FileText, color: "blue" },
-    { title: "SLA Breaches", value: "3", icon: AlertTriangle, color: "rose" },
-    { title: "Dringende Tickets", value: "7", icon: Flame, color: "amber" },
-    { title: "AVA Antworten heute", value: "89", icon: BotIcon, color: "emerald" },
-];
-
-const marketingKpiCards = [
-    { title: "Aktive Nurture-Kontakte", value: "145", icon: Users, color: "purple" },
-    { title: "M → S Übergaben", value: "8", icon: GitBranch, color: "emerald" },
-    { title: "Top Social Engagement", value: "1.2k", icon: Activity, color: "blue" },
-    { title: "Email Performance", value: "42%", icon: BarChart3, color: "amber", subline: "Open Rate" },
-];
-
-
-const DashboardView = () => (
-    <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-                <CardHeader><CardTitle>Neue Kontakte (30T)</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">12</p></CardContent>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Deals in Pipeline</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">4</p></CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle>Pipeline-Wert</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">€90.000</p></CardContent>
-            </Card>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Eskalationen aktiv</CardTitle>
-                    <Flame className="h-4 w-4 text-rose-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">2</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Entscheidungen warten</CardTitle>
-                    <GitBranch className="h-4 w-4 text-amber-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">5</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Laufende Prozesse</CardTitle>
-                    <Workflow className="h-4 w-4 text-blue-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">18</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">KI-Aktionen heute</CardTitle>
-                    <BotIcon className="h-4 w-4 text-emerald-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">128</div>
-                </CardContent>
-            </Card>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-           {kpiCards.map(kpi => {
-               const Icon = kpi.icon;
-               return (
-                <Card key={kpi.title} className="p-4 bg-card/50">
-                    <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                        <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                        <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
-                    </CardHeader>
-                    <CardContent className="p-2 pt-0">
-                        <div className="text-2xl font-bold">{kpi.value}</div>
-                    </CardContent>
+const DashboardView = () => {
+    const kpiCardsData = [
+        { title: 'Eskalationen aktiv', value: 2, icon: Flame, color: 'rose' },
+        { title: 'Entscheidungen warten', value: 5, icon: GitBranch, color: 'amber' },
+        { title: 'Laufende Prozesse', value: 18, icon: Workflow, color: 'blue' },
+        { title: 'KI-Aktionen heute', value: 128, icon: BotIcon, color: 'emerald' },
+    ];
+    return (
+        <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                    <CardHeader><CardTitle>Neue Kontakte (30T)</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold">12</p></CardContent>
                 </Card>
-               )
-            })}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             {marketingKpiCards.map(kpi => {
-               const Icon = kpi.icon;
-               return (
-                <Card key={kpi.title} className="p-4 bg-card/50">
-                    <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                        <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                        <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
-                    </CardHeader>
-                    <CardContent className="p-2 pt-0">
-                        <div className="text-2xl font-bold">{kpi.value}</div>
-                         {kpi.subline && <p className="text-xs text-muted-foreground">{kpi.subline}</p>}
-                    </CardContent>
+                <Card>
+                    <CardHeader><CardTitle>Deals in Pipeline</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold">4</p></CardContent>
                 </Card>
-               )
-            })}
+                <Card>
+                    <CardHeader><CardTitle>Pipeline-Wert</CardTitle></CardHeader>
+                    <CardContent><p className="text-4xl font-bold">€90.000</p></CardContent>
+                </Card>
+            </div>
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {kpiCardsData.map(kpi => {
+                    const Icon = kpi.icon;
+                    return (
+                        <Card key={kpi.title} className="p-4 bg-card/50">
+                            <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                                <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
+                            </CardHeader>
+                            <CardContent className="p-2 pt-0">
+                                <div className="text-2xl font-bold">{kpi.value}</div>
+                            </CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const ContactsView = () => (
     <Card>
@@ -436,168 +374,13 @@ const GenericView = ({ title }: { title: string }) => (
     </Card>
 );
 
-const FeatureFlagView = () => {
-
-    const featureFlags = [
-        { id: 'qhubEnabled', label: 'Q-Hub Global', description: 'Aktiviert oder deaktiviert das gesamte Q-Hub-Subsystem.', enabled: true },
-        { id: 'leadRouting', label: 'Lead Routing', description: 'Automatisches Routing neuer Leads basierend auf Regeln.', enabled: true },
-        { id: 'salesCycle', label: 'Sales Cycle Prozess', description: 'Steuert Deals durch die Sales-Pipeline mit SLAs.', enabled: true },
-        { id: 'supportFlow', label: 'Support Ticket Flow', description: 'Automatisiert die Bearbeitung von Kundenservice-Tickets.', enabled: true },
-        { id: 'marketingNurture', label: 'Marketing Nurture', description: 'Prozessgesteuerte Nurture-Strecken für Kontakte.', enabled: true },
-        { id: 'reportingStreams', label: 'Echtzeit-KPI-Streams', description: 'Aktualisiert KPI-Dashboards in Echtzeit basierend auf Events.', enabled: true },
-        { id: 'agentActions', label: 'KI-Agenten-Aktionen', description: 'Erlaubt KI-Agenten die Ausführung von Aktionen.', enabled: true }
-    ];
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Feature Flags</CardTitle>
-                <CardDescription>Steuern Sie die Aktivierung einzelner Q-Hub-Module.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 <Alert variant="destructive" className="bg-rose-950/50 border-rose-500/20 text-rose-300 [&>svg]:text-rose-400">
-                    <Flame className="h-4 w-4" />
-                    <AlertTitle>Globaler System-Schalter</AlertTitle>
-                    <AlertDescription>
-                       Das Deaktivieren von "Q-Hub Global" stoppt sofort alle Q-Hub-Prozesse und Automationen.
-                    </AlertDescription>
-                </Alert>
-                {featureFlags.map(flag => (
-                     <div key={flag.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
-                         <div>
-                            <Label htmlFor={flag.id} className={cn("font-bold text-foreground", flag.id === 'qhubEnabled' && 'text-rose-400')}>{flag.label}</Label>
-                            <p className="text-xs text-muted-foreground">{flag.description}</p>
-                        </div>
-                        <Switch id={flag.id} defaultChecked={flag.enabled} />
-                    </div>
-                ))}
-            </CardContent>
-        </Card>
-    );
-};
-
-
-const SystemAdminView = () => {
-    const adminTabs = [
-        { value: 'overview', label: 'Übersicht' },
-        { value: 'users', label: 'Benutzer' },
-        { value: 'teams-depts', label: 'Teams & Bereiche' },
-        { value: 'roles-rights', label: 'Rollen & Rechte' },
-        { value: 'kpi-policies', label: 'KPI-Richtlinien' },
-        { value: 'feature-flags', label: 'Feature Flags' },
-        { value: 'security', label: 'Sicherheit' },
-        { value: 'system-health', label: 'Systemzustand' },
-    ];
-    return (
-        <div>
-            <header className="mb-6">
-                <h2 className="text-xl font-bold text-foreground">System Admin (Q-Hub)</h2>
-                <p className="text-sm text-muted-foreground">Administrative Steuerung von Q-Hub.</p>
-            </header>
-            <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="mb-4 h-auto flex-wrap justify-start">
-                    {adminTabs.map(tab => (
-                        <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
-                    ))}
-                </TabsList>
-
-                <TabsContent value="overview">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card><CardHeader><CardTitle>Aktive Nutzer</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{kpiMitarbeiter.length}</p></CardContent></Card>
-                        <Card><CardHeader><CardTitle>Teams</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.team))].length}</p></CardContent></Card>
-                        <Card><CardHeader><CardTitle>Bereiche</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.abteilung))].length}</p></CardContent></Card>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="feature-flags">
-                    <FeatureFlagView />
-                </TabsContent>
-
-                <TabsContent value="users">
-                    <Card>
-                        <CardHeader><CardTitle>Benutzerverwaltung</CardTitle></CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Rolle</TableHead><TableHead>Team</TableHead><TableHead>Bereich</TableHead><TableHead>Aktiv</TableHead></TableRow></TableHeader>
-                                <TableBody>
-                                    {kpiMitarbeiter.map(user => (
-                                        <TableRow key={user.id}>
-                                            <TableCell>{user.name}</TableCell>
-                                            <TableCell><Select defaultValue={user.role}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Mitarbeiter">Mitarbeiter</SelectItem><SelectItem value="Teamleiter">Teamleiter</SelectItem></SelectContent></Select></TableCell>
-                                            <TableCell><Select defaultValue={user.team}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Core-Backend">Core-Backend</SelectItem><SelectItem value="Enterprise">Enterprise</SelectItem></SelectContent></Select></TableCell>
-                                            <TableCell><Select defaultValue={user.abteilung}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="IT">IT</SelectItem><SelectItem value="Vertrieb">Vertrieb</SelectItem></SelectContent></Select></TableCell>
-                                            <TableCell><Switch defaultChecked={true} /></TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="teams-depts">
-                    <div className="grid grid-cols-2 gap-6">
-                        <Card><CardHeader><CardTitle>Bereiche</CardTitle><Button size="sm" className="mt-2">Neuer Bereich</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Bereiche...</p></CardContent></Card>
-                        <Card><CardHeader><CardTitle>Teams</CardTitle><Button size="sm" className="mt-2">Neues Team</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Teams...</p></CardContent></Card>
-                    </div>
-                </TabsContent>
-
-                 <TabsContent value="roles-rights">
-                    <Card><CardHeader><CardTitle>Rollen & Rechte (Read-only)</CardTitle></CardHeader>
-                        <CardContent><p className="text-muted-foreground">Hier würde eine schreibgeschützte Übersicht der Berechtigungen pro Rolle angezeigt.</p></CardContent>
-                    </Card>
-                </TabsContent>
-                
-                <TabsContent value="kpi-policies">
-                    <Card>
-                        <CardHeader><CardTitle>KPI-Richtlinien</CardTitle><p className="text-sm text-muted-foreground">Nur für `exec` Rolle sichtbar/bearbeitbar.</p></CardHeader>
-                        <CardContent className="space-y-4">
-                           <div className="grid grid-cols-3 gap-4">
-                                <div><Label>OK-Schwelle (≥)</Label><Input type="number" defaultValue="90" className="bg-input"/></div>
-                                <div><Label>Beobachtungs-Schwelle (≥)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
-                                <div><Label>Eskalations-Schwelle (&lt;)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
-                           </div>
-                           <h4 className="font-bold">Abzugsparameter</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                <div><Label>Überfällig</Label><Input type="number" defaultValue="2" className="bg-input"/></div>
-                                <div><Label>Verspätet</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
-                                <div><Label>Blockiert</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
-                                <div><Label>Abweichung Arbeitsanweisung</Label><Input type="number" defaultValue="3" className="bg-input"/></div>
-                                <div><Label>Projektverzug</Label><Input type="number" defaultValue="4" className="bg-input"/></div>
-                           </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="security">
-                     <Card>
-                        <CardHeader><CardTitle>Sicherheit</CardTitle></CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 gap-4">
-                                <Card className="p-4"><h4 className="font-bold">Rollenverteilung</h4><p>5 Mitarbeiter, 2 Teamleiter...</p></Card>
-                                <Card className="p-4"><h4 className="font-bold">Letztes Audit-Event</h4><p>Nutzer `space_admin` hat Rolle von `Ben Weber` geändert.</p></Card>
-                            </div>
-                        </CardContent>
-                     </Card>
-                </TabsContent>
-
-                 <TabsContent value="system-health">
-                     <Card>
-                        <CardHeader><CardTitle>Systemzustand</CardTitle></CardHeader>
-                        <CardContent className="grid grid-cols-3 gap-4">
-                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">KPI Engine</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
-                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Eskalations-Service</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
-                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Datenkonsistenz</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
-                        </CardContent>
-                     </Card>
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
-}
-
 export default function QhubPage() {
     const [activeModule, setActiveModule] = useState(modules[0].name);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const renderModule = () => {
         switch (activeModule) {
@@ -647,7 +430,7 @@ export default function QhubPage() {
                     <Input type="text" placeholder="Kontakte, Firmen, Deals durchsuchen..." className="pl-9 bg-input" />
                 </div>
                 <div className="flex items-center gap-3">
-                     <DropdownMenu>
+                     {isClient && <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                            <Button>
                                 <Plus className="mr-2 h-4 w-4" />
@@ -661,7 +444,7 @@ export default function QhubPage() {
                             <DropdownMenuItem>Neue Aufgabe</DropdownMenuItem>
                             <DropdownMenuItem>Neue Notiz</DropdownMenuItem>
                         </DropdownMenuContent>
-                    </DropdownMenu>
+                    </DropdownMenu>}
                 </div>
             </header>
 
