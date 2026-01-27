@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useMemo, FormEvent, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,34 +21,70 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import {
   LayoutDashboard,
-  Users,
-  Building,
-  Handshake,
-  Kanban,
-  Activity,
-  CheckSquare,
   FileText,
-  Mail,
-  Phone,
-  Calendar,
-  BarChart3,
+  Users,
+  Activity,
+  Settings,
   Search,
   Plus,
-  Flame,
-  GitBranch,
-  Workflow,
-  Bot,
-  Timer,
-  AlertCircle,
-  ChevronRight,
-  TrendingUp,
-  DollarSign,
+  Briefcase,
+  BarChart3,
   HeartPulse,
+  UserCheck,
+  AlertTriangle,
+  Flame,
+  ArrowUp,
+  ArrowDown,
+  ArrowRight,
+  MessageSquare,
+  ArrowLeft,
+  Search as SearchIcon,
+  Bot as BotIcon,
+  X,
+  MoreHorizontal,
+  Folder,
+  CheckSquare,
+  User as UserIcon,
+  Calendar as CalendarIcon,
+  Upload,
+  File as FileIcon,
+  FolderPlus,
+  MoreVertical,
+  Tag,
+  Archive,
+  Send,
+  BrainCircuit,
+  ChevronRight,
+  Timer,
+  Workflow,
+  GitBranch,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData } from '@/lib/data';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 const modules = [
@@ -66,7 +104,7 @@ const modules = [
 
 const kpiCards = [
     { title: "Offene Tickets", value: "32", icon: FileText, color: "blue" },
-    { title: "SLA Breaches", value: "3", icon: AlertCircle, color: "rose" },
+    { title: "SLA Breaches", value: "3", icon: AlertTriangle, color: "rose" },
     { title: "Dringende Tickets", value: "7", icon: Flame, color: "amber" },
     { title: "AVA Antworten heute", value: "89", icon: Bot, color: "emerald" },
 ];
@@ -281,7 +319,7 @@ const PipelineView = () => (
                                     )}
                                     {deal.inactiveDays > 0 && (
                                         <div className="flex items-center gap-1.5 text-amber-400">
-                                            <AlertCircle className="w-3 h-3" />
+                                            <AlertTriangle className="w-3 h-3" />
                                             <span>Inaktiv seit {deal.inactiveDays} Tag(en)</span>
                                         </div>
                                     )}
