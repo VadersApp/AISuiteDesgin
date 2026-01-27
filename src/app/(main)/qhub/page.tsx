@@ -87,10 +87,13 @@ import {
   Info,
   CheckCircle2,
   Circle,
+  PhoneIncoming,
+  PhoneOutgoing,
+  PhoneMissed
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -1301,6 +1304,130 @@ const EmailsView = () => {
     );
 };
 
+const AnrufeView = () => {
+    const sortedCalls = useMemo(() => 
+        mockCalls.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    , []);
+
+    const openAndCriticalCalls = useMemo(() => 
+        sortedCalls.filter(c => c.status === 'Rückruf offen' || c.status === 'Verpasst')
+    , [sortedCalls]);
+
+    const sevenDaysAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
+
+    const recentCalls = useMemo(() =>
+        sortedCalls.filter(c => c.status === 'Erfolgreich geführt' && new Date(c.createdAt) > sevenDaysAgo)
+    , [sortedCalls, sevenDaysAgo]);
+
+    const olderCalls = useMemo(() =>
+        sortedCalls.filter(c => c.status === 'Erfolgreich geführt' && new Date(c.createdAt) <= sevenDaysAgo)
+    , [sortedCalls, sevenDaysAgo]);
+
+    const CallRow = ({ call }: { call: any }) => {
+        const callTypeIcons: { [key: string]: React.ElementType } = {
+            Eingehend: PhoneIncoming,
+            Ausgehend: PhoneOutgoing,
+            Verpasst: PhoneMissed,
+        };
+        const CallTypeIcon = callTypeIcons[call.type as keyof typeof callTypeIcons] || Phone;
+        
+        const statusColors: { [key: string]: string } = {
+            'Rückruf offen': 'border-amber-500/50 text-amber-400 bg-amber-500/5',
+            'Verpasst': 'border-rose-500/50 text-rose-400 bg-rose-500/5',
+            'Erfolgreich geführt': 'border-border',
+        };
+        
+        const statusBadgeColors: { [key: string]: string } = {
+            'Rückruf offen': 'bg-amber-500/10 text-amber-400',
+            'Verpasst': 'bg-rose-500/10 text-rose-400',
+            'Erfolgreich geführt': 'bg-emerald-500/10 text-emerald-400',
+        };
+
+        const contextIcons: { [key: string]: React.ElementType } = {
+            Deal: Handshake,
+            Kontakt: UserIcon,
+            Firma: Building2,
+            Servicefall: Ticket,
+        };
+        const ContextIcon = contextIcons[call.contextType as keyof typeof contextIcons] || Briefcase;
+
+        return (
+            <Card className={cn("p-4", statusColors[call.status])}>
+                <div className="flex items-center gap-4">
+                    <div className="flex-1 grid grid-cols-12 gap-4 items-center">
+                        <div className="col-span-3 flex items-center gap-2">
+                           <CallTypeIcon className="w-4 h-4 text-muted-foreground" />
+                           <div>
+                                <p className="font-bold text-sm text-foreground">{call.contactName}</p>
+                                <p className="text-xs text-muted-foreground">{call.companyName}</p>
+                           </div>
+                        </div>
+                        <div className="col-span-3 text-sm text-muted-foreground flex items-center gap-1.5">
+                            <ContextIcon className="w-3.5 h-3.5"/>
+                            <span>{call.contextType}: {call.contextName}</span>
+                        </div>
+                        <div className="col-span-2 text-sm font-mono text-muted-foreground">
+                            {formatDistanceToNow(new Date(call.createdAt), { addSuffix: true, locale: de })}
+                        </div>
+                         <div className="col-span-2 text-sm font-mono text-muted-foreground">
+                            {call.duration || '---'}
+                        </div>
+                        <div className="col-span-2 text-right">
+                           <Badge variant="outline" className={cn('capitalize', statusBadgeColors[call.status])}>{call.status}</Badge>
+                        </div>
+                    </div>
+                     <Button variant="outline" size="sm">In Q-Call öffnen</Button>
+                </div>
+            </Card>
+        );
+    };
+
+    return (
+        <div className="space-y-8">
+            <header>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">Anrufe</h1>
+                <p className="text-muted-foreground">Zentrale Übersicht für telefonische Kundenkommunikation.</p>
+            </header>
+
+            {/* Offene & Kritische Anrufe */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><PhoneMissed className="w-5 h-5 text-rose-400"/>Offene & Kritische Anrufe</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 p-3">
+                    {openAndCriticalCalls.length > 0 ? openAndCriticalCalls.map(call => <CallRow key={call.id} call={call} />) : <p className="p-4 text-sm text-muted-foreground italic text-center">Keine offenen oder kritischen Anrufe.</p>}
+                </CardContent>
+            </Card>
+            
+             {/* Letzte Kundenanrufe */}
+             <Card>
+                <CardHeader><CardTitle>Letzte Kundenanrufe</CardTitle></CardHeader>
+                 <CardContent className="space-y-3 p-3">
+                    {recentCalls.length > 0 ? recentCalls.map(call => <CallRow key={call.id} call={call} />) : <p className="p-4 text-sm text-muted-foreground italic text-center">Keine Anrufe in den letzten 7 Tagen.</p>}
+                </CardContent>
+            </Card>
+
+            {/* Ältere Anrufe */}
+            <Collapsible>
+                <CollapsibleTrigger asChild>
+                     <div className="flex items-center gap-2 text-muted-foreground cursor-pointer hover:text-foreground">
+                        <h2 className="text-xl font-bold">Ältere Anrufe</h2>
+                        <ChevronDown className="w-5 h-5"/>
+                    </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-4 animate-in fade-in">
+                    <Card>
+                        <CardContent className="space-y-3 p-3">
+                             {olderCalls.length > 0 ? olderCalls.map(call => <CallRow key={call.id} call={call} />) : <p className="p-4 text-sm text-muted-foreground italic text-center">Keine älteren Anrufe.</p>}
+                        </CardContent>
+                    </Card>
+                </CollapsibleContent>
+            </Collapsible>
+
+        </div>
+    );
+};
+
 
 export default function QhubPage() {
   const router = useRouter();
@@ -1337,6 +1464,7 @@ export default function QhubPage() {
           case 'Aufgaben': return <AufgabenView />;
           case 'Notizen': return <NotesView />;
           case 'E-Mails': return <EmailsView />;
+          case 'Anrufe': return <AnrufeView />;
           case 'Reports': return <ReportsView />;
           default: return <GenericView title={activeModule} />;
       }

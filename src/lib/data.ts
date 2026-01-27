@@ -487,7 +487,8 @@ export const mockDeals = [
     { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 5, nextStep: 'Bedarf klären' },
     { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen' },
     { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden' },
-    { id: 5, name: 'Global Exports - Logistik-Suite', stage: 'Verhandlung', value: '€75,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 2, nextStep: 'Finale Konditionen klären' }
+    { id: 5, name: 'Global Exports - Logistik-Suite', stage: 'Verhandlung', value: '€75,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 2, nextStep: 'Finale Konditionen klären' },
+    { id: 6, name: 'Abgeschlossener Deal', stage: 'Gewonnen', value: '€100,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 30, nextStep: 'Projektübergabe' }
 ];
 
 export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
@@ -1371,5 +1372,85 @@ export const mockEmails = [
         contextName: 'Hans Guck',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 9).toISOString(), // 9 days ago
         status: 'Beantwortet',
+    },
+];
+
+export const mockCalls = [
+    {
+        id: 'call-1',
+        type: 'Verpasst',
+        contactName: 'Peter Panik',
+        companyName: 'Alt GmbH',
+        contextType: 'Deal',
+        contextName: 'Alt GmbH - Q4 Opportunity',
+        createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(), // 20 mins ago
+        duration: null,
+        status: 'Rückruf offen',
+    },
+    {
+        id: 'call-2',
+        type: 'Eingehend',
+        contactName: 'Max Mustermann',
+        companyName: 'Innovate GmbH',
+        contextType: 'Kontakt',
+        contextName: 'Max Mustermann',
+        createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 90 mins ago
+        duration: '5:32',
+        status: 'Erfolgreich geführt',
+    },
+    {
+        id: 'call-3',
+        type: 'Ausgehend',
+        contactName: 'Erika Musterfrau',
+        companyName: 'Data Corp',
+        contextType: 'Deal',
+        contextName: 'Data Corp - Analyse-Software',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
+        duration: '12:15',
+        status: 'Erfolgreich geführt',
+    },
+    {
+        id: 'call-4',
+        type: 'Verpasst',
+        contactName: 'Wanda Warter',
+        companyName: 'Warter AG',
+        contextType: 'Kontakt',
+        contextName: 'Wanda Warter',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours ago
+        duration: null,
+        status: 'Rückruf offen',
+    },
+    {
+        id: 'call-5',
+        type: 'Eingehend',
+        contactName: 'Hans Guck',
+        companyName: 'Himmel AG',
+        contextType: 'Servicefall',
+        contextName: 'Ticket #9982',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString(), // 1 day ago
+        duration: '3:45',
+        status: 'Erfolgreich geführt',
+    },
+    {
+        id: 'call-6',
+        type: 'Eingehend',
+        contactName: 'Zufrieden GmbH',
+        companyName: 'Zufrieden GmbH',
+        contextType: 'Firma',
+        contextName: 'Zufrieden GmbH',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(), // 8 days ago
+        duration: '7:11',
+        status: 'Erfolgreich geführt',
+    },
+     {
+        id: 'call-7',
+        type: 'Ausgehend',
+        contactName: 'Historisch AG',
+        companyName: 'Historisch AG',
+        contextType: 'Kontakt',
+        contextName: 'Historisch AG',
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 40).toISOString(), // 40 days ago
+        duration: '4:20',
+        status: 'Erfolgreich geführt',
     },
 ];
