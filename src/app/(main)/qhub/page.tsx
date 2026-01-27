@@ -82,6 +82,7 @@ import {
   Ticket,
   CalendarDays,
   Clock,
+  History,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
