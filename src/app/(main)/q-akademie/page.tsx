@@ -595,6 +595,42 @@ const ParticipantsView = ({ onOpenCreateDialog }: { onOpenCreateDialog: () => vo
     );
 };
 
+const DepartmentsAndRolesView = ({ onOpenCreateDepartmentDialog, onOpenCreateRoleDialog }: { onOpenCreateDepartmentDialog: () => void, onOpenCreateRoleDialog: () => void }) => {
+    return (
+        <div className="space-y-6">
+             <h2 className="text-2xl font-bold text-foreground">Abteilungen & Rollen</h2>
+             <Tabs defaultValue="departments">
+                 <TabsList>
+                     <TabsTrigger value="departments">Abteilungen</TabsTrigger>
+                     <TabsTrigger value="roles">Rollen</TabsTrigger>
+                 </TabsList>
+                 <TabsContent value="departments">
+                     <Card>
+                         <CardHeader className="flex-row items-center justify-between">
+                            <CardTitle>Abteilungen</CardTitle>
+                            <Button variant="outline" onClick={onOpenCreateDepartmentDialog}><Plus className="mr-2 h-4 w-4"/> Abteilung erstellen</Button>
+                         </CardHeader>
+                         <CardContent>
+                            <div className="text-center py-12 text-muted-foreground italic">Hier werden die Abteilungen verwaltet.</div>
+                         </CardContent>
+                     </Card>
+                 </TabsContent>
+                 <TabsContent value="roles">
+                     <Card>
+                        <CardHeader className="flex-row items-center justify-between">
+                            <CardTitle>Rollen</CardTitle>
+                            <Button variant="outline" onClick={onOpenCreateRoleDialog}><Plus className="mr-2 h-4 w-4"/> Rolle erstellen</Button>
+                        </CardHeader>
+                        <CardContent>
+                           <div className="text-center py-12 text-muted-foreground italic">Hier werden die Rollen und deren Rechte verwaltet.</div>
+                        </CardContent>
+                     </Card>
+                 </TabsContent>
+             </Tabs>
+        </div>
+    )
+}
+
 const CertificatesView = ({ onOpenCreateDialog }: { onOpenCreateDialog: () => void }) => {
     return (
     <Card>
@@ -1161,7 +1197,7 @@ export default function QAkademiePage() {
             case 'Lernpfade': return <LearningPathsView onOpenCreateDialog={() => setIsCreateLernpfadOpen(true)}/>;
             case 'Inhalte': return <InhalteView videos={videos} setVideos={setVideos} onOpenRecordDialog={() => setIsRecordingDialogOpen(true)} onOpenUploadDialog={()=> setIsVideoUploadOpen(true)} onOpenWissensbausteinDialog={() => setIsWissensbausteinOpen(true)} />;
             case 'Teilnehmer': return <ParticipantsView onOpenCreateDialog={() => setIsAddParticipantOpen(true)}/>;
-            case 'Abteilungen & Rollen': return <GenericCreateDialog open={isCreateDepartmentOpen || isCreateRoleOpen} onOpenChange={isCreateDepartmentOpen ? setIsCreateDepartmentOpen : setIsCreateRoleOpen} title='Platzhalter' description='Hier wird die Erstellung von Abteilungen & Rollen verwaltet.' />;
+            case 'Abteilungen & Rollen': return <DepartmentsAndRolesView onOpenCreateDepartmentDialog={() => setIsCreateDepartmentOpen(true)} onOpenCreateRoleDialog={() => setIsCreateRoleOpen(true)} />;
             case 'Fortschritt & Reports': return <ReportingView />;
             case 'Zertifikate': return <CertificatesView onOpenCreateDialog={() => setIsCreateCertificateOpen(true)} />;
             case 'Einstellungen': return <SettingsView />;
@@ -1206,13 +1242,21 @@ export default function QAkademiePage() {
                     {renderModule()}
                 </div>
             </main>
-             <GenericCreateDialog open={isCreateCourseOpen} onOpenChange={setIsCreateCourseOpen} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />
-             <GenericCreateDialog open={isCreateLernpfadOpen} onOpenChange={setIsCreateLernpfadOpen} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />
-             <GenericCreateDialog open={isCreateCertificateOpen} onOpenChange={setIsCreateCertificateOpen} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />
-             <GenericCreateDialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />
-             <GenericCreateDialog open={isVideoUploadOpen} onOpenChange={setIsVideoUploadOpen} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />
-             <GenericCreateDialog open={isWissensbausteinOpen} onOpenChange={setIsWissensbausteinOpen} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />
-             <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />
+             
+            {isCreateCourseOpen && <GenericCreateDialog open={isCreateCourseOpen} onOpenChange={setIsCreateCourseOpen} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />}
+            {isCreateLernpfadOpen && <GenericCreateDialog open={isCreateLernpfadOpen} onOpenChange={setIsCreateLernpfadOpen} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />}
+            {isCreateCertificateOpen && <GenericCreateDialog open={isCreateCertificateOpen} onOpenChange={setIsCreateCertificateOpen} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />}
+            {isAddParticipantOpen && <GenericCreateDialog open={isAddParticipantOpen} onOpenChange={setIsAddParticipantOpen} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />}
+            {isVideoUploadOpen && <GenericCreateDialog open={isVideoUploadOpen} onOpenChange={setIsVideoUploadOpen} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />}
+            {isWissensbausteinOpen && <GenericCreateDialog open={isWissensbausteinOpen} onOpenChange={setIsWissensbausteinOpen} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />}
+            {isRecordingDialogOpen && <VideoRecorderDialog open={isRecordingDialogOpen} onOpenChange={setIsRecordingDialogOpen} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />}
+            
+            {activeModule === 'Abteilungen & Rollen' && (
+                <>
+                {isCreateDepartmentOpen && <GenericCreateDialog open={isCreateDepartmentOpen} onOpenChange={setIsCreateDepartmentOpen} title='Abteilung erstellen' description='Hier wird die Funktion zum Erstellen von Abteilungen verwaltet.'/>}
+                {isCreateRoleOpen && <GenericCreateDialog open={isCreateRoleOpen} onOpenChange={setIsCreateRoleOpen} title='Rolle erstellen' description='Hier wird die Funktion zum Erstellen von Rollen verwaltet.'/>}
+                </>
+            )}
         </div>
     );
 }
