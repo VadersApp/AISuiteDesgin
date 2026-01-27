@@ -24,6 +24,7 @@ import {
   Users,
   DollarSign,
   BookOpen,
+  GitBranch,
 } from "lucide-react";
 import * as React from 'react';
 import {
@@ -82,6 +83,7 @@ const navGroups = [
             { href: "/admin", icon: ShieldCheck, label: "System Admin" },
             { href: "/settings", icon: Settings, label: "Einstellungen" },
             { href: "/feedback", icon: MessageCircle, label: "Feedback" },
+            { href: "/git-auth", icon: GitBranch, label: "Git-Authentifizierung" },
         ]
     }
 ]
