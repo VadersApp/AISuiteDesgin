@@ -113,44 +113,44 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const recordedChunksRef = useRef<Blob[]>([]);
 
-    const cleanupAndReset = useCallback(() => {
-        // Stop all media tracks
-        mediaStreamsRef.current.forEach(stream => {
-            stream.getTracks().forEach(track => track.stop());
-        });
-        mediaStreamsRef.current = [];
+    useEffect(() => {
+        const cleanup = () => {
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                mediaRecorderRef.current.stop();
+            }
+            mediaRecorderRef.current = null;
 
-        // Stop the recorder if it's running
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-            mediaRecorderRef.current.stop();
-        }
-        mediaRecorderRef.current = null;
-        
-        // Stop animation frame for PiP
-        if (animationFrameId.current) {
-            cancelAnimationFrame(animationFrameId.current);
-            animationFrameId.current = null;
+            if (animationFrameId.current) {
+                cancelAnimationFrame(animationFrameId.current);
+                animationFrameId.current = null;
+            }
+
+            mediaStreamsRef.current.forEach(stream => {
+                stream.getTracks().forEach(track => track.stop());
+            });
+            mediaStreamsRef.current = [];
+
+            if (videoRef.current?.srcObject) {
+                (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+                videoRef.current.srcObject = null;
+            }
+
+            if (recordedVideoUrl) {
+                URL.revokeObjectURL(recordedVideoUrl);
+            }
+        };
+
+        if (!open) {
+            cleanup();
+            setStep('mode-selection');
+            setRecordingMode(null);
+            setRecordedVideoUrl(null);
+            setError(null);
+            recordedChunksRef.current = [];
         }
 
-        // Revoke any created blob URLs
-        if (recordedVideoUrl) {
-            URL.revokeObjectURL(recordedVideoUrl);
-        }
-        
-        // Reset all component state to initial values
-        setStep('mode-selection');
-        setRecordingMode(null);
-        setRecordedVideoUrl(null);
-        setError(null);
-        recordedChunksRef.current = [];
-    }, [recordedVideoUrl]);
-
-    const handleDialogChange = (isOpen: boolean) => {
-        if (!isOpen) {
-            cleanupAndReset();
-        }
-        onOpenChange(isOpen);
-    };
+        return cleanup;
+    }, [open, recordedVideoUrl]);
     
     const handleStartRecording = async () => {
         if (!recordingMode) return;
@@ -169,6 +169,8 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             } else {
                 const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always" }, audio: true });
                 mediaStreamsRef.current.push(screenStream);
+                
+                recorderStream = new MediaStream(screenStream.getTracks());
 
                 if (recordingMode === 'screen-cam') {
                     const cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 180 }, audio: false });
@@ -205,15 +207,12 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     };
                     draw();
                     
-                    recorderStream = canvas.captureStream(30);
-                    const audioTracks = screenStream.getAudioTracks();
-                    if (audioTracks.length > 0) {
-                         recorderStream.addTrack(audioTracks[0]);
-                    }
-                    displayStream = recorderStream;
+                    const canvasStream = canvas.captureStream(30);
+                    mediaStreamsRef.current.push(canvasStream);
+                    canvasStream.getVideoTracks().forEach(track => recorderStream.addTrack(track));
+                    displayStream = canvasStream;
                 } else {
                     displayStream = screenStream;
-                    recorderStream = screenStream;
                 }
             }
 
@@ -238,13 +237,6 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
                     setRecordedVideoUrl(url);
                 }
                 setStep('preview');
-
-                // Stop the local display stream when recording stops to turn off camera light etc.
-                if (videoRef.current && videoRef.current.srcObject) {
-                    const stream = videoRef.current.srcObject as MediaStream;
-                    stream.getTracks().forEach(track => track.stop());
-                    videoRef.current.srcObject = null;
-                }
             };
 
             recorder.start();
@@ -253,7 +245,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         } catch (err: any) {
             console.error('Error accessing media devices.', err);
             setError(`Zugriff auf Medien verweigert: ${err.message}. Bitte Berechtigungen in den Browsereinstellungen prüfen.`);
-            cleanupAndReset();
+            onOpenChange(false);
         }
     };
     
@@ -279,16 +271,23 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
             };
             onVideoSaved(newVideo);
             toast({ title: "Video gespeichert", description: "Ihre Aufnahme wurde der Bibliothek hinzugefügt." });
-            handleDialogChange(false);
+            onOpenChange(false);
         }, 2000);
     };
 
      const handleResetAndRecordAgain = () => {
-        cleanupAndReset();
-    };
+        setStep('mode-selection');
+        setRecordingMode(null);
+        setRecordedVideoUrl(null);
+        setError(null);
+        recordedChunksRef.current = [];
+        if (recordedVideoUrl) {
+            URL.revokeObjectURL(recordedVideoUrl);
+        }
+     };
 
     return (
-        <Dialog open={open} onOpenChange={handleDialogChange}>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Video aufnehmen</DialogTitle>
@@ -1269,14 +1268,14 @@ export default function QAkademiePage() {
 
             <VideoRecorderDialog open={dialogStates.isRecordingDialogOpen} onOpenChange={(isOpen) => setDialogOpen('isRecordingDialogOpen', isOpen)} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />
             
-            <GenericCreateDialog open={dialogStates.isCreateCourseOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCourseOpen', isOpen)} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />
-            <GenericCreateDialog open={dialogStates.isCreateLernpfadOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateLernpfadOpen', isOpen)} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />
-            <GenericCreateDialog open={dialogStates.isCreateCertificateOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCertificateOpen', isOpen)} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />
-            <GenericCreateDialog open={dialogStates.isAddParticipantOpen} onOpenChange={(isOpen) => setDialogOpen('isAddParticipantOpen', isOpen)} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />
-            <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title="Abteilung erstellen" description="Hier wird die Funktion zum Erstellen von Abteilungen verwaltet."/>
-            <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."/>
-            <GenericCreateDialog open={dialogStates.isVideoUploadOpen} onOpenChange={(isOpen) => setDialogOpen('isVideoUploadOpen', isOpen)} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />
-            <GenericCreateDialog open={dialogStates.isWissensbausteinOpen} onOpenChange={(isOpen) => setDialogOpen('isWissensbausteinOpen', isOpen)} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />
+            {dialogStates.isCreateCourseOpen && <GenericCreateDialog open={dialogStates.isCreateCourseOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCourseOpen', isOpen)} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />}
+            {dialogStates.isCreateLernpfadOpen && <GenericCreateDialog open={dialogStates.isCreateLernpfadOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateLernpfadOpen', isOpen)} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />}
+            {dialogStates.isCreateCertificateOpen && <GenericCreateDialog open={dialogStates.isCreateCertificateOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCertificateOpen', isOpen)} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />}
+            {dialogStates.isAddParticipantOpen && <GenericCreateDialog open={dialogStates.isAddParticipantOpen} onOpenChange={(isOpen) => setDialogOpen('isAddParticipantOpen', isOpen)} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />}
+            {dialogStates.isCreateDepartmentOpen && <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title="Abteilung erstellen" description="Hier wird die Funktion zum Erstellen von Abteilungen verwaltet."/>}
+            {dialogStates.isCreateRoleOpen && <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."/>}
+            {dialogStates.isVideoUploadOpen && <GenericCreateDialog open={dialogStates.isVideoUploadOpen} onOpenChange={(isOpen) => setDialogOpen('isVideoUploadOpen', isOpen)} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />}
+            {dialogStates.isWissensbausteinOpen && <GenericCreateDialog open={dialogStates.isWissensbausteinOpen} onOpenChange={(isOpen) => setDialogOpen('isWissensbausteinOpen', isOpen)} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />}
         </div>
     );
 }
