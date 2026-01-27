@@ -486,7 +486,8 @@ export const mockDeals = [
     { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen' },
     { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 5, nextStep: 'Bedarf klären' },
     { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen' },
-    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden' }
+    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden' },
+    { id: 5, name: 'Global Exports - Logistik-Suite', stage: 'Verhandlung', value: '€75,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 2, nextStep: 'Finale Konditionen klären' }
 ];
 
 export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
@@ -1199,4 +1200,70 @@ export const testLeads = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
+];
+
+export const allActivities = [
+    // From mockTasks
+    ...mockTasks.map(t => {
+        let dueDate;
+        const now = new Date();
+        if (t.due === 'Heute') {
+            dueDate = now;
+        } else if (t.due === 'Morgen') {
+            dueDate = addDays(now, 1);
+        } else if (t.due === 'Diese Woche') {
+            dueDate = addDays(now, 3);
+        } else if (t.due === 'Nächste Woche') {
+            dueDate = addDays(now, 7);
+        } else if (t.due === 'Sofort') {
+            dueDate = subDays(now,1); // To make it overdue
+        }
+         else {
+            dueDate = addDays(now, 14); // Default "später"
+        }
+        return {
+            id: `task-${t.id}`,
+            type: 'Aufgabe',
+            description: t.title,
+            context: `Mitarbeiter: ${t.owner}`,
+            dueDate: dueDate,
+            status: t.status === 'Erledigt' ? 'Erledigt' : 'Offen'
+        }
+    }),
+    // From mockDeals
+    ...mockDeals.map(d => {
+        let dueDate;
+        const now = new Date();
+        if (d.slaDue === 'heute') {
+            dueDate = now;
+        } else if (d.slaDue === 'morgen') {
+            dueDate = addDays(now, 1);
+        } else if (d.slaDue === 'überschritten') {
+            dueDate = subDays(now, 1);
+        } else if (d.slaDue?.includes('in')) {
+            const days = parseInt(d.slaDue.split(' ')[1]);
+            dueDate = addDays(now, days);
+        } else {
+            dueDate = addDays(now, 10);
+        }
+        return {
+            id: `deal-${d.id}`,
+            type: 'Verkaufschance',
+            description: d.nextStep,
+            context: `Deal: ${d.name}`,
+            dueDate: dueDate,
+            status: 'Offen'
+        }
+    }),
+    // From qalenderBookings
+    ...getDynamicQalenderBookings().map(b => {
+        return {
+            id: b.bookingId,
+            type: 'Termin',
+            description: b.eventTypeName,
+            context: `Gast: ${b.guestName}`,
+            dueDate: new Date(b.startAt),
+            status: b.status === 'erledigt' ? 'Erledigt' : 'Offen'
+        }
+    })
 ];

@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday } from 'date-fns';
 import { de } from 'date-fns/locale';
 import {
   LayoutDashboard,
@@ -82,11 +82,14 @@ import {
   Clock,
   History,
   DollarSign,
-  GitBranch
+  GitBranch,
+  ChevronDown,
+  CheckCircle2,
+  Circle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -608,26 +611,23 @@ const PipelineView = () => {
 
                                     return (
                                         <Card key={deal.id} className={cardClasses}>
-                                            {/* 1. Kopfbereich */}
                                             <div>
                                                 <h4 className="font-bold text-foreground truncate">{deal.name}</h4>
                                                 <p className="text-sm text-muted-foreground">{formatCurrency(deal.value)}</p>
                                             </div>
                                             
-                                            {/* 2. Status-Bereich */}
                                             <div className="my-2 py-2 border-t border-b border-border/50 text-xs">
+                                                {deal.inactiveDays > 0 && (
+                                                    <p className="text-muted-foreground/80 mb-1">{deal.inactiveDays} Tage ohne Aktivität</p>
+                                                )}
                                                 {deal.slaDue && (
                                                     <div className={cn("flex items-center gap-1.5 font-medium", isCritical ? "text-rose-500" : isAttention ? "text-amber-500" : "text-muted-foreground")}>
                                                         <AlertTriangle className="w-3.5 h-3.5" />
                                                         <span>{formatSlaStatus(deal.slaDue)}</span>
                                                     </div>
                                                 )}
-                                                {deal.inactiveDays > 0 && (
-                                                    <p className="text-muted-foreground/80 mt-1">{deal.inactiveDays} Tage ohne Aktivität</p>
-                                                )}
                                             </div>
 
-                                            {/* 3. Handlungsbereich */}
                                             <div className="bg-primary/10 p-2 rounded-md text-center mt-2">
                                                 <p className="text-[9px] font-bold text-primary/80 uppercase">Nächster Schritt:</p>
                                                 <p className="text-sm font-bold text-primary">{deal.nextStep}</p>
@@ -867,6 +867,129 @@ const GenericView = ({ title }: { title: string }) => (
     </Card>
 );
 
+const ActivityItem = ({ activity }: { activity: any }) => {
+  const isOverdue = isPast(activity.dueDate) && !isToday(activity.dueDate);
+  const isTodayTask = isToday(activity.dueDate);
+
+  const priorityColor = isOverdue
+    ? 'border-rose-500/50 bg-rose-500/5'
+    : isTodayTask
+    ? 'border-amber-500/50 bg-amber-500/5'
+    : 'border-border';
+  
+  const priorityDotColor = isOverdue
+    ? 'bg-rose-500'
+    : isTodayTask
+    ? 'bg-amber-500'
+    : 'bg-blue-500';
+    
+  const Icon = {
+      Aufgabe: CheckSquare,
+      Termin: Calendar,
+      Rückruf: Phone,
+      Verkaufschance: Handshake,
+      Servicefall: Ticket,
+  }[activity.type] || CheckSquare;
+
+  return (
+    <div className={cn("flex items-center gap-4 p-3 rounded-lg border-l-4", priorityColor)}>
+      <div className={cn("w-2 h-2 rounded-full shrink-0", priorityDotColor)}></div>
+      <div className="flex-1 grid grid-cols-12 gap-4 items-center">
+        <div className="col-span-4 flex items-center gap-2">
+            <Icon className="w-4 h-4 text-muted-foreground"/>
+            <span className="font-bold text-foreground">{activity.description}</span>
+        </div>
+        <div className="col-span-3 text-sm text-muted-foreground">{activity.context}</div>
+        <div className="col-span-2">
+            {activity.status === 'Erledigt' ? (
+                <span className="text-xs font-medium text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5"/> Erledigt</span>
+            ) : isOverdue ? (
+                <span className="text-xs font-medium text-rose-500 flex items-center gap-1"><Clock className="w-3.5 h-3.5"/> Überfällig</span>
+            ) : isTodayTask ? (
+                <span className="text-xs font-medium text-amber-500 flex items-center gap-1"><Clock className="w-3.5 h-3.5"/> Heute fällig</span>
+            ) : (
+                <span className="text-xs text-muted-foreground">{activity.dueDate.toLocaleDateString('de-DE', { weekday: 'long' })}</span>
+            )}
+        </div>
+        <div className="col-span-2 text-sm text-muted-foreground">
+             {activity.status !== 'Erledigt' && <Button variant="outline" size="sm">Erledigen</Button>}
+        </div>
+        <div className="col-span-1 text-right">
+            <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-4 h-4"/></Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ActivityGroup = ({ title, activities }: { title: string; activities: any[] }) => {
+  if (activities.length === 0) return null;
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-foreground mb-4">{title}</h2>
+      <div className="space-y-3">
+        {activities.map(activity => <ActivityItem key={activity.id} activity={activity} />)}
+      </div>
+    </div>
+  );
+};
+
+
+const ActivitiesView = () => {
+  const activities = useMemo(() => allActivities.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()), []);
+
+  const today = startOfToday();
+  const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
+  const endOfThisWeek = endOfWeek(today, { weekStartsOn: 1 });
+
+  const overdue = useMemo(() => activities.filter(a => isPast(a.dueDate) && !isToday(a.dueDate) && a.status !== 'Erledigt'), [activities]);
+  const dueToday = useMemo(() => activities.filter(a => isToday(a.dueDate) && a.status !== 'Erledigt'), [activities]);
+  
+  const dueTomorrow = useMemo(() => activities.filter(a => isTomorrow(a.dueDate) && a.status !== 'Erledigt'), [activities]);
+  const dueThisWeek = useMemo(() => activities.filter(a => isFuture(a.dueDate) && !isTomorrow(a.dueDate) && isWithinInterval(a.dueDate, { start: today, end: endOfThisWeek }) && a.status !== 'Erledigt'), [activities, today, endOfThisWeek]);
+  const dueLater = useMemo(() => activities.filter(a => isFuture(a.dueDate) && !isWithinInterval(a.dueDate, { start: today, end: endOfThisWeek }) && a.status !== 'Erledigt'), [activities, today, endOfThisWeek]);
+
+  const completed = useMemo(() => activities.filter(a => a.status === 'Erledigt').slice(0, 10), [activities]);
+
+
+  return (
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">
+          Aktivitäten
+        </h1>
+        <p className="text-muted-foreground">Ihre persönliche Arbeitszentrale für heute und die nächsten Tage.</p>
+      </header>
+
+      <div className="space-y-8">
+        {/* Zone 1: Heute & Überfällig */}
+        <ActivityGroup title="Heute & Überfällig" activities={[...overdue, ...dueToday]} />
+
+        {/* Zone 2: Nächste Aktivitäten */}
+        <ActivityGroup title="Morgen" activities={dueTomorrow} />
+        <ActivityGroup title="Diese Woche" activities={dueThisWeek} />
+        <ActivityGroup title="Später" activities={dueLater} />
+
+        {/* Zone 3: Abgeschlossen */}
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <div className="flex items-center gap-2 text-muted-foreground cursor-pointer hover:text-foreground">
+                <h2 className="text-lg font-bold">Abgeschlossen</h2>
+                <ChevronDown className="w-5 h-5"/>
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-4 animate-in fade-in">
+             <div className="space-y-3">
+                {completed.map(activity => <ActivityItem key={activity.id} activity={activity} />)}
+             </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+      </div>
+    </div>
+  );
+}
+
 export default function QhubPage() {
   const router = useRouter();
   const searchParams = usePathname();
@@ -898,6 +1021,7 @@ export default function QhubPage() {
           case 'Firmen': return <CompaniesView />;
           case 'Deals': return <DealsView />;
           case 'Pipeline': return <PipelineView />;
+          case 'Aktivitäten': return <ActivitiesView />;
           case 'Reports': return <ReportsView />;
           default: return <GenericView title={activeModule} />;
       }
