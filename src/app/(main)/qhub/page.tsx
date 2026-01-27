@@ -81,10 +81,12 @@ import {
   CalendarDays,
   Clock,
   History,
+  DollarSign,
+  GitBranch
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -646,7 +648,7 @@ const ReportsView = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {execKpis.map(kpi => {
                     const Icon = {
-                        'DollarSign': TrendingUp,
+                        'DollarSign': DollarSign,
                         'TrendingUp': TrendingUp,
                         'Flame': Flame,
                         'Workflow': Workflow
