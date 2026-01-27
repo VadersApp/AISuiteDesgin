@@ -70,13 +70,13 @@ import {
   ChevronRight,
   Timer,
   Workflow,
-  GitBranch,
   Building,
   Handshake,
   Kanban,
   Mail,
   Phone,
   TrendingUp,
+  DollarSign,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
