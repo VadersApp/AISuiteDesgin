@@ -76,6 +76,7 @@ import {
   Kanban,
   Mail,
   Phone,
+  TrendingUp,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -109,10 +110,21 @@ const modules = [
 
 const DashboardView = () => {
     const kpiCardsData = [
+        // From Step 2 & others
         { title: 'Eskalationen aktiv', value: 2, icon: Flame, color: 'rose' },
         { title: 'Entscheidungen warten', value: 5, icon: GitBranch, color: 'amber' },
         { title: 'Laufende Prozesse', value: 18, icon: Workflow, color: 'blue' },
         { title: 'KI-Aktionen heute', value: 128, icon: BotIcon, color: 'emerald' },
+        // From Step 3
+        { title: 'Offene Tickets', value: '43', icon: FileText, color: 'blue' },
+        { title: 'SLA Breaches', value: '3', icon: AlertTriangle, color: 'rose' },
+        { title: 'Urgent Tickets', value: '7', icon: Flame, color: 'amber' },
+        { title: 'AVA Antworten heute', value: '76', icon: MessageSquare, color: 'emerald' },
+        // From Step 4
+        { title: 'Aktive Nurture-Kontakte', value: '124', icon: Users, color: 'blue' },
+        { title: 'M→S Übergaben', value: '8', icon: Handshake, color: 'emerald' },
+        { title: 'Top Social Engagements', value: '1.2k', icon: TrendingUp, color: 'purple' },
+        { title: 'Email Performance', value: '42%', icon: Mail, color: 'amber' },
     ];
     return (
         <div className="space-y-6">
