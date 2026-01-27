@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -150,7 +149,7 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
         if (!isOpen) {
             cleanupAndReset();
         }
-        onOpenChange(isOpen); // Propagate to parent to unmount
+        onOpenChange(isOpen);
     };
     
     const handleStartRecording = async () => {
@@ -1168,6 +1167,8 @@ const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void 
 
 
 export default function QAkademiePage() {
+    const router = useRouter();
+    const pathname = usePathname();
     const [activeModule, setActiveModule] = useState(modules[0].name);
     const [activeCourse, setActiveCourse] = useState<any | null>(null);
     const [videos, setVideos] = useState(mockAcademyVideos);
@@ -1184,19 +1185,29 @@ export default function QAkademiePage() {
     });
     
     const setDialogOpen = (dialog: keyof typeof dialogStates, isOpen: boolean) => {
-        // This is a simplified state management. In a real app, you'd want something more robust
-        // especially if multiple dialogs can be stacked. For this case, we close all others.
-        if (isOpen) {
-            const newStates = Object.keys(dialogStates).reduce((acc, key) => {
-                acc[key as keyof typeof dialogStates] = false;
-                return acc;
-            }, {} as typeof dialogStates);
-            newStates[dialog] = true;
-            setDialogStates(newStates);
-        } else {
-             setDialogStates(prev => ({ ...prev, [dialog]: false }));
-        }
+        setDialogStates(prev => ({ ...prev, [dialog]: isOpen }));
     };
+    
+    useEffect(() => {
+        const resetDialogs = () => {
+             setDialogStates({
+                isCreateCourseOpen: false,
+                isCreateLernpfadOpen: false,
+                isRecordingDialogOpen: false,
+                isVideoUploadOpen: false,
+                isWissensbausteinOpen: false,
+                isAddParticipantOpen: false,
+                isCreateDepartmentOpen: false,
+                isCreateRoleOpen: false,
+                isCreateCertificateOpen: false,
+            });
+        };
+        
+        // This is a simplified way to detect navigation.
+        // In a real Next.js app, you might use router events.
+        resetDialogs();
+    }, [pathname]);
+
 
     const renderModule = () => {
         switch (activeModule) {
@@ -1256,21 +1267,16 @@ export default function QAkademiePage() {
                 </div>
             </main>
 
-            {dialogStates.isRecordingDialogOpen && <VideoRecorderDialog open={dialogStates.isRecordingDialogOpen} onOpenChange={(isOpen) => setDialogOpen('isRecordingDialogOpen', isOpen)} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />}
+            <VideoRecorderDialog open={dialogStates.isRecordingDialogOpen} onOpenChange={(isOpen) => setDialogOpen('isRecordingDialogOpen', isOpen)} onVideoSaved={(newVideo) => setVideos(prev => [newVideo, ...prev])} />
             
             <GenericCreateDialog open={dialogStates.isCreateCourseOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCourseOpen', isOpen)} title="Neuen Kurs erstellen" description="Hier wird der Wizard zum Erstellen von neuen Kursen implementiert." />
             <GenericCreateDialog open={dialogStates.isCreateLernpfadOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateLernpfadOpen', isOpen)} title="Neuen Lernpfad erstellen" description="Hier wird der Editor für Lernpfade implementiert." />
             <GenericCreateDialog open={dialogStates.isCreateCertificateOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateCertificateOpen', isOpen)} title="Neues Zertifikat erstellen" description="Hier wird der Editor für Zertifikate implementiert." />
             <GenericCreateDialog open={dialogStates.isAddParticipantOpen} onOpenChange={(isOpen) => setDialogOpen('isAddParticipantOpen', isOpen)} title="Teilnehmer hinzufügen" description="Hier wird die Funktion zum Hinzufügen von Teilnehmern implementiert." />
+            <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title="Abteilung erstellen" description="Hier wird die Funktion zum Erstellen von Abteilungen verwaltet."/>
+            <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title="Rolle erstellen" description="Hier wird die Funktion zum Erstellen von Rollen verwaltet."/>
             <GenericCreateDialog open={dialogStates.isVideoUploadOpen} onOpenChange={(isOpen) => setDialogOpen('isVideoUploadOpen', isOpen)} title="Video hochladen" description="Hier wird die Funktion zum Hochladen von Videos implementiert." />
             <GenericCreateDialog open={dialogStates.isWissensbausteinOpen} onOpenChange={(isOpen) => setDialogOpen('isWissensbausteinOpen', isOpen)} title="Wissensbaustein erstellen" description="Hier wird die Funktion zum Erstellen von Wissensbausteinen implementiert." />
-            
-            {activeModule === 'Abteilungen & Rollen' && (
-                <>
-                <GenericCreateDialog open={dialogStates.isCreateDepartmentOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateDepartmentOpen', isOpen)} title='Abteilung erstellen' description='Hier wird die Funktion zum Erstellen von Abteilungen verwaltet.'/>
-                <GenericCreateDialog open={dialogStates.isCreateRoleOpen} onOpenChange={(isOpen) => setDialogOpen('isCreateRoleOpen', isOpen)} title='Rolle erstellen' description='Hier wird die Funktion zum Erstellen von Rollen verwaltet.'}/>
-                </>
-            )}
         </div>
     );
 }
