@@ -1009,3 +1009,33 @@ export const mockCertificates = [
     { id: 1, title: 'Q-Onboarding abgeschlossen', requirement: 'Q-Onboarding', validity: 'Unbegrenzt', status: 'Erhalten' },
     { id: 2, title: 'DSGVO-Experte', requirement: 'DSGVO-Basisschulung', validity: '12 Monate', status: 'Offen' },
 ];
+
+export const execKpiData = {
+    kpis: [
+        { title: "Umsatz (heute)", value: "€12.5k", icon: "DollarSign", color: "emerald", change: "+5% vs. Gestern" },
+        { title: "Forecast (gewichtet)", value: "€2.1M", icon: "TrendingUp", color: "blue", change: "+2% vs. Vorwoche" },
+        { title: "Offene Risiken", value: "3", icon: "Flame", color: "rose", change: "1 neues seit gestern" },
+        { title: "Prozess-Staus", value: "1", icon: "Workflow", color: "amber", change: "Stage 'Angebot' > 7d" },
+    ],
+    processKpis: [
+        { metric: "Ø Zeit in 'Discovery'", value: "3.2 Tage" },
+        { metric: "Ø Zeit in 'Angebot'", value: "8.1 Tage" },
+        { metric: "Conversion Rate (Lead → Deal)", value: "28%" },
+        { metric: "SLA Breaches (Deals)", value: "2" },
+    ],
+    agentKpis: [
+        { agent: "AVA", actions: 1208, successRate: "99.1%" },
+        { agent: "LEO", actions: 450, successRate: "97.8%" },
+        { agent: "SOPHIE", actions: 210, successRate: "99.5%" },
+        { agent: "NOVA", actions: 350, successRate: "100%" },
+    ],
+    attribution: {
+        dealName: "Innovatech - Q3 Projekt",
+        timeline: [
+            { event: "Social Engagement", channel: "LinkedIn", source: "NOVA", timestamp: "vor 28 Tagen" },
+            { event: "E-Mail Click", channel: "E-Mail", source: "SOPHIE", timestamp: "vor 15 Tagen" },
+            { event: "Lead Created", channel: "Webformular", source: "System", timestamp: "vor 14 Tagen" },
+            { event: "Deal Created", channel: "Manuell", source: "Anna Schmidt", timestamp: "vor 12 Tagen" },
+        ]
+    }
+};

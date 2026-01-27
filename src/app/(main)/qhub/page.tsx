@@ -40,9 +40,13 @@ import {
   Timer,
   AlertCircle,
   ChevronRight,
+  TrendingUp,
+  DollarSign,
+  HeartPulse,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
+import { mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData, processKpiData, agentPerformanceData, attributionData } from '@/lib/data';
 
 
 const modules = [
@@ -60,20 +64,19 @@ const modules = [
     { name: 'Reports', icon: BarChart3 },
 ];
 
-const mockContacts = [
-    { id: 1, name: 'Anna Schmidt', company: 'Innovatech GmbH', email: 'anna.schmidt@innovatech.de', status: 'Lead', owner: 'Leo Sales' },
-    { id: 2, name: 'Ben Weber', company: 'Quantum Solutions', email: 'ben.w@quantum.com', status: 'Kunde', owner: 'Leo Sales' },
+const kpiCards = [
+    { title: "Offene Tickets", value: "32", icon: FileText, color: "blue" },
+    { title: "SLA Breaches", value: "3", icon: AlertCircle, color: "rose" },
+    { title: "Dringende Tickets", value: "7", icon: Flame, color: "amber" },
+    { title: "AVA Antworten heute", value: "89", icon: Bot, color: "emerald" },
 ];
-const mockCompanies = [
-    { id: 1, name: 'Innovatech GmbH', industry: 'Technologie', owner: 'Leo Sales' },
-    { id: 2, name: 'Quantum Solutions', industry: 'Forschung', owner: 'Leo Sales' },
+
+const marketingKpiCards = [
+    { title: "Aktive Nurture-Kontakte", value: "145", icon: Users, color: "purple" },
+    { title: "M → S Übergaben", value: "8", icon: GitBranch, color: "emerald" },
+    { title: "Top Social Engagement", value: "1.2k", icon: Activity, color: "blue" },
+    { title: "Email Performance", value: "42%", icon: BarChart3, color: "amber", subline: "Open Rate" },
 ];
-const mockDeals = [
-    { id: 1, name: 'Innovatech - Q3 Projekt', stage: 'Qualifizierung', value: '25.000€', owner: 'Leo Sales', slaDue: 'in 2 Tagen', inactiveDays: 1, nextStep: 'Anrufen' },
-    { id: 2, name: 'Quantum - Jahreslizenz', stage: 'Verhandlung', value: '50.000€', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 0, nextStep: 'Angebot finalisieren' },
-    { id: 3, name: 'Data Core - Integration', stage: 'Neu', value: '15.000€', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Erstkontakt' },
-];
-const pipelineStages = ['Neu', 'Qualifizierung', 'Präsentation', 'Verhandlung', 'Gewonnen', 'Verloren'];
 
 
 const DashboardView = () => (
@@ -131,82 +134,38 @@ const DashboardView = () => (
                 </CardContent>
             </Card>
         </div>
-         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Offene Tickets</CardTitle>
-                    <FileText className="h-4 w-4 text-blue-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">32</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">SLA Breaches</CardTitle>
-                    <AlertCircle className="h-4 w-4 text-rose-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">3</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Dringende Tickets</CardTitle>
-                    <Flame className="h-4 w-4 text-amber-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">7</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">AVA Antworten heute</CardTitle>
-                    <Bot className="h-4 w-4 text-emerald-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">89</div>
-                </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+           {kpiCards.map(kpi => {
+               const Icon = kpi.icon;
+               return (
+                <Card key={kpi.title} className="p-4 bg-card/50">
+                    <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                        <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                        <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
+                    </CardHeader>
+                    <CardContent className="p-2 pt-0">
+                        <div className="text-2xl font-bold">{kpi.value}</div>
+                    </CardContent>
+                </Card>
+               )
+            })}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Aktive Nurture-Kontakte</CardTitle>
-                    <Users className="h-4 w-4 text-purple-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">145</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">M → S Übergaben</CardTitle>
-                    <GitBranch className="h-4 w-4 text-emerald-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">8</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Top Social Engagement</CardTitle>
-                    <Activity className="h-4 w-4 text-blue-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">1.2k</div>
-                </CardContent>
-            </Card>
-            <Card className="p-4 bg-card/50">
-                <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium">Email Performance</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-amber-400" />
-                </CardHeader>
-                <CardContent className="p-2 pt-0">
-                    <div className="text-2xl font-bold">42%</div>
-                    <p className="text-xs text-muted-foreground">Open Rate</p>
-                </CardContent>
-            </Card>
+             {marketingKpiCards.map(kpi => {
+               const Icon = kpi.icon;
+               return (
+                <Card key={kpi.title} className="p-4 bg-card/50">
+                    <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                        <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                        <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
+                    </CardHeader>
+                    <CardContent className="p-2 pt-0">
+                        <div className="text-2xl font-bold">{kpi.value}</div>
+                         {kpi.subline && <p className="text-xs text-muted-foreground">{kpi.subline}</p>}
+                    </CardContent>
+                </Card>
+               )
+            })}
         </div>
     </div>
 );
@@ -342,6 +301,87 @@ const PipelineView = () => (
     </div>
 );
 
+const ReportsView = () => {
+    const { kpis: execKpis, processKpis, agentKpis, attribution } = execKpiData;
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h2 className="text-2xl font-bold text-foreground">Executive Overview</h2>
+                <p className="text-sm text-muted-foreground">Live-Übersicht der wichtigsten Unternehmens-KPIs.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {execKpis.map(kpi => {
+                    const Icon = {
+                        'DollarSign': DollarSign,
+                        'TrendingUp': TrendingUp,
+                        'Flame': Flame,
+                        'Workflow': Workflow
+                    }[kpi.icon] || Info;
+                     return (
+                        <Card key={kpi.title} className="p-4 bg-card/50">
+                            <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
+                                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                                <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
+                            </CardHeader>
+                            <CardContent className="p-2 pt-0">
+                                <div className="text-2xl font-bold">{kpi.value}</div>
+                                {kpi.change && <p className="text-xs text-muted-foreground">{kpi.change}</p>}
+                            </CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                 <Card>
+                    <CardHeader><CardTitle>Prozess-KPIs (Sales)</CardTitle></CardHeader>
+                    <CardContent>
+                         <Table>
+                            <TableHeader><TableRow><TableHead>Metrik</TableHead><TableHead className="text-right">Wert</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {processKpis.map(kpi => (
+                                    <TableRow key={kpi.metric}><TableCell>{kpi.metric}</TableCell><TableCell className="text-right font-mono">{kpi.value}</TableCell></TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader><CardTitle>KI-Performance</CardTitle></CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader><TableRow><TableHead>Agent</TableHead><TableHead className="text-right">Aktionen</TableHead><TableHead className="text-right">Erfolgsquote</TableHead></TableRow></TableHeader>
+                            <TableBody>
+                                {agentKpis.map(kpi => (
+                                     <TableRow key={kpi.agent}><TableCell>{kpi.agent}</TableCell><TableCell className="text-right font-mono">{kpi.actions}</TableCell><TableCell className="text-right font-mono">{kpi.successRate}</TableCell></TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+             <Card>
+                <CardHeader><CardTitle>Marketing Attribution</CardTitle></CardHeader>
+                <CardContent>
+                    <p className="text-sm font-bold text-foreground">Deal: {attribution.dealName}</p>
+                    <div className="mt-4 space-y-4 relative pl-5 before:absolute before:left-[9px] before:top-0 before:h-full before:w-0.5 before:bg-border">
+                        {attribution.timeline.map((item, index) => (
+                            <div key={index} className="flex items-center gap-4 relative">
+                                <div className="h-5 w-5 rounded-full bg-background border-2 border-primary flex-shrink-0 z-10"></div>
+                                <div>
+                                    <p className="font-bold text-sm">{item.event}</p>
+                                    <p className="text-xs text-muted-foreground">{item.channel} • {item.source} • {item.timestamp}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
+};
+
 const GenericView = ({ title }: { title: string }) => (
     <Card>
         <CardHeader>
@@ -370,7 +410,7 @@ export default function QhubPage() {
             case 'E-Mails': return <GenericView title="E-Mails" />;
             case 'Anrufe': return <GenericView title="Anrufe" />;
             case 'Termine': return <GenericView title="Termine" />;
-            case 'Reports': return <GenericView title="Reports" />;
+            case 'Reports': return <ReportsView />;
             default: return <DashboardView />;
         }
     };
