@@ -474,13 +474,12 @@ export const mockContacts = [
     { id: 5, name: 'Sam Wilson', company: 'Innovate GmbH', email: 'sam.w@innovate.de', leadStatus: 'Kunde', owner: 'Ava Assist', status: 'Aktiv', lastActivity: 'Gestern', priority: 'neutral' }
 ];
 
-export const mockCompanies = [...new Set(mockContacts.map(c => c.company))].map((companyName, index) => ({
-    id: index + 1,
-    name: companyName,
-    industry: 'Technologie', // Placeholder
-    owner: 'Leo Sales', // Placeholder
-    status: 'Aktiv' // Placeholder
-}));
+export const mockCompanies = [
+    { id: 1, name: 'Innovate GmbH', industry: 'Technologie', owner: 'Leo Sales', status: 'Aktiv', aktiveVorgange: '1 Verkaufschance', priority: 'attention' },
+    { id: 2, name: 'Data Corp', industry: 'Datenanalyse', owner: 'Leo Sales', status: 'Aktiv', aktiveVorgange: '1 Verkaufschance', priority: 'attention' },
+    { id: 3, name: 'Tech Solutions', industry: 'IT-Dienstleistungen', owner: 'Ava Assist', status: 'Aktiv', aktiveVorgange: 'Keine', priority: 'neutral' },
+    { id: 4, name: 'Global Exports', industry: 'Handel', owner: 'Ava Assist', status: 'Inaktiv', aktiveVorgange: '1 Servicefall', priority: 'critical' },
+];
 
 
 export const mockDeals = [

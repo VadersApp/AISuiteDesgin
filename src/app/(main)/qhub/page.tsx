@@ -71,14 +71,13 @@ import {
   ChevronRight,
   Timer,
   Workflow,
-  Building,
+  Building2,
   Handshake,
   Kanban,
   Mail,
   Phone,
   TrendingUp,
   DollarSign,
-  GitBranch,
   Ticket,
   CalendarDays,
   Clock,
@@ -105,7 +104,7 @@ const modules = [
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'Termine', icon: CalendarDays },
     { name: 'Kontakte', icon: Users },
-    { name: 'Firmen', icon: Building },
+    { name: 'Firmen', icon: Building2 },
     { name: 'Deals', icon: Handshake },
     { name: 'Pipeline', icon: Kanban },
     { name: 'Aktivitäten', icon: Activity },
@@ -296,8 +295,8 @@ const ContactsView = () => {
 
     const getPriorityClass = (priority: string | undefined) => {
         switch (priority) {
-            case 'critical': return 'bg-rose-500/10 hover:bg-rose-500/20';
-            case 'attention': return 'bg-amber-500/10 hover:bg-amber-500/20';
+            case 'critical': return 'bg-rose-500/5 hover:bg-rose-500/10';
+            case 'attention': return 'bg-amber-500/5 hover:bg-amber-500/10';
             default: return 'hover:bg-muted/50';
         }
     };
@@ -363,34 +362,89 @@ const ContactsView = () => {
 };
 
 const CompaniesView = () => {
+    const [filter, setFilter] = useState('Alle');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredCompanies = useMemo(() => {
+        return mockCompanies.filter(c => {
+            const matchesSearch = searchTerm === '' || c.name.toLowerCase().includes(searchTerm.toLowerCase());
+            if (!matchesSearch) return false;
+
+            switch (filter) {
+                case 'Aktiv':
+                    return c.status === 'Aktiv';
+                case 'Mit Verkaufschancen':
+                    return c.aktiveVorgange.includes('Verkaufschance');
+                case 'Mit Servicefällen':
+                    return c.aktiveVorgange.includes('Servicefall');
+                case 'Alle':
+                default:
+                    return true;
+            }
+        });
+    }, [filter, searchTerm, mockCompanies]);
+
+    const getPriorityClass = (priority?: string) => {
+        switch (priority) {
+            case 'critical': return 'bg-rose-500/5 hover:bg-rose-500/10';
+            case 'attention': return 'bg-amber-500/5 hover:bg-amber-500/10';
+            default: return 'hover:bg-muted/50';
+        }
+    };
+
     return (
-     <Card>
-        <CardHeader>
-            <CardTitle>Firmen</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Firmenname</TableHead>
-                        <TableHead>Branche</TableHead>
-                        <TableHead>Zuständig</TableHead>
-                        <TableHead>Status</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockCompanies.map(c => (
-                        <TableRow key={c.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{c.name}</TableCell>
-                            <TableCell>{c.industry}</TableCell>
-                            <TableCell>{c.owner}</TableCell>
-                            <TableCell><Badge variant="secondary">{c.status}</Badge></TableCell>
+        <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Firmen</CardTitle>
+                        <CardDescription>Alle Unternehmen im System</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Input placeholder="Suchen..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-48 bg-input" />
+                        <Button><Plus className="mr-2 h-4 w-4" /> Firma erstellen</Button>
+                    </div>
+                </div>
+                <div className="pt-4">
+                    <Tabs value={filter} onValueChange={setFilter}>
+                        <TabsList>
+                            <TabsTrigger value="Alle">Alle</TabsTrigger>
+                            <TabsTrigger value="Aktiv">Aktiv</TabsTrigger>
+                            <TabsTrigger value="Mit Verkaufschancen">Mit Verkaufschancen</TabsTrigger>
+                            <TabsTrigger value="Mit Servicefällen">Mit Servicefällen</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Firmenname</TableHead>
+                            <TableHead>Branche</TableHead>
+                            <TableHead>Zuständig</TableHead>
+                            <TableHead>Firma aktiv</TableHead>
+                            <TableHead>Aktive Vorgänge</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredCompanies.map(c => (
+                            <TableRow key={c.id} className={cn("cursor-pointer", getPriorityClass(c.priority))}>
+                                <TableCell className="font-semibold text-foreground">{c.name}</TableCell>
+                                <TableCell className="text-muted-foreground">{c.industry}</TableCell>
+                                <TableCell>{c.owner}</TableCell>
+                                <TableCell>
+                                    <Badge variant={c.status === 'Aktiv' ? 'default' : 'secondary'} className={c.status === 'Aktiv' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}>
+                                        {c.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>{c.aktiveVorgange}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
     );
 };
 
