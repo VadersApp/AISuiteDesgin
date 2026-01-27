@@ -467,8 +467,11 @@ export function getDynamicQalenderBookings() {
 }
 
 export const mockContacts = [
-    { id: 1, name: 'John Doe', company: 'Innovate GmbH', email: 'john.doe@innovate.de', leadStatus: 'Neu', owner: 'Leo Sales', status: 'Aktiv' },
-    { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', leadStatus: 'Qualifiziert', owner: 'Leo Sales', status: 'Aktiv' }
+    { id: 1, name: 'John Doe', company: 'Innovate GmbH', email: 'john.doe@innovate.de', leadStatus: 'Qualifiziert', owner: 'Leo Sales', status: 'Aktiv', lastActivity: 'Heute', priority: 'attention' },
+    { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', leadStatus: 'Kunde', owner: 'Ava Assist', status: 'Aktiv', lastActivity: 'Vor 2 Tagen', priority: 'neutral' },
+    { id: 3, name: 'Peter Jones', company: 'Tech Solutions', email: 'peter.j@tech.io', leadStatus: 'Neu', owner: 'Leo Sales', status: 'Aktiv', lastActivity: 'Vor 5 Tagen', priority: 'neutral' },
+    { id: 4, name: 'Maria Garcia', company: 'Global Exports', email: 'm.garcia@globalexports.com', leadStatus: 'In Betreuung', owner: 'Ava Assist', status: 'Inaktiv', lastActivity: 'Vor 3 Wochen', priority: 'critical' },
+    { id: 5, name: 'Sam Wilson', company: 'Innovate GmbH', email: 'sam.w@innovate.de', leadStatus: 'Kunde', owner: 'Ava Assist', status: 'Aktiv', lastActivity: 'Gestern', priority: 'neutral' }
 ];
 
 export const mockCompanies = [...new Set(mockContacts.map(c => c.company))].map((companyName, index) => ({

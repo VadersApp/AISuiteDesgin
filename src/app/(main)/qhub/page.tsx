@@ -3,7 +3,7 @@
 import { useState, useMemo, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -283,39 +283,84 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
 };
 
 
-const ContactsView = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Kontakte</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Firma</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Lead-Status</TableHead>
-                        <TableHead>Owner</TableHead>
-                        <TableHead>Status</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockContacts.map(c => (
-                        <TableRow key={c.id} className="cursor-pointer">
-                            <TableCell className="font-medium">{c.name}</TableCell>
-                            <TableCell>{c.company}</TableCell>
-                            <TableCell>{c.email}</TableCell>
-                            <TableCell><Badge variant="outline">{c.leadStatus}</Badge></TableCell>
-                            <TableCell>{c.owner}</TableCell>
-                            <TableCell><Badge variant="secondary">{c.status}</Badge></TableCell>
+const ContactsView = () => {
+    const [filter, setFilter] = useState('Alle');
+
+    const filteredContacts = useMemo(() => {
+        if (filter === 'Alle') return mockContacts;
+        if (filter === 'Aktiv') return mockContacts.filter(c => c.status === 'Aktiv');
+        if (filter === 'Mit Handlungsbedarf') return mockContacts.filter(c => c.priority === 'critical' || c.priority === 'attention');
+        if (filter === 'Kunden') return mockContacts.filter(c => c.leadStatus === 'Kunde' || c.leadStatus === 'In Betreuung');
+        return mockContacts;
+    }, [filter]);
+
+    const getPriorityClass = (priority: string | undefined) => {
+        switch (priority) {
+            case 'critical': return 'bg-rose-500/10 hover:bg-rose-500/20';
+            case 'attention': return 'bg-amber-500/10 hover:bg-amber-500/20';
+            default: return 'hover:bg-muted/50';
+        }
+    };
+    
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Kontakte</CardTitle>
+                        <CardDescription>Alle bekannten Personen im System</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Input placeholder="Suchen..." className="w-48 bg-input" />
+                        <Button><Plus className="mr-2 h-4 w-4" /> Kontakt erstellen</Button>
+                    </div>
+                </div>
+                <div className="pt-4">
+                    <Tabs value={filter} onValueChange={setFilter}>
+                        <TabsList>
+                            <TabsTrigger value="Alle">Alle</TabsTrigger>
+                            <TabsTrigger value="Aktiv">Aktiv</TabsTrigger>
+                            <TabsTrigger value="Mit Handlungsbedarf">Mit Handlungsbedarf</TabsTrigger>
+                            <TabsTrigger value="Kunden">Kunden</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Firma</TableHead>
+                            <TableHead>E-Mail</TableHead>
+                            <TableHead>Kontaktphase</TableHead>
+                            <TableHead>Zuständig</TableHead>
+                            <TableHead>Kontakt aktiv</TableHead>
+                            <TableHead>Letzte Aktivität</TableHead>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+                    </TableHeader>
+                    <TableBody>
+                        {filteredContacts.map(c => (
+                            <TableRow key={c.id} className={cn("cursor-pointer", getPriorityClass(c.priority))}>
+                                <TableCell className="font-medium">{c.name}</TableCell>
+                                <TableCell>{c.company}</TableCell>
+                                <TableCell>{c.email}</TableCell>
+                                <TableCell><Badge variant="outline">{c.leadStatus}</Badge></TableCell>
+                                <TableCell>{c.owner}</TableCell>
+                                <TableCell>
+                                    <Badge variant={c.status === 'Aktiv' ? 'default' : 'secondary'} className={c.status === 'Aktiv' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}>
+                                        {c.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>{c.lastActivity}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+};
 
 const CompaniesView = () => {
     return (
@@ -329,7 +374,7 @@ const CompaniesView = () => {
                     <TableRow>
                         <TableHead>Firmenname</TableHead>
                         <TableHead>Branche</TableHead>
-                        <TableHead>Owner</TableHead>
+                        <TableHead>Zuständig</TableHead>
                         <TableHead>Status</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -361,7 +406,7 @@ const DealsView = () => (
                         <TableHead>Deal-Name</TableHead>
                         <TableHead>Phase</TableHead>
                         <TableHead>Wert</TableHead>
-                        <TableHead>Owner</TableHead>
+                        <TableHead>Zuständig</TableHead>
                         <TableHead>SLA-Status</TableHead>
                         <TableHead>Nächster Schritt</TableHead>
                     </TableRow>
