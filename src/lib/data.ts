@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 export const bots = [
@@ -429,12 +429,6 @@ export const eventTypes = [
   { id: 'et-3', name: 'Support-Call 15 Min', slug: 'support-15', description: 'Schnelle Hilfe bei technischen Fragen oder Problemen.', durationMinutes: 15, meetingType: 'phone', active: false },
 ];
 
-export const qalenderBookings = [
-    { bookingId: 'bk-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: '2024-02-10T10:00:00.000Z', assignedOwnerId: 'Leo Sales', status: 'booked' },
-    { bookingId: 'bk-2', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: '2024-02-11T14:30:00.000Z', assignedOwnerId: 'Leo Sales', status: 'booked' },
-    { bookingId: 'bk-3', eventTypeName: 'Erstgespräch 30 Min', guestName: 'John Doe', guestEmail: 'john.d@example.com', startAt: '2024-02-08T09:00:00.000Z', assignedOwnerId: 'Anna M.', status: 'canceled' },
-];
-
 export const qalenderTeams = [
     { id: 'team-1', name: 'Sales Team', slug: 'sales', memberIds: ['LS', 'AM'], routingType: 'round_robin' },
     { id: 'team-2', name: 'Support Team', slug: 'support', memberIds: ['AA', 'TS'], routingType: 'least_busy' },
@@ -442,22 +436,33 @@ export const qalenderTeams = [
 
 export function getDynamicQalenderBookings() {
     const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    tomorrow.setHours(7, 31, 0, 0);
-
-    const dayAfter = new Date(today);
-    dayAfter.setDate(today.getDate() + 2);
-    dayAfter.setHours(10, 0, 0, 0);
-
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    yesterday.setHours(14, 0, 0, 0);
+    const tomorrow = addDays(new Date(), 1);
+    const dayAfter = addDays(new Date(), 2);
+    
+    const overdue = subDays(new Date(), 2);
+    const past = subDays(new Date(), 7);
 
     return [
-        { bookingId: 'bk-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: tomorrow.toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
-        { bookingId: 'bk-2', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: dayAfter.toISOString(), assignedOwnerId: 'Leo Sales', status: 'booked' },
-        { bookingId: 'bk-3', eventTypeName: 'Erstgespräch 30 Min', guestName: 'John Doe', guestEmail: 'john.d@example.com', startAt: yesterday.toISOString(), assignedOwnerId: 'Anna M.', status: 'canceled' },
+        // Today
+        { bookingId: 'bk-today-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: new Date(new Date().setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Interessent', context: 'Verkaufschance #123' },
+        { bookingId: 'bk-today-2', eventTypeName: 'Q-Hub Sync', guestName: 'Anna Schmidt', guestEmail: 'anna.schmidt@qore.com', startAt: new Date(new Date().setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Projekt Phoenix' },
+
+        // Tomorrow
+        { bookingId: 'bk-tomorrow-1', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: new Date(tomorrow.setHours(11, 30, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Kunde', context: 'Deal #456' },
+
+        // This Week
+        { bookingId: 'bk-week-1', eventTypeName: 'Support-Call 15 Min', guestName: 'Ben Weber', guestEmail: 'ben.weber@qore.com', startAt: new Date(addDays(new Date(),3).setHours(15, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'bestätigt', role: 'Intern', context: 'Ticket #9981' },
+        
+        // Later
+        { bookingId: 'bk-later-1', eventTypeName: 'Strategie-Session', guestName: 'Management Team', guestEmail: '-', startAt: new Date(addDays(new Date(), 14).setHours(9, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Q2 Planung' },
+
+        // Critical / Open
+        { bookingId: 'bk-overdue-1', eventTypeName: 'Follow-Up Call', guestName: 'Peter Panik', guestEmail: 'peter.panik@alt.com', startAt: new Date(overdue.setHours(16, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'überfällig', role: 'Interessent', context: 'Verkaufschance #098' },
+        { bookingId: 'bk-unconfirmed-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Wanda Warter', guestEmail: 'wanda.warter@mail.com', startAt: new Date(dayAfter.setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'unbestätigt', role: 'Interessent', context: 'Verkaufschance #111' },
+        { bookingId: 'bk-no-result-1', eventTypeName: 'Kundenfeedback', guestName: 'Zufrieden GmbH', guestEmail: 'kontakt@zufrieden.de', startAt: new Date(overdue.setHours(11, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'ohne Ergebnis', role: 'Kunde', context: 'Ticket #887' },
+
+        // Past
+        { bookingId: 'bk-past-1', eventTypeName: 'Kick-Off Projekt Phoenix', guestName: 'Projektteam', guestEmail: '-', startAt: new Date(past.setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'erledigt', role: 'Intern', context: 'Projekt Phoenix' },
     ];
 }
 
@@ -1129,20 +1134,20 @@ export const processTemplate_leadRoutingV1 = {
     { from: "routed", to: "failed", onEventTypes: ["process.error"] }
   ],
   actions: [
-    { atState: "new", actionType: "enqueue_enrichment", config: { mode: "rules_basic" } },
-    { atState: "enriched", actionType: "run_qualification_rules", config: { decisionKey: "route_lead" } },
-    { atState: "routed", actionType: "execute_routing_actions", config: { createDealOnSales: true } }
+    { atState: "new",          "actionType": "enqueue_enrichment",       "config": { "mode": "rules_basic" } },
+    { atState: "enriched",     "actionType": "run_qualification_rules", "config": { "decisionKey": "route_lead" } },
+    { atState: "routed",       "actionType": "execute_routing_actions", "config": { "createDealOnSales": true } }
   ]
 };
 
 export const leadRoutingPolicy = {
   thresholds: { sales: 65, nurture: 35 },
-  freemailDomains: ["gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "gmx.de", "web.de"],
-  negativeKeywords: ["bewerbung", "job", "praktikum", "spam"],
-  buyIntentKeywords: ["angebot", "preis", "demo", "beratung", "start", "sofort", "termin"],
-  topicKeywords: ["automatisierung", "ki", "prozess", "sales", "marketing"],
+  freemailDomains: ["gmail.com","outlook.com","hotmail.com","yahoo.com","gmx.de","web.de"],
+  negativeKeywords: ["bewerbung","job","praktikum","spam"],
+  buyIntentKeywords: ["angebot","preis","demo","beratung","start","sofort","termin"],
+  topicKeywords: ["automatisierung","ki","prozess","sales","marketing"],
   blacklistDomains: [],
-  targetCountries: ["DE", "AT", "CH"],
+  targetCountries: ["DE","AT","CH"],
   targetIndustries: []
 };
 

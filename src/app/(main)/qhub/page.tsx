@@ -31,7 +31,8 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
   LayoutDashboard,
   FileText,
@@ -78,10 +79,13 @@ import {
   TrendingUp,
   DollarSign,
   GitBranch,
+  Ticket,
+  CalendarDays,
+  Clock,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockCompanies, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -98,6 +102,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const modules = [
     { name: 'Dashboard', icon: LayoutDashboard },
+    { name: 'Termine', icon: CalendarDays },
     { name: 'Kontakte', icon: Users },
     { name: 'Firmen', icon: Building },
     { name: 'Deals', icon: Handshake },
@@ -107,7 +112,6 @@ const modules = [
     { name: 'Notizen', icon: FileText },
     { name: 'E-Mails', icon: Mail },
     { name: 'Anrufe', icon: Phone },
-    { name: 'Termine', icon: CalendarIcon },
     { name: 'Reports', icon: BarChart3 },
 ];
 
@@ -122,10 +126,10 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
 
     // ZONE B Data
     const handlungsbedarfData = [
-        { title: "Eskalationen aktiv", value: 2, icon: Flame, color: 'rose', tooltip: "Erfordert sofortige Prüfung" },
-        { title: 'Entscheidungen offen', value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
-        { title: "Laufende Prozesse", value: 18, icon: Workflow, color: 'blue', tooltip: "Automatisierungen in Bearbeitung" },
-        { title: "KI-Aktionen heute", value: 128, icon: BotIcon, color: 'emerald', tooltip: "Durch KI-Mitarbeiter ausgeführt" },
+      { title: "Eskalationen aktiv", value: 2, icon: Flame, color: 'rose', tooltip: "Erfordert sofortige Prüfung" },
+      { title: "Entscheidungen offen", value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
+      { title: "Laufende Prozesse", value: 18, icon: Workflow, color: 'blue', tooltip: "Automatisierungen in Bearbeitung" },
+      { title: "KI-Aktionen heute", value: 128, icon: BotIcon, color: 'emerald', tooltip: "Durch KI-Mitarbeiter ausgeführt" },
     ];
 
     // ZONE C Data
@@ -292,7 +296,7 @@ const ContactsView = () => (
                         <TableHead>Email</TableHead>
                         <TableHead>Lead-Status</TableHead>
                         <TableHead>Owner</TableHead>
-                         <TableHead>Status</TableHead>
+                        <TableHead>Status</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -368,7 +372,7 @@ const DealsView = () => (
                             <TableCell><Badge variant="secondary">{d.stage}</Badge></TableCell>
                             <TableCell>{d.value}</TableCell>
                             <TableCell>{d.owner}</TableCell>
-                            <TableCell><Badge variant="outline" className={d.slaDue === 'heute' ? 'border-rose-500/50 text-rose-400' : ''}>{d.slaDue}</Badge></TableCell>
+                             <TableCell><Badge variant="outline" className={d.slaDue === 'heute' ? 'border-rose-500/50 text-rose-400' : ''}>{d.slaDue || 'im Plan'}</Badge></TableCell>
                             <TableCell className="text-xs">{d.nextStep}</TableCell>
                         </TableRow>
                     ))}
@@ -531,6 +535,137 @@ const ReportsView = () => {
     )
 };
 
+const TerminboardView = () => {
+    const allBookings = useMemo(() => getDynamicQalenderBookings().map(b => ({ ...b, date: new Date(b.startAt) })), []);
+
+    const todayBookings = useMemo(() => allBookings.filter(b => isToday(b.date)), [allBookings]);
+    const nextBooking = useMemo(() => todayBookings.filter(b => isFuture(b.date)).sort((a, b) => a.date.getTime() - b.date.getTime())[0], [todayBookings]);
+    const customerBookingsToday = useMemo(() => todayBookings.filter(b => b.role === 'Kunde' || b.role === 'Interessent').length, [todayBookings]);
+
+    const upcomingBookings = useMemo(() => {
+        const tomorrow = addDays(new Date(), 1);
+        const endOfThisWeek = endOfWeek(new Date(), { weekStartsOn: 1 });
+
+        return {
+            heute: todayBookings.sort((a, b) => a.date.getTime() - b.date.getTime()),
+            morgen: allBookings.filter(b => isTomorrow(b.date)).sort((a, b) => a.date.getTime() - b.date.getTime()),
+            dieseWoche: allBookings.filter(b => isFuture(b.date) && !isToday(b.date) && !isTomorrow(b.date) && isWithinInterval(b.date, { start: new Date(), end: endOfThisWeek })).sort((a, b) => a.date.getTime() - b.date.getTime()),
+            spaeter: allBookings.filter(b => isFuture(b.date) && !isWithinInterval(b.date, { start: new Date(), end: endOfThisWeek })).sort((a, b) => a.date.getTime() - b.date.getTime()),
+        }
+    }, [allBookings, todayBookings]);
+
+    const criticalBookings = useMemo(() => allBookings.filter(b => b.status === 'überfällig' || b.status === 'unbestätigt' || b.status === 'ohne Ergebnis'), [allBookings]);
+    const pastBookings = useMemo(() => allBookings.filter(b => isPast(b.date) && b.status === 'erledigt'), [allBookings]);
+
+    const contextIcons: { [key: string]: React.ElementType } = {
+        Verkaufschance: DollarSign,
+        Ticket: Ticket,
+        Projekt: Briefcase,
+    };
+    
+    const getRoleBadgeColor = (role: string) => {
+        switch(role) {
+            case 'Kunde': return 'bg-emerald-500/10 text-emerald-400';
+            case 'Interessent': return 'bg-blue-500/10 text-blue-400';
+            case 'Intern': return 'bg-slate-500/10 text-slate-400';
+            default: return 'bg-muted';
+        }
+    }
+    
+    const getStatusColorClass = (status: string) => {
+        if (status === 'überfällig') return 'border-rose-500 text-rose-400';
+        if (status === 'unbestätigt' || status === 'ohne Ergebnis') return 'border-amber-500 text-amber-400';
+        return 'border-border';
+    }
+
+
+    const renderBookingCard = (booking: any) => {
+        const ContextIcon = contextIcons[booking.context.split(' ')[0]] || Briefcase;
+        return (
+            <Card key={booking.bookingId} className="p-4">
+                <p className="font-bold text-sm text-foreground">{booking.eventTypeName}</p>
+                <p className="text-sm text-muted-foreground">{booking.guestName}</p>
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border text-xs">
+                     <div className="flex items-center gap-4">
+                        <Badge variant="outline" className={cn("capitalize", getRoleBadgeColor(booking.role))}>{booking.role}</Badge>
+                        <span className="text-muted-foreground flex items-center gap-1.5"><ContextIcon className="w-3 h-3" /> {booking.context}</span>
+                     </div>
+                     <span className="font-mono text-muted-foreground">{format(booking.date, 'HH:mm')} Uhr</span>
+                </div>
+            </Card>
+        )
+    };
+    
+     const renderBookingGroup = (title: string, bookings: any[]) => {
+        if (bookings.length === 0) return null;
+        return (
+            <div key={title}>
+                <h3 className="text-sm font-bold text-muted-foreground my-4">{title}</h3>
+                <div className="space-y-3">
+                    {bookings.map(renderBookingCard)}
+                </div>
+            </div>
+        );
+    };
+
+
+    return (
+         <div className="space-y-8">
+            {/* ZONE A */}
+            <div>
+                <h2 className="text-xl font-bold text-foreground mb-4">Tagesüberblick</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="p-4"><CardHeader className="p-0"><CardTitle className="text-sm">Termine heute</CardTitle></CardHeader><CardContent className="p-0 pt-2"><p className="text-3xl font-bold">{todayBookings.length}</p></CardContent></Card>
+                    <Card className="p-4"><CardHeader className="p-0"><CardTitle className="text-sm">Nächster Termin</CardTitle></CardHeader><CardContent className="p-0 pt-2"><p className="text-3xl font-bold">{nextBooking ? format(nextBooking.date, 'HH:mm') : '---'}</p><p className="text-xs text-muted-foreground truncate">{nextBooking?.eventTypeName || 'Keine anstehenden Termine'}</p></CardContent></Card>
+                    <Card className="p-4"><CardHeader className="p-0"><CardTitle className="text-sm">Termine mit Kunden</CardTitle></CardHeader><CardContent className="p-0 pt-2"><p className="text-3xl font-bold">{customerBookingsToday}</p></CardContent></Card>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* ZONE B */}
+                <div className="lg:col-span-2 space-y-2">
+                     <h2 className="text-xl font-bold text-foreground">Nächste Termine</h2>
+                    {renderBookingGroup('Heute', upcomingBookings.heute)}
+                    {renderBookingGroup('Morgen', upcomingBookings.morgen)}
+                    {renderBookingGroup('Diese Woche', upcomingBookings.dieseWoche)}
+                    {renderBookingGroup('Später', upcomingBookings.spaeter)}
+                </div>
+                {/* ZONE C & D */}
+                <div className="space-y-6">
+                     <div>
+                        <h2 className="text-xl font-bold text-foreground mb-4">Offene / kritische Termine</h2>
+                        <div className="space-y-3">
+                             {criticalBookings.length > 0 ? criticalBookings.map(b => (
+                                <Card key={b.bookingId} className={cn("p-3 border-l-4", getStatusColorClass(b.status))}>
+                                    <p className="font-bold text-xs">{b.eventTypeName}</p>
+                                    <p className="text-xs text-muted-foreground">{b.guestName} • {format(b.date, 'dd.MM.yy HH:mm')}</p>
+                                     <Badge variant="outline" className="capitalize mt-2 text-xs">{b.status.replace('_', ' ')}</Badge>
+                                </Card>
+                             )) : <p className="text-sm text-muted-foreground italic">Keine kritischen Termine.</p>}
+                        </div>
+                    </div>
+                     <Collapsible>
+                        <CollapsibleTrigger asChild>
+                            <Button variant="outline" className="w-full">
+                                <History className="mr-2 h-4 w-4" />
+                                Vergangene Termine anzeigen
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-4 space-y-3">
+                              {pastBookings.length > 0 ? pastBookings.map(b => (
+                                <Card key={b.bookingId} className="p-3 bg-muted/50">
+                                    <p className="font-bold text-xs text-muted-foreground">{b.eventTypeName}</p>
+                                    <p className="text-xs text-muted-foreground/70">{b.guestName} • {format(b.date, 'dd.MM.yyyy')}</p>
+                                </Card>
+                             )) : <p className="text-sm text-muted-foreground italic text-center py-4">Keine vergangenen Termine.</p>}
+                        </CollapsibleContent>
+                    </Collapsible>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 const GenericView = ({ title }: { title: string }) => (
     <Card>
         <CardHeader>
@@ -541,153 +676,6 @@ const GenericView = ({ title }: { title: string }) => (
         </CardContent>
     </Card>
 );
-
-const SystemAdminView = () => {
-    const adminTabs = [
-        { value: 'overview', label: 'Übersicht' },
-        { value: 'users', label: 'Benutzer' },
-        { value: 'teams-depts', label: 'Teams & Bereiche' },
-        { value: 'roles-rights', label: 'Rollen & Rechte' },
-        { value: 'feature-flags', label: 'Feature Flags'},
-        { value: 'kpi-policies', label: 'KPI-Richtlinien' },
-        { value: 'security', label: 'Sicherheit' },
-        { value: 'system-health', label: 'Systemzustand' },
-    ];
-    return (
-        <div>
-            <header className="mb-6">
-                <h2 className="text-xl font-bold text-foreground">System Admin (Q-Hub)</h2>
-                <p className="text-sm text-muted-foreground">Administrative Steuerung von Q-Hub.</p>
-            </header>
-            <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="mb-4 flex-wrap h-auto justify-start">
-                    {adminTabs.map(tab => (
-                        <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
-                    ))}
-                </TabsList>
-
-                <TabsContent value="overview">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card><CardHeader><CardTitle>Aktive Nutzer</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{kpiMitarbeiter.length}</p></CardContent></Card>
-                        <Card><CardHeader><CardTitle>Teams</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.team))].length}</p></CardContent></Card>
-                        <Card><CardHeader><CardTitle>Bereiche</CardTitle></CardHeader><CardContent><p className="text-4xl font-bold">{[...new Set(kpiMitarbeiter.map(m=>m.abteilung))].length}</p></CardContent></Card>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="users">
-                    <Card>
-                        <CardHeader><CardTitle>Benutzerverwaltung</CardTitle></CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Rolle</TableHead><TableHead>Team</TableHead><TableHead>Bereich</TableHead><TableHead>Aktiv</TableHead></TableRow></TableHeader>
-                                <TableBody>
-                                    {kpiMitarbeiter.map(user => (
-                                        <TableRow key={user.id}>
-                                            <TableCell>{user.name}</TableCell>
-                                            <TableCell><Select defaultValue={user.role}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Mitarbeiter">Mitarbeiter</SelectItem><SelectItem value="Teamleiter">Teamleiter</SelectItem></SelectContent></Select></TableCell>
-                                            <TableCell><Select defaultValue={user.team}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Core-Backend">Core-Backend</SelectItem><SelectItem value="Enterprise">Enterprise</SelectItem></SelectContent></Select></TableCell>
-                                            <TableCell><Select defaultValue={user.abteilung}><SelectTrigger className="w-40 bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="IT">IT</SelectItem><SelectItem value="Vertrieb">Vertrieb</SelectItem></SelectContent></Select></TableCell>
-                                            <TableCell><Switch defaultChecked={true} /></TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="teams-depts">
-                    <div className="grid grid-cols-2 gap-6">
-                        <Card><CardHeader><CardTitle>Bereiche</CardTitle><Button size="sm" className="mt-2">Neuer Bereich</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Bereiche...</p></CardContent></Card>
-                        <Card><CardHeader><CardTitle>Teams</CardTitle><Button size="sm" className="mt-2">Neues Team</Button></CardHeader><CardContent><p className="text-muted-foreground italic">Liste der Teams...</p></CardContent></Card>
-                    </div>
-                </TabsContent>
-
-                 <TabsContent value="roles-rights">
-                    <Card><CardHeader><CardTitle>Rollen & Rechte (Read-only)</CardTitle></CardHeader>
-                        <CardContent><p className="text-muted-foreground">Hier würde eine schreibgeschützte Übersicht der Berechtigungen pro Rolle angezeigt.</p></CardContent>
-                    </Card>
-                </TabsContent>
-                
-                 <TabsContent value="feature-flags">
-                    <Card>
-                        <CardHeader>
-                          <CardTitle>Feature Flags &amp; Systemsteuerung</CardTitle>
-                          <CardDescription>Aktivieren oder deaktivieren Sie Q-Hub-Module.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <Alert variant="destructive">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Globaler System-Schalter</AlertTitle>
-                                <AlertDescription>
-                                    <div className="flex items-center justify-between mt-2">
-                                        <div>
-                                            <p className="font-bold">Q-Hub Subsystem aktivieren</p>
-                                            <p className="text-xs">Deaktivieren stoppt alle Q-Hub Prozesse sofort.</p>
-                                        </div>
-                                        <Switch defaultChecked={true} />
-                                    </div>
-                                </AlertDescription>
-                            </Alert>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {Object.entries(featureFlags).filter(([key]) => key !== 'qhubEnabled').map(([key, value]) => (
-                                     <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
-                                        <Label htmlFor={key} className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</Label>
-                                        <Switch id={key} defaultChecked={value as boolean} />
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-                
-                <TabsContent value="kpi-policies">
-                    <Card>
-                        <CardHeader><CardTitle>KPI-Richtlinien</CardTitle><p className="text-sm text-muted-foreground">Nur für `exec` Rolle sichtbar/bearbeitbar.</p></CardHeader>
-                        <CardContent className="space-y-4">
-                           <div className="grid grid-cols-3 gap-4">
-                                <div><Label>OK-Schwelle (≥)</Label><Input type="number" defaultValue="90" className="bg-input"/></div>
-                                <div><Label>Beobachtungs-Schwelle (≥)</Label><Input type="number" defaultValue="80" className="bg-input"/></div>
-                                <div><Label>Eskalations-Schwelle (&lt;)</Label><Input type="number" defaultValue="70" className="bg-input"/></div>
-                           </div>
-                           <h4 className="font-bold">Abzugsparameter</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                <div><Label>Überfällig</Label><Input type="number" defaultValue="2" className="bg-input"/></div>
-                                <div><Label>Verspätet</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
-                                <div><Label>Blockiert</Label><Input type="number" defaultValue="1" className="bg-input"/></div>
-                                <div><Label>Abweichung Arbeitsanweisung</Label><Input type="number" defaultValue="3" className="bg-input"/></div>
-                                <div><Label>Projektverzug</Label><Input type="number" defaultValue="4" className="bg-input"/></div>
-                           </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                <TabsContent value="security">
-                     <Card>
-                        <CardHeader><CardTitle>Sicherheit</CardTitle></CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-2 gap-4">
-                                <Card className="p-4"><h4 className="font-bold">Rollenverteilung</h4><p>5 Mitarbeiter, 2 Teamleiter...</p></Card>
-                                <Card className="p-4"><h4 className="font-bold">Letztes Audit-Event</h4><p>Nutzer `space_admin` hat Rolle von `Ben Weber` geändert.</p></Card>
-                            </div>
-                        </CardContent>
-                     </Card>
-                </TabsContent>
-
-                 <TabsContent value="system-health">
-                     <Card>
-                        <CardHeader><CardTitle>Systemzustand</CardTitle></CardHeader>
-                        <CardContent className="grid grid-cols-3 gap-4">
-                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">KPI Engine</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
-                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Eskalations-Service</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
-                            <Card className="p-4 flex justify-between items-center"><p className="font-bold">Datenkonsistenz</p><Badge className="bg-emerald-500/20 text-emerald-400">OK</Badge></Card>
-                        </CardContent>
-                     </Card>
-                </TabsContent>
-            </Tabs>
-        </div>
-    );
-}
 
 export default function QhubPage() {
   const [activeModule, setActiveModule] = useState(modules[0].name);
@@ -709,6 +697,7 @@ export default function QhubPage() {
   const renderModule = () => {
       switch (activeModule) {
           case 'Dashboard': return <DashboardView currentUser={currentUser} filteredKpiMitarbeiter={kpiMitarbeiter} filteredChatThreads={chatThreads} filteredTasks={mockTasks} />;
+          case 'Termine': return <TerminboardView />;
           case 'Kontakte': return <ContactsView />;
           case 'Firmen': return <CompaniesView />;
           case 'Deals': return <DealsView />;
@@ -754,8 +743,8 @@ export default function QhubPage() {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input type="text" placeholder="Kontakte, Firmen, Deals durchsuchen..." className="pl-9 bg-input" />
                 </div>
-                <div className="flex items-center gap-3">
-                    {isClient && <DropdownMenu>
+                 {isClient && <div className="flex items-center gap-3">
+                    <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                            <Button>
                                 <Plus className="mr-2 h-4 w-4" />
@@ -769,8 +758,8 @@ export default function QhubPage() {
                             <DropdownMenuItem>Neue Aufgabe</DropdownMenuItem>
                             <DropdownMenuItem>Neue Notiz</DropdownMenuItem>
                         </DropdownMenuContent>
-                    </DropdownMenu>}
-                </div>
+                    </DropdownMenu>
+                </div>}
             </header>
             <div className="animate-in fade-in duration-300">
                 {renderModule()}
