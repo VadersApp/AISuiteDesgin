@@ -1,6 +1,8 @@
 
+
 import { formatDistanceToNow, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { PhoneCall, UserCheck, CalendarPlus, Percent, MailQuestion, AlertTriangle, Flame } from 'lucide-react';
 
 export const bots = [
     { name: 'Ava Assist', id: 'ava', role: 'Support-Spezialistin', desc: 'Beantwortet Kundenanfragen und managt Tickets basierend auf der FAQ.', tasksCount: 14, timeSaved: '142h', kpis: [{ label: 'Zufriedenh.', value: '98%', icon: 'star' }, { label: 'Tickets', value: '1.2k', icon: 'message-square' }, { label: 'Response', value: '0.8s', icon: 'clock' }], currentActivity: 'Analysiert aktuell 14 offene Tickets in der Warteschlange.', lastAction: { desc: 'Beschwerde #8291 erfolgreich gelöst.', time: 'Vor 12 Minuten' }, complianceNote: 'DSGVO konform. Datenanonymisierung aktiv.', focusReports: [{ date: 'HEUTE', title: 'Sentiment Q1', content: 'Kundenzufriedenheit um 14% gestiegen.', type: 'Performance' }] },
@@ -286,6 +288,30 @@ export const workflows = [
     }
 ];
 
+export const salesKpiGroups = {
+    aktivitaet: {
+        title: 'Aktivität',
+        kpis: [
+            { title: 'Anrufe heute', value: '34', icon: PhoneCall },
+            { title: 'Erreichte Leads', value: '12', icon: UserCheck },
+        ]
+    },
+    output: {
+        title: 'Output',
+        kpis: [
+            { title: 'Termine gelegt', value: '3', icon: CalendarPlus },
+            { title: 'Abschlussquote', value: '25%', icon: Percent },
+        ]
+    },
+    risiko: {
+        title: 'Risiko',
+        kpis: [
+            { title: 'Offene Follow-ups', value: '8', icon: MailQuestion },
+            { title: 'Eskalationen', value: '1', icon: Flame },
+        ]
+    }
+};
+
 export const qsalesLeads = [
   {
     id: 'lead-001',
@@ -308,10 +334,15 @@ export const qsalesLeads = [
     notes: [
       { date: '14.01.2024', text: 'Erster Versuch. Mailbox.' },
     ],
+    kiHint: 'Hohes Interesse an Prozessautomatisierung.',
     aiRecommendation: {
       nextStatus: 'Kontaktiert',
       bestTime: 'Morgen, 10-12 Uhr',
       probability: 75,
+      probabilityLabel: 'Hoch',
+      bedarf: 'Sucht nach einer Lösung zur Automatisierung wiederkehrender Vertriebsaufgaben.',
+      einwaende: ['Implementierungsaufwand', 'Kosten im Vergleich zu manuellem Aufwand'],
+      gespraechseinstieg: 'Ich habe gesehen, Sie suchen nach Wegen, Ihre Vertriebsprozesse zu optimieren. Wäre jetzt ein guter Zeitpunkt für ein kurzes Gespräch dazu?',
     }
   },
   {
@@ -335,19 +366,24 @@ export const qsalesLeads = [
     notes: [
       { date: '11.01.2024', text: 'Gutes Gespräch, Interesse an Produkt B. Follow-up mit Details senden.' },
     ],
+    kiHint: 'Positives Gespräch, wartet auf Detail-Informationen.',
     aiRecommendation: {
       nextStatus: 'Termin gelegt',
       bestTime: 'Jetzt',
       probability: 85,
+      probabilityLabel: 'Sehr hoch',
+      bedarf: 'Benötigt eine Lösung für Datenanalyse in Echtzeit. Hat konkrete Anwendungsfälle genannt.',
+      einwaende: ['Integration mit bestehendem BI-Tool (Tableau)'],
+      gespraechseinstieg: 'Hallo Herr Weber, hier ist [Ihr Name]. Wie besprochen, komme ich auf Sie zu, um die Details für die Echtzeit-Analyse zu klären.',
     }
   },
-  {
+    {
     id: 'lead-003',
     name: 'Julia Richter',
     company: 'NextGen Robotics',
     status: 'Kontaktiert',
     lastActivity: 'Heute',
-    nextAction: 'In 2 Tagen',
+    nextAction: 'Überfällig',
     priority: 'Mittel',
     agent: 'Leo Sales',
     agentAvatar: 'LS',
@@ -362,66 +398,17 @@ export const qsalesLeads = [
     notes: [
       { date: '15.01.2024', text: 'Info-Mail ist raus, möchte sich melden.' },
     ],
+    kiHint: 'Wartet auf proaktive Meldung vom Lead.',
     aiRecommendation: {
       nextStatus: 'Follow-up geplant',
       bestTime: 'Nachmittag',
       probability: 60,
+      probabilityLabel: 'Mittel',
+      bedarf: 'Allgemeines Interesse an KI-gestützter Robotik-Steuerung, aber noch unkonkret.',
+      einwaende: ['Noch in früher Evaluierungsphase', 'Vergleich mit Wettbewerbern steht an.'],
+      gespraechseinstieg: 'Hallo Frau Richter, ich wollte nachhaken, ob meine Informations-Mail gut bei Ihnen angekommen ist und ob sich bereits konkretere Fragen ergeben haben.',
     }
   },
-    {
-    id: 'lead-004',
-    name: 'Tom Bauer',
-    company: 'Data-Sphere AG',
-    status: 'Termin gelegt',
-    lastActivity: 'Gestern',
-    nextAction: '20.01. 11:00',
-    priority: 'Mittel',
-    agent: 'Leo Sales',
-    agentAvatar: 'LS',
-     profile: {
-      email: 't.bauer@data-sphere.de',
-      phone: '+49 179 55667788',
-      source: 'Kaltakquise',
-    },
-    callHistory: [
-       { date: '14.01.2024', result: 'Termin vereinbart', duration: '5:30' },
-    ],
-    notes: [
-      { date: '14.01.2024', text: 'Demo für den 20.01. terminiert. Einladung ist raus.' },
-    ],
-    aiRecommendation: {
-      nextStatus: 'Abschlussbereit',
-      bestTime: 'Während des Termins',
-      probability: 90,
-    }
-  },
-   {
-    id: 'lead-005',
-    name: 'Sophie Lang',
-    company: 'Cloudnomads',
-    status: 'Verloren',
-    lastActivity: 'Vor 1 Woche',
-    nextAction: '-',
-    priority: 'Niedrig',
-    agent: 'Leo Sales',
-    agentAvatar: 'LS',
-     profile: {
-      email: 'sophie@cloudnomads.com',
-      phone: '+49 152 44332211',
-      source: 'Empfehlung',
-    },
-    callHistory: [
-       { date: '08.01.2024', result: 'Absage', duration: '3:05' },
-    ],
-    notes: [
-      { date: '08.01.2024', text: 'Kein Budget für Q1. Evtl. in Q2 erneut versuchen.' },
-    ],
-    aiRecommendation: {
-      nextStatus: '-',
-      bestTime: 'Nächstes Quartal',
-      probability: 20,
-    }
-  }
 ];
 
 export const eventTypes = [

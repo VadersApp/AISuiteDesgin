@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -18,7 +18,6 @@ import {
   Percent,
   MailQuestion,
   Search,
-  ChevronDown,
   Activity,
   Phone,
   MailCheck,
@@ -35,40 +34,30 @@ import {
   History,
   X,
   Bot,
-  Info
+  Info,
+  ChevronDown,
+  GitBranch,
+  Workflow,
+  AlertTriangle,
+  TrendingUp,
+  Clock,
+  Briefcase
 } from 'lucide-react';
-import { qsalesLeads as allLeads } from '@/lib/data';
+import { qsalesLeads as allLeads, salesKpiGroups } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 
-const kpis = [
-  { title: 'Anrufe heute', value: '34', icon: PhoneCall },
-  { title: 'Erreichte Leads', value: '12', icon: UserCheck },
-  { title: 'Termine gelegt', value: '3', icon: CalendarPlus },
-  { title: 'Abschlussquote', value: '25%', icon: Percent },
-  { title: 'Offene Follow-ups', value: '8', icon: MailQuestion },
+const actionViews = [
+  { name: '🔥 Jetzt anrufen', slug: 'call-now' },
+  { name: '📅 Heute geplant', slug: 'due-today' },
+  { name: '🧠 KI-priorisiert', slug: 'ai-priority' },
+  { name: '🔁 Follow-ups', slug: 'follow-up' },
+  { name: '✅ Abgeschlossen', slug: 'done' },
+  { name: '❌ Kein Interesse', slug: 'lost' },
 ];
-
-const views = [
-  { name: 'Aktive Leads', icon: Activity },
-  { name: 'Heute anrufen', icon: Phone },
-  { name: 'Follow-ups', icon: MailCheck },
-  { name: 'Termine gelegt', icon: Calendar },
-  { name: 'Abgeschlossen', icon: CheckCircle2 },
-  { name: 'Verloren / Kein Interesse', icon: XCircle },
-  { name: 'KI-empfohlen', icon: Sparkles },
-  { name: 'Priorisiert', icon: Flame },
-];
-
-const statusColors: { [key: string]: string } = {
-  Neu: 'bg-blue-500/20 text-blue-400',
-  Kontaktiert: 'bg-amber-500/20 text-amber-400',
-  'Follow-up geplant': 'bg-purple-500/20 text-purple-400',
-  'Termin gelegt': 'bg-emerald-500/20 text-emerald-400',
-  Verloren: 'bg-rose-500/20 text-rose-400',
-};
 
 const priorityColors: { [key: string]: string } = {
   Hoch: 'border-rose-500/50 text-rose-400',
@@ -76,32 +65,81 @@ const priorityColors: { [key: string]: string } = {
   Niedrig: 'border-slate-500/50 text-slate-400',
 };
 
+const statusColors: { [key: string]: string } = {
+  Neu: 'bg-blue-500/20 text-blue-400',
+  Kontaktiert: 'bg-amber-500/20 text-amber-400',
+  'Follow-up geplant': 'bg-purple-500/20 text-purple-400',
+  'Termin gelegt': 'bg-emerald-500/20 text-emerald-400',
+  Abgeschlossen: 'bg-slate-500/20 text-slate-400',
+  Verloren: 'bg-rose-500/20 text-rose-400',
+};
+
 type Lead = (typeof allLeads)[0];
 
+const probabilityLabelColors: {[key: string]: string} = {
+    'Sehr hoch': 'text-emerald-400',
+    'Hoch': 'text-emerald-500',
+    'Mittel': 'text-amber-400',
+    'Niedrig': 'text-rose-400',
+}
+
+const SalesFocusHeader = ({ leads, onLeadSelect }: { leads: Lead[], onLeadSelect: (lead: Lead | null) => void }) => {
+    const top3Leads = [...leads].sort((a,b) => b.aiRecommendation.probability - a.aiRecommendation.probability).slice(0,3);
+    const overdueLeads = leads.filter(l => l.nextAction.includes('Überfällig'));
+    const todayAppointments = leads.filter(l => l.nextAction.includes('Heute') && l.status === 'Termin gelegt');
+
+    return (
+        <Card className="p-4 sticky top-4 z-20 bg-background/80 backdrop-blur-lg">
+             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Dein heutiger Sales-Fokus</h3>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                 <div className="space-y-2">
+                     <p className="text-xs font-bold text-foreground flex items-center gap-2"><Flame className="w-4 h-4 text-rose-400"/>Top 3 Leads</p>
+                     {top3Leads.map(lead => (
+                         <Button key={lead.id} variant="ghost" className="w-full justify-start h-auto py-1 px-2 text-left" onClick={() => onLeadSelect(lead)}>
+                             {lead.name} <span className="text-muted-foreground ml-auto text-xs">{lead.aiRecommendation.probability}%</span>
+                         </Button>
+                     ))}
+                 </div>
+                 <div className="space-y-2">
+                     <p className="text-xs font-bold text-foreground flex items-center gap-2"><Phone className="w-4 h-4 text-amber-400"/>Überfällige Kontakte</p>
+                     {overdueLeads.slice(0,3).map(lead => (
+                          <Button key={lead.id} variant="ghost" className="w-full justify-start h-auto py-1 px-2 text-left" onClick={() => onLeadSelect(lead)}>
+                             {lead.name}
+                         </Button>
+                     ))}
+                 </div>
+                 <div className="space-y-2">
+                     <p className="text-xs font-bold text-foreground flex items-center gap-2"><Calendar className="w-4 h-4 text-blue-400"/>Heutige Termine</p>
+                     {todayAppointments.slice(0,3).map(lead => (
+                           <Button key={lead.id} variant="ghost" className="w-full justify-start h-auto py-1 px-2 text-left" onClick={() => onLeadSelect(lead)}>
+                             {lead.name}
+                         </Button>
+                     ))}
+                 </div>
+             </div>
+        </Card>
+    )
+}
+
+
 export default function QSalesPage() {
-  const [activeView, setActiveView] = useState('Aktive Leads');
+  const [activeView, setActiveView] = useState(actionViews[0].slug);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(allLeads[0]);
 
   const filteredLeads = useMemo(() => {
     switch (activeView) {
-      case 'Heute anrufen':
+      case 'call-now':
+        return allLeads.filter(l => l.nextAction.includes('Heute') || l.nextAction.includes('Überfällig'));
+      case 'due-today':
         return allLeads.filter(l => l.nextAction.includes('Heute'));
-      case 'Follow-ups':
+      case 'follow-up':
         return allLeads.filter(l => l.status === 'Follow-up geplant');
-      case 'Termine gelegt':
-         return allLeads.filter(l => l.status === 'Termin gelegt');
-      case 'Abgeschlossen':
+      case 'done':
          return allLeads.filter(l => l.status === 'Abgeschlossen');
-      case 'Verloren / Kein Interesse':
+      case 'lost':
          return allLeads.filter(l => l.status === 'Verloren');
-      case 'KI-empfohlen':
-        return [...allLeads].sort((a,b) => b.aiRecommendation.probability - a.aiRecommendation.probability);
-      case 'Priorisiert':
-        return [...allLeads].sort((a,b) => {
-            const prioOrder = { 'Hoch': 3, 'Mittel': 2, 'Niedrig': 1};
-            return prioOrder[b.priority] - prioOrder[a.priority];
-        });
-      case 'Aktive Leads':
+      case 'ai-priority':
+        return [...allLeads].filter(l => l.status !== 'Abgeschlossen' && l.status !== 'Verloren').sort((a,b) => b.aiRecommendation.probability - a.aiRecommendation.probability);
       default:
         return allLeads.filter(l => l.status !== 'Abgeschlossen' && l.status !== 'Verloren');
     }
@@ -114,42 +152,46 @@ export default function QSalesPage() {
         <p className="text-muted-foreground">Ihre operative Vertriebsoberfläche für die tägliche Sales-Arbeit.</p>
       </header>
       
-      {/* Topbar */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {kpis.map(kpi => {
-          const Icon = kpi.icon;
-          return (
-            <Card key={kpi.title} className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-muted rounded-lg text-muted-foreground"><Icon className="w-4 h-4" /></div>
-                <div>
-                    <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{kpi.title}</p>
-                </div>
-              </div>
+      <SalesFocusHeader leads={allLeads} onLeadSelect={setSelectedLead} />
+
+      {/* KPI Groups */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Object.entries(salesKpiGroups).map(([groupKey, group]) => {
+            const colors: {[key: string]: string} = {'Aktivität': 'blue', 'Output': 'emerald', 'Risiko': 'amber'};
+            return (
+            <Card key={groupKey} className="p-4">
+                <CardHeader className="p-0 mb-4">
+                    <CardTitle className={`text-sm text-${colors[group.title]}-400`}>{group.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 grid grid-cols-2 gap-4">
+                    {group.kpis.map(kpi => {
+                         const Icon = kpi.icon;
+                         return (
+                             <div key={kpi.title}>
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{kpi.title}</p>
+                                <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
+                            </div>
+                         )
+                    })}
+                </CardContent>
             </Card>
-          );
-        })}
+        )})}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Sidebar */}
         <Card className="p-2 lg:col-span-2">
             <div className="space-y-1">
-            {views.map(view => {
-                const Icon = view.icon;
-                return (
+            {actionViews.map(view => (
                 <Button 
-                    key={view.name}
-                    variant={activeView === view.name ? 'secondary' : 'ghost'}
-                    onClick={() => setActiveView(view.name)}
-                    className="w-full justify-start text-xs font-bold gap-2"
+                    key={view.slug}
+                    variant={activeView === view.slug ? 'secondary' : 'ghost'}
+                    onClick={() => setActiveView(view.slug)}
+                    className="w-full justify-start text-sm font-bold gap-2"
                 >
-                    <Icon className="w-4 h-4" />
                     {view.name}
                 </Button>
-                )
-            })}
+            ))}
             </div>
         </Card>
 
@@ -157,7 +199,7 @@ export default function QSalesPage() {
         <div className={cn("transition-all duration-300", selectedLead ? "lg:col-span-7" : "lg:col-span-10")}>
           <Card>
             <div className="p-4 border-b border-border flex justify-between items-center">
-                <h3 className="font-bold text-foreground">{activeView} ({filteredLeads.length})</h3>
+                <h3 className="font-bold text-foreground">{actionViews.find(v => v.slug === activeView)?.name} ({filteredLeads.length})</h3>
                 <div className="flex items-center gap-2">
                     <div className="relative w-48">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -170,13 +212,11 @@ export default function QSalesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Letzte Aktivität</TableHead>
+                  <TableHead className="w-1/3">Lead</TableHead>
                   <TableHead>Nächste Aktion</TableHead>
                   <TableHead>Priorität</TableHead>
-                  <TableHead>Zuständig</TableHead>
-                  <TableHead className="text-right w-[150px]">Aktionen</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right w-[150px]">Aktion</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -189,22 +229,14 @@ export default function QSalesPage() {
                     <TableCell>
                       <p className="font-bold text-foreground text-sm">{lead.name}</p>
                       <p className="text-xs text-muted-foreground">{lead.company}</p>
+                      <p className="text-[10px] text-blue-400 italic mt-1">{lead.kiHint}</p>
                     </TableCell>
-                    <TableCell><Badge variant="outline" className={cn("text-[10px] uppercase font-bold", statusColors[lead.status])}>{lead.status}</Badge></TableCell>
-                    <TableCell className="text-xs">{lead.lastActivity}</TableCell>
-                    <TableCell className="text-xs font-mono">{lead.nextAction}</TableCell>
+                    <TableCell className="text-sm font-bold">{lead.nextAction}</TableCell>
                     <TableCell><Badge variant="outline" className={cn("text-xs font-bold", priorityColors[lead.priority])}>{lead.priority}</Badge></TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarFallback className="text-[10px] bg-muted text-muted-foreground font-bold">{lead.agentAvatar}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs font-bold text-muted-foreground">{lead.agent}</span>
-                      </div>
-                    </TableCell>
+                    <TableCell><Badge variant="outline" className={cn("text-[10px] uppercase font-bold", statusColors[lead.status])}>{lead.status}</Badge></TableCell>
                     <TableCell className="text-right">
-                        <Button variant="secondary" size="sm" className="h-8">
-                            <Phone className="w-3.5 h-3.5 mr-2" /> Anrufen
+                        <Button variant="default" size="sm" className="h-8">
+                            <Phone className="w-3.5 h-3.5 mr-2" /> Jetzt anrufen
                         </Button>
                     </TableCell>
                   </TableRow>
@@ -239,70 +271,42 @@ export default function QSalesPage() {
                              <p className="text-[10px] text-muted-foreground mt-2">Quelle: <span className="font-bold">{selectedLead.profile.source}</span></p>
                         </Card>
 
-                        {/* AI Recommendation */}
+                        {/* AI Sales-Briefing */}
                          <Card className="p-4 bg-blue-500/5 border-blue-500/10">
-                            <h4 className="text-xs font-bold uppercase text-blue-400 mb-3 flex items-center gap-2"><BrainCircuit className="w-4 h-4"/> KI-Empfehlung</h4>
-                            <div className="space-y-3">
+                            <h4 className="text-xs font-bold uppercase text-blue-400 mb-3 flex items-center gap-2"><BrainCircuit className="w-4 h-4"/> KI-Sales-Briefing</h4>
+                            <div className="space-y-4 text-sm">
                                 <div>
-                                    <p className="text-xs font-bold text-foreground">Nächster Status</p>
-                                    <Badge variant="outline" className="text-xs bg-background">{selectedLead.aiRecommendation.nextStatus}</Badge>
+                                    <p className="text-xs font-bold text-foreground">Erkannter Bedarf</p>
+                                    <p className="text-xs text-muted-foreground">{selectedLead.aiRecommendation.bedarf}</p>
                                 </div>
                                  <div>
-                                    <p className="text-xs font-bold text-foreground">Abschluss-Wahrscheinlichkeit</p>
-                                    <div className="flex items-center gap-2">
-                                        <Progress value={selectedLead.aiRecommendation.probability} className="h-1.5" />
-                                        <span className="text-xs font-mono text-foreground font-bold">{selectedLead.aiRecommendation.probability}%</span>
-                                    </div>
+                                    <p className="text-xs font-bold text-foreground">Erwartete Einwände</p>
+                                    <ul className="text-xs text-muted-foreground list-disc pl-4">
+                                        {selectedLead.aiRecommendation.einwaende.map((e,i) => <li key={i}>{e}</li>)}
+                                    </ul>
+                                </div>
+                                 <div>
+                                    <p className="text-xs font-bold text-foreground">Empfohlener Gesprächseinstieg</p>
+                                    <p className="text-xs text-muted-foreground italic">"{selectedLead.aiRecommendation.gespraechseinstieg}"</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-foreground">Beste Kontaktzeit</p>
-                                    <p className="text-xs text-muted-foreground">{selectedLead.aiRecommendation.bestTime}</p>
+                                    <p className="text-xs font-bold text-foreground">Abschlusswahrscheinlichkeit</p>
+                                    <p className={`text-lg font-bold ${probabilityLabelColors[selectedLead.aiRecommendation.probabilityLabel]}`}>{selectedLead.aiRecommendation.probability}% ({selectedLead.aiRecommendation.probabilityLabel})</p>
                                 </div>
                             </div>
                         </Card>
 
                         {/* Actions */}
                         <Card className="p-4 bg-muted/50">
-                             <div className="grid grid-cols-3 gap-2 text-center">
-                                <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><FilePen className="w-4 h-4"/>Status</Button>
+                             <div className="grid grid-cols-2 gap-2 text-center">
+                                <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><Phone className="w-4 h-4"/>Anrufen</Button>
                                 <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><MessageSquarePlus className="w-4 h-4"/>Notiz</Button>
                                 <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><Mail className="w-4 h-4"/>E-Mail</Button>
                                 <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><Calendar className="w-4 h-4"/>Termin</Button>
-                                <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><Info className="w-4 h-4"/>Info</Button>
-                                <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><Bot className="w-4 h-4"/>KI</Button>
+                                <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1 bg-blue-500/10 border-blue-500/20 text-blue-300 hover:bg-blue-500/20"><Bot className="w-4 h-4"/>KI fragen</Button>
+                                <Button variant="outline" size="sm" className="flex-col h-14 text-xs gap-1"><History className="w-4 h-4"/>Historie</Button>
                              </div>
                         </Card>
-
-
-                        {/* Call History */}
-                         <Card className="p-4 bg-muted/50">
-                            <h4 className="text-xs font-bold uppercase text-muted-foreground mb-3 flex items-center gap-2"><History className="w-4 h-4"/> Anruf-Historie</h4>
-                            <div className="space-y-3">
-                                {selectedLead.callHistory.map((call, i) => (
-                                    <div key={i} className="text-xs">
-                                        <div className="flex justify-between items-center">
-                                            <p className="font-bold text-foreground">{call.result}</p>
-                                            <p className="text-muted-foreground font-mono">{call.date}</p>
-                                        </div>
-                                        <p className="text-muted-foreground">Dauer: {call.duration}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </Card>
-
-                         {/* Notes */}
-                         <Card className="p-4 bg-muted/50">
-                            <h4 className="text-xs font-bold uppercase text-muted-foreground mb-3 flex items-center gap-2"><MessageSquarePlus className="w-4 h-4"/> Notizen</h4>
-                             <div className="space-y-3">
-                                {selectedLead.notes.map((note, i) => (
-                                    <div key={i} className="text-xs border-l-2 border-border pl-2">
-                                        <p className="text-muted-foreground italic">"{note.text}"</p>
-                                        <p className="text-[10px] text-muted-foreground/70 mt-1">{note.date}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </Card>
-
                     </div>
                 </Card>
             </div>
