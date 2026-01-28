@@ -48,6 +48,7 @@ import {
   Repeat,
   MoreVertical,
   Star,
+  BarChart,
   BarChart2,
   Handshake,
   DollarSign,
@@ -55,7 +56,7 @@ import {
   UserX,
   Target,
 } from 'lucide-react';
-import { qsalesLeads as allLeads, salesKpiGroups, qSalesSystemViews, mockSequences, qSalesReportingData, kpiMitarbeiter } from '@/lib/data';
+import { allLeads, salesKpiGroups, qSalesSystemViews, mockSequences, qSalesReportingData, kpiMitarbeiter } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -69,7 +70,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Line, ComposedChart } from 'recharts';
+import { ResponsiveContainer, Line, ComposedChart } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 
@@ -543,7 +544,7 @@ const AbschluesseTab = () => {
                     </Table>
                 </CardContent>
             </Card>
-            <Card className="bg-blue-950/50 border-blue-500/20 p-4">
+            <Card className="bg-blue-500/10 border-blue-500/20 p-4">
                 <h4 className="text-sm font-bold text-blue-300">KI: Top Gründe für Gewinne</h4>
                 <p className="text-xs text-blue-200 mt-1">Schnelle Reaktionszeit und klare Bedarfsanalyse im Erstgespräch.</p>
                 <h4 className="text-sm font-bold text-blue-300 mt-3">KI: Top Gründe für Verluste</h4>
@@ -589,11 +590,11 @@ const RisikoTab = () => {
                             <div className="flex justify-between items-center">
                                 <div>
                                     <p className="font-bold text-foreground">{d.name}</p>
-                                    <p className="text-sm text-muted-foreground">€{d.value.toLocaleString('de-DE')}</p>
+                                    <p className="text-sm text-muted-foreground">€{d.dealValue.toLocaleString('de-DE')}</p>
                                 </div>
                                 <div className="text-right">
                                      <Badge variant="destructive">At Risk</Badge>
-                                     <p className="text-xs text-rose-400 mt-1">{d.reason}</p>
+                                     <p className="text-xs text-rose-400 mt-1">{d.health.reasons.join(', ')}</p>
                                 </div>
                             </div>
                             <div className="flex items-center justify-between mt-3 pt-3 border-t border-rose-500/20">
@@ -809,3 +810,4 @@ export default function QSalesPage() {
     </div>
   );
 }
+

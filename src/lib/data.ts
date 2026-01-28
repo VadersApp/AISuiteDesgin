@@ -201,7 +201,7 @@ export const tasksMockByDepartment: { [key: string]: any[] } = {
         { title: "Qualitätscheck: 10 Calls bewerten", desc: "Zufallsstichprobe Support", prio: "Mittel", due: "Freitag", status: "Offen", agent: "Ava Assist", prioColor: "amber" }
     ],
     'purchase': [
-        { title: "Tool-Lizenzliste aktualisieren", desc: "Ablaufdaten prüfen", prio: "Niedrig", due: "Nächste Woche", status: "Offen", agent: "Sophie Market", prioColor: "slate" }
+        { title: "Einkauf & Partner", desc: "Tool-Lizenzliste aktualisieren", prio: "Niedrig", due: "Nächste Woche", status: "Offen", agent: "Sophie Market", prioColor: "slate" }
     ]
 };
 
@@ -384,7 +384,7 @@ export const mockDeals = [
 export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
 
 
-export const qsalesLeads = [
+export const allLeads = [
   {
     id: 'lead-001',
     name: 'Dr. Eva Schmidt',
@@ -555,8 +555,8 @@ export const qSalesReportingData = {
       ]
   },
   risiko: {
-      atRiskDeals: qsalesLeads.filter(l => l.health.status === 'at_risk'),
-      warningDeals: qsalesLeads.filter(l => l.health.status === 'warning'),
+      atRiskDeals: allLeads.filter(l => l.health.status === 'at_risk'),
+      warningDeals: allLeads.filter(l => l.health.status === 'warning'),
       overdueActions: 5,
       noResponse: 2,
   },
