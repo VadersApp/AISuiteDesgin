@@ -86,14 +86,10 @@ import {
   DollarSign,
   Info,
   CheckCircle2,
-  Circle,
-  PhoneIncoming,
-  PhoneOutgoing,
-  PhoneMissed
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -251,7 +247,7 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                             <CardTitle className="text-rose-400 text-base">KI-Eskalation</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm">Deal 'Data Corp - Analyse-Software' ist seit 5 Tagen inaktiv.</p>
+                            <p className="text-sm">Deal 'Data Corp' ist seit 5 Tagen inaktiv.</p>
                         </CardContent>
                         <CardFooter>
                             <Button asChild variant="outline" size="sm">
@@ -742,8 +738,46 @@ const PipelineView = () => {
 const ReportsView = () => {
     const { kpis: execKpis, processKpis, agentKpis, attribution } = execKpiData;
 
+    const summaryIconMap: { [key: string]: React.ElementType } = {
+        gut: CheckCircle2,
+        kritisch: Flame,
+        handlungsbedarf: AlertTriangle,
+    };
+    
+    const summaryColorMap: { [key: string]: string } = {
+        gut: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300 [&>svg]:text-emerald-400',
+        kritisch: 'bg-rose-500/5 border-rose-500/20 text-rose-300 [&>svg]:text-rose-400',
+        handlungsbedarf: 'bg-amber-500/5 border-amber-500/20 text-amber-300 [&>svg]:text-amber-400',
+    };
+
     return (
         <div className="space-y-8">
+            <Card className="bg-blue-950/50 border-blue-500/20">
+                <CardHeader>
+                    <CardTitle className="text-base text-blue-300 flex items-center gap-2">
+                        <BrainCircuit className="w-5 h-5"/>
+                        KI-Management-Zusammenfassung
+                    </CardTitle>
+                    <CardDescription className="text-blue-400/70">Was Sie heute wissen müssen – automatisch von der KI aufbereitet.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {kiManagementSummary.map((item, index) => {
+                        const Icon = summaryIconMap[item.type];
+                        return (
+                            <Alert key={index} className={cn("flex items-start", summaryColorMap[item.type])}>
+                                <Icon className="h-5 w-5" />
+                                <div className='ml-4'>
+                                    <AlertTitle className="font-bold text-white">{item.text}</AlertTitle>
+                                    <AlertDescription>
+                                        {item.grund}
+                                    </AlertDescription>
+                                </div>
+                            </Alert>
+                        );
+                    })}
+                </CardContent>
+            </Card>
+
             <div>
                 <h2 className="text-2xl font-bold text-foreground">Executive Overview</h2>
                 <p className="text-sm text-muted-foreground">Live-Übersicht der wichtigsten Unternehmens-KPIs.</p>
@@ -819,6 +853,7 @@ const ReportsView = () => {
         </div>
     )
 };
+
 
 const TerminboardView = () => {
     const allBookings = useMemo(() => getDynamicQalenderBookings().map(b => ({ ...b, date: new Date(b.startAt) })), []);
@@ -1713,3 +1748,4 @@ export default function QhubPage() {
     </>
   );
 }
+

@@ -1540,3 +1540,11 @@ export const kiTagesfokus = [
     { title: "Lead 'Dr. Eva Schmidt'", reason: "Hohe Priorität, seit gestern keine Aktion.", type: 'lead' },
     { title: "Aufgabe 'Follow-ups'", reason: "Heute fällig, hohe Priorität.", type: 'task' },
 ];
+
+export const kiManagementSummary = [
+    { type: 'gut', text: 'Stabile Abschlussquote im Vertrieb (28%)', grund: 'Die Conversion Rate von qualifizierten Leads zu Deals ist im 30-Tage-Schnitt konstant geblieben.' },
+    { type: 'kritisch', text: 'Deal "Data Corp" stagniert', grund: 'Seit 5 Tagen keine Aktivität in der Discovery-Phase, obwohl die SLA überschritten ist.' },
+    { type: 'kritisch', text: 'SLA-Verstöße im Kundenservice', grund: '3 Tickets mit hoher Priorität haben die definierte Reaktionszeit überschritten.' },
+    { type: 'handlungsbedarf', text: 'Hohe Ticket-Last im Support', grund: 'Das Verhältnis von offenen zu erledigten Tickets deutet auf eine mögliche Überlastung hin (43 offen).' },
+    { type: 'handlungsbedarf', text: 'Marketing-Leads ohne Follow-up', grund: '8 als "heiß" eingestufte Leads aus dem Marketing haben noch keinen ersten Kontaktversuch im Vertrieb erhalten.' },
+];
