@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useMemo, FormEvent, useEffect } from 'react';
@@ -48,6 +50,7 @@ import {
   CheckCircle2,
   CheckSquare,
   ChevronDown,
+  ChevronRight,
   Clock,
   DollarSign,
   FileText,
@@ -602,7 +605,7 @@ const KpiDashboard = ({ mitarbeiter } : { mitarbeiter: any[]}) => {
     
     const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
         switch (trend) {
-            case 'up': return <ArrowUp className="w-4 h-4 text-emerald-400" />;
+            case 'up': return <TrendingUp className="w-4 h-4 text-emerald-400" />;
             case 'down': return <ArrowDown className="w-4 h-4 text-rose-400" />;
             case 'stable': return <ArrowRight className="w-4 h-4 text-slate-400" />;
             default: return null;
