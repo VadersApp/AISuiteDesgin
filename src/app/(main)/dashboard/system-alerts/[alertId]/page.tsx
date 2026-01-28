@@ -5,6 +5,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import Link from 'next/link';
 import {
@@ -28,6 +29,10 @@ import {
   ArrowLeft,
   Search as SearchIcon,
   Plus,
+  Briefcase,
+  DollarSign,
+  CheckSquare,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -528,6 +533,99 @@ const ApiLimitWarningView = () => {
   );
 };
 
+
+const DealStagnationView = () => {
+    return (
+        <div className="space-y-8 pb-20">
+            <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/qhub"
+                        className="p-2 rounded-xl bg-[#1E293B] border border-slate-700/50 text-slate-400 hover:text-white transition-colors"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
+                    </Link>
+                    <div>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="text-3xl font-bold text-white tracking-tight break-words">
+                                KI-Eskalation: Deal stagniert
+                            </h1>
+                            <Badge variant="destructive">Kritisch</Badge>
+                        </div>
+                        <p className="text-slate-400 mt-1">
+                            Die KI hat eine Verkaufschance mit hohem Risiko identifiziert.
+                        </p>
+                    </div>
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                    <Card className="p-6">
+                         <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-rose-500" /> Warum kritisch?
+                        </h3>
+                        <p className="text-white text-lg">
+                            Deal ist seit 5 Tagen inaktiv und SLA wurde überschritten.
+                        </p>
+                        <p className="text-sm text-slate-400 mt-2">
+                           Inaktivität in dieser Phase führt erfahrungsgemäß zu einem hohen Verlustrisiko.
+                        </p>
+                    </Card>
+                     <Card className="p-6">
+                        <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <Info className="w-4 h-4 text-blue-400" /> Kontext zum Deal
+                        </h3>
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Deal:</span>
+                                <span className="font-bold text-white">Data Corp - Analyse-Software</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Wert:</span>
+                                <span className="font-bold text-white">€40,000</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-slate-400">Phase:</span>
+                                <span className="font-bold text-white">Discovery</span>
+                            </div>
+                             <div className="flex justify-between">
+                                <span className="text-slate-400">Zuständig:</span>
+                                <span className="font-bold text-white">Leo Sales</span>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+                <div className="space-y-6">
+                    <Card className="p-6">
+                         <h3 className="text-sm font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                           <Zap className="w-4 h-4 text-emerald-400" /> Empfohlene nächste Schritte
+                        </h3>
+                        <div className="space-y-3">
+                             <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                                <h4 className="font-bold text-white">Aufgabe anlegen: Follow-up Anruf</h4>
+                                <p className="text-xs text-slate-400 mt-1">Erstellt eine Aufgabe für den zuständigen Vertriebler, den Kunden anzurufen, um den Status zu klären.</p>
+                                <Button size="sm" className="mt-3 w-full"><CheckSquare className="w-4 h-4 mr-2"/> Aufgabe erstellen</Button>
+                            </div>
+                             <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/30">
+                                <h4 className="font-bold text-white">Deal manuell prüfen</h4>
+                                <p className="text-xs text-slate-400 mt-1">Öffnen Sie den Deal im Q-Hub, um alle Details zu prüfen und selbst die nächsten Schritte festzulegen.</p>
+                                <Button size="sm" variant="outline" className="mt-3 w-full"><ExternalLink className="w-4 h-4 mr-2"/> Deal ansehen</Button>
+                            </div>
+                        </div>
+                    </Card>
+                     <Card className="p-6">
+                        <Button variant="ghost" className="w-full text-slate-400 hover:text-white">
+                           <Trash2 className="w-4 h-4 mr-2" />Eskalation verwerfen
+                        </Button>
+                    </Card>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 export default function SystemAlertDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -547,6 +645,8 @@ export default function SystemAlertDetailPage() {
         return <EscalationDetailView onOpenChat={handleOpenChat} />;
       case 'warn-api-limit':
         return <ApiLimitWarningView />;
+      case 'esc-deal-stagnation':
+        return <DealStagnationView />;
       default:
         notFound();
     }
@@ -558,4 +658,3 @@ export default function SystemAlertDetailPage() {
     </>
   );
 }
-

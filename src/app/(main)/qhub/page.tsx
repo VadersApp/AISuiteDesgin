@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, FormEvent, useEffect } from 'react';
@@ -83,7 +84,6 @@ import {
   Clock,
   History,
   DollarSign,
-  GitBranch,
   Info,
   CheckCircle2,
   Circle,
@@ -173,7 +173,7 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
 
     const handlungsbedarfData = [
       { title: "Eskalationen aktiv", value: 2, icon: Flame, color: 'rose', tooltip: "Erfordert sofortige Prüfung" },
-      { title: "Entscheidungen offen", value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
+      { title: "Entscheidungen offen", value: 5, icon: Workflow, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
       { title: "Laufende Prozesse", value: 18, icon: Workflow, color: 'blue', tooltip: "Automatisierungen in Bearbeitung" },
       { title: "KI-Aktionen heute", value: 128, icon: BotIcon, color: 'emerald', tooltip: "Durch KI-Mitarbeiter ausgeführt" },
     ];
@@ -245,7 +245,22 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                         })}
                     </div>
                 </div>
-                <KiTagesfokus />
+                <div className="space-y-6">
+                     <Card className="border-rose-500/50 bg-rose-500/10">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-rose-400 text-base">KI-Eskalation</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm">Deal 'Data Corp - Analyse-Software' ist seit 5 Tagen inaktiv.</p>
+                        </CardContent>
+                        <CardFooter>
+                            <Button asChild variant="outline" size="sm">
+                                <Link href="/dashboard/system-alerts/esc-deal-stagnation">Details ansehen</Link>
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                    <KiTagesfokus />
+                </div>
             </div>
             
             {/* ZONE C: Operative Bereiche */}
