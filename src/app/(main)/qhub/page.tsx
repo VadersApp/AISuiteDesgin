@@ -86,6 +86,7 @@ import {
   DollarSign,
   Info,
   CheckCircle2,
+  GitBranch,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -169,7 +170,7 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
 
     const handlungsbedarfData = [
       { title: "Eskalationen aktiv", value: 2, icon: Flame, color: 'rose', tooltip: "Erfordert sofortige Prüfung" },
-      { title: "Entscheidungen offen", value: 5, icon: Workflow, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
+      { title: "Entscheidungen offen", value: 5, icon: GitBranch, color: 'amber', tooltip: "Freigabe oder Prüfung notwendig" },
       { title: "Laufende Prozesse", value: 18, icon: Workflow, color: 'blue', tooltip: "Automatisierungen in Bearbeitung" },
       { title: "KI-Aktionen heute", value: 128, icon: BotIcon, color: 'emerald', tooltip: "Durch KI-Mitarbeiter ausgeführt" },
     ];
@@ -345,6 +346,7 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
 
 
 const ContactsView = () => {
+    const router = useRouter();
     const [filter, setFilter] = useState('Alle');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -420,7 +422,7 @@ const ContactsView = () => {
                     </TableHeader>
                     <TableBody>
                         {filteredContacts.map(c => (
-                            <TableRow key={c.id} className={cn("cursor-pointer", getPriorityClass(c.priority))}>
+                            <TableRow key={c.id} onClick={() => router.push(`/qhub/contacts/${c.id}`)} className={cn("cursor-pointer", getPriorityClass(c.priority))}>
                                 <TableCell className="font-medium">{c.name}</TableCell>
                                 <TableCell>{c.company}</TableCell>
                                 <TableCell>{c.email}</TableCell>
@@ -1582,7 +1584,7 @@ const AnrufeView = () => {
 
     return (
         <div className="space-y-8">
-            <header>
+             <header>
                 <h1 className="text-3xl font-bold text-foreground tracking-tight">Anrufe</h1>
                 <p className="text-muted-foreground">Zentrale Übersicht für telefonische Kundenkommunikation.</p>
                 <Alert className="mt-4 bg-blue-500/10 border-blue-500/20 text-blue-300 [&>svg]:text-blue-400">
@@ -1635,10 +1637,14 @@ const AnrufeView = () => {
 
 
 export default function QhubPage() {
-  const router = useRouter();
-  const searchParams = usePathname();
-  
   const [activeModule, setActiveModule] = useState(modules[0].name);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Simulate the currently logged-in user. In a real app, this would come from an auth context.
+  const [currentUserId, setCurrentUserId] = useState('dr-mueller');
+  const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
+  
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
@@ -1650,8 +1656,73 @@ export default function QhubPage() {
     }
   }, []);
 
-  const [currentUserId, setCurrentUserId] = useState('dr-mueller');
-  const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
+  useEffect(() => {
+    if (pathname.startsWith('/q-space/chat')) {
+      if (activeModule !== 'Q-Chat') {
+          setActiveModule('Q-Chat');
+      }
+    }
+  }, [pathname, activeModule]);
+
+  // DERIVED DATA BASED ON USER ROLE
+  const filteredKpiMitarbeiter = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return kpiMitarbeiter;
+    if (currentUser.role === 'dept_head') return kpiMitarbeiter.filter(m => m.abteilung === currentUser.abteilung);
+    if (currentUser.role === 'team_lead') return kpiMitarbeiter.filter(m => m.team === currentUser.team);
+    return kpiMitarbeiter.filter(m => m.id === currentUser.id);
+  }, [currentUser]);
+
+  const filteredChatThreads = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return chatThreads;
+    return chatThreads.filter(t => t.participants.includes(currentUser.id));
+  }, [currentUser]);
+
+  const tasksWithDept = useMemo(() => mockTasks.map(t => {
+      const owner = kpiMitarbeiter.find(m => m.name === t.owner);
+      return {...t, deptId: owner?.abteilung, ownerId: owner?.id };
+  }), []);
+
+  const filteredTasks = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return tasksWithDept;
+    return tasksWithDept.filter(t => t.deptId === currentUser.abteilung || t.ownerId === currentUser.id);
+  }, [currentUser, tasksWithDept]);
+
+  const projectsWithDept = useMemo(() => mockProjects.map(p => {
+    const owner = kpiMitarbeiter.find(m => m.name === p.owner);
+    return {...p, deptId: owner?.abteilung, ownerId: owner?.id };
+  }), []);
+
+  const filteredProjects = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return projectsWithDept;
+    return projectsWithDept.filter(p => p.deptId === currentUser.abteilung || p.ownerId === currentUser.id);
+  }, [currentUser, projectsWithDept]);
+
+  const filteredSops = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return mockSops;
+    return mockSops.filter(s => s.deptId === currentUser.abteilung);
+  }, [currentUser]);
+
+  const filteredDocs = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return allMockDocs;
+    return allMockDocs.filter(doc => doc.deptId === currentUser.abteilung || doc.ownerUserId === currentUser.id);
+  }, [currentUser]);
+  
+  const filteredFolders = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') return docFolders;
+    return docFolders.filter(folder => folder.deptId === currentUser.abteilung || folder.deptId === 'Geschäftsführung');
+  }, [currentUser]);
+
+  const totalUnread = chatThreads.reduce(
+      (sum, t) => sum + (t.unreadCount || 0),
+      0
+    );
 
   if (!currentUser) {
     return <div className="p-8">Benutzer wird geladen oder konnte nicht gefunden werden...</div>;
@@ -1676,10 +1747,14 @@ export default function QhubPage() {
   };
 
   const handleModuleClick = (moduleName: string) => {
-    setActiveModule(moduleName);
-    const newSearchParams = new URLSearchParams(window.location.search);
-    newSearchParams.set('module', moduleName);
-    router.replace(`/qhub?${newSearchParams.toString()}`);
+    if (moduleName === 'Q-Chat') {
+        router.push('/q-space/chat');
+    } else {
+        if (pathname.startsWith('/q-space/chat')) {
+            router.push('/q-space');
+        }
+        setActiveModule(moduleName);
+    }
   };
 
   return (
