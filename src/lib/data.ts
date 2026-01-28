@@ -1,6 +1,6 @@
 
 
-import { formatDistanceToNow, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
+import { formatDistanceToNow, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { PhoneCall, UserCheck, CalendarPlus, Percent, MailQuestion, AlertTriangle, Flame, Phone, Calendar, Handshake, DollarSign } from 'lucide-react';
 
@@ -312,6 +312,78 @@ export const salesKpiGroups = {
     }
 };
 
+export const eventTypes = [
+  { id: 'et-1', name: 'Erstgespräch 30 Min', slug: 'erstgespraech-30', description: 'Ein kurzes Kennenlernen, um Ihre Anforderungen zu besprechen.', durationMinutes: 30, meetingType: 'video', active: true },
+  { id: 'et-2', name: 'Technische Demo 60 Min', slug: 'tech-demo-60', description: 'Eine detaillierte Vorführung unserer Plattform und ihrer Funktionen.', durationMinutes: 60, meetingType: 'video', active: true },
+  { id: 'et-3', name: 'Support-Call 15 Min', slug: 'support-15', description: 'Schnelle Hilfe bei technischen Fragen oder Problemen.', durationMinutes: 15, meetingType: 'phone', active: false },
+];
+
+export const qalenderTeams = [
+    { id: 'team-1', name: 'Sales Team', slug: 'sales', memberIds: ['LS', 'AM'], routingType: 'round_robin' },
+    { id: 'team-2', name: 'Support Team', slug: 'support', memberIds: ['AA', 'TS'], routingType: 'least_busy' },
+];
+
+export function getDynamicQalenderBookings() {
+    const today = new Date();
+    const tomorrow = addDays(new Date(), 1);
+    const dayAfter = addDays(new Date(), 2);
+    
+    const overdue = subDays(new Date(), 2);
+    const past = subDays(new Date(), 7);
+
+    return [
+        // Today
+        { bookingId: 'bk-today-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: new Date(new Date().setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Interessent', context: 'Verkaufschance #123' },
+        { bookingId: 'bk-today-2', eventTypeName: 'Q-Hub Sync', guestName: 'Anna Schmidt', guestEmail: 'anna.schmidt@qore.com', startAt: new Date(new Date().setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Projekt Phoenix' },
+
+        // Tomorrow
+        { bookingId: 'bk-tomorrow-1', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: new Date(tomorrow.setHours(11, 30, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Kunde', context: 'Deal #456' },
+
+        // This Week
+        { bookingId: 'bk-week-1', eventTypeName: 'Support-Call 15 Min', guestName: 'Ben Weber', guestEmail: 'ben.weber@qore.com', startAt: new Date(addDays(new Date(),3).setHours(15, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'bestätigt', role: 'Intern', context: 'Ticket #9981' },
+        
+        // Later
+        { bookingId: 'bk-later-1', eventTypeName: 'Strategie-Session', guestName: 'Management Team', guestEmail: '-', startAt: new Date(addDays(new Date(), 14).setHours(9, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Q2 Planung' },
+
+        // Critical / Open
+        { bookingId: 'bk-overdue-1', eventTypeName: 'Follow-Up Call', guestName: 'Peter Panik', guestEmail: 'peter.panik@alt.com', startAt: new Date(overdue.setHours(16, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'überfällig', role: 'Interessent', context: 'Verkaufschance #098' },
+        { bookingId: 'bk-unconfirmed-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Wanda Warter', guestEmail: 'wanda.warter@mail.com', startAt: new Date(dayAfter.setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'unbestätigt', role: 'Interessent', context: 'Verkaufschance #111' },
+        { bookingId: 'bk-no-result-1', eventTypeName: 'Kundenfeedback', guestName: 'Zufrieden GmbH', guestEmail: 'kontakt@zufrieden.de', startAt: new Date(overdue.setHours(11, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'ohne Ergebnis', role: 'Kunde', context: 'Ticket #887' },
+
+        // Past
+        { bookingId: 'bk-past-1', eventTypeName: 'Kick-Off Projekt Phoenix', guestName: 'Projektteam', guestEmail: '-', startAt: new Date(past.setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'erledigt', role: 'Intern', context: 'Projekt Phoenix' },
+    ];
+}
+
+export const mockContacts = [
+    { id: 1, name: 'John Doe', company: 'Innovate GmbH', email: 'john.doe@innovate.de', leadStatus: 'Qualifiziert', owner: 'Leo Sales', status: 'Aktiv', lastActivity: 'Heute', priority: 'attention' },
+    { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', leadStatus: 'Kunde', owner: 'Ava Assist', status: 'Aktiv', lastActivity: 'Vor 2 Tagen', priority: 'neutral' },
+    { id: 3, name: 'Peter Jones', company: 'Tech Solutions', email: 'peter.j@tech.io', leadStatus: 'Neu', owner: 'Leo Sales', status: 'Aktiv', lastActivity: 'Vor 5 Tagen', priority: 'neutral' },
+    { id: 4, name: 'Maria Garcia', company: 'Global Exports', email: 'm.garcia@globalexports.com', leadStatus: 'In Betreuung', owner: 'Ava Assist', status: 'Inaktiv', lastActivity: 'Vor 3 Wochen', priority: 'critical' },
+    { id: 5, name: 'Sam Wilson', company: 'Innovate GmbH', email: 'sam.w@innovate.de', leadStatus: 'Kunde', owner: 'Ava Assist', status: 'Aktiv', lastActivity: 'Gestern', priority: 'neutral' }
+];
+
+export const mockCompanies = [
+    { id: 1, name: 'Innovate GmbH', industry: 'Technologie', owner: 'Leo Sales', status: 'Aktiv', aktiveVorgange: '1 Verkaufschance', priority: 'attention' },
+    { id: 2, name: 'Data Corp', industry: 'Datenanalyse', owner: 'Leo Sales', status: 'Aktiv', aktiveVorgange: '1 Verkaufschance', priority: 'attention' },
+    { id: 3, name: 'Tech Solutions', industry: 'IT-Dienstleistungen', owner: 'Ava Assist', status: 'Aktiv', aktiveVorgange: 'Keine', priority: 'neutral' },
+    { id: 4, name: 'Global Exports', industry: 'Handel', owner: 'Ava Assist', status: 'Inaktiv', aktiveVorgange: '1 Servicefall', priority: 'critical' },
+];
+
+
+export const mockDeals = [
+    { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen', aiNextStepSuggestion: 'Anrufen und offene Fragen zum Angebot klären.', aiRisk: null },
+    { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 5, nextStep: 'Bedarf klären', aiNextStepSuggestion: 'E-Mail mit Terminvorschlag für Bedarfsanalyse senden.', aiRisk: "Hohe Inaktivität. Deal könnte verloren gehen." },
+    { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen', aiNextStepSuggestion: 'Kurze E-Mail mit Frage nach Feedback zum Angebot.', aiRisk: null },
+    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden', aiNextStepSuggestion: null, aiRisk: null },
+    { id: 5, name: 'Global Exports - Logistik-Suite', stage: 'Verhandlung', value: '€75,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 2, nextStep: 'Finale Konditionen klären', aiNextStepSuggestion: 'Internen Call zur Klärung der letzten Rabattstufe ansetzen.', aiRisk: null },
+    { id: 6, name: 'Abgeschlossener Deal', stage: 'Gewonnen', value: '€100,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 30, nextStep: 'Projektübergabe', aiNextStepSuggestion: null, aiRisk: null },
+    { id: 7, name: 'Altes Projekt', stage: 'Angebot', value: '€5,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 12, nextStep: 'Angebot nachfassen', aiNextStepSuggestion: 'Deal als verloren markieren oder letzte E-Mail senden.', aiRisk: 'Sehr hohe Inaktivität. Wahrscheinlich verloren.' },
+];
+
+export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
+
+
 export const qsalesLeads = [
   {
     id: 'lead-001',
@@ -443,6 +515,63 @@ export const qsalesLeads = [
   }
 ];
 
+export const qSalesReportingData = {
+  uebersicht: {
+    kpis: [
+      { title: 'Anrufe (30 T.)', value: '182', icon: 'Phone' },
+      { title: 'Termine (30 T.)', value: '48', icon: 'Calendar' },
+      { title: 'Abschlüsse (30 T.)', value: '12', icon: 'Handshake' },
+      { title: 'Abschlussquote', value: '25%', icon: 'Percent' },
+      { title: 'Pipeline-Wert', value: '€215.000', icon: 'DollarSign' },
+      { title: 'At-Risk Deals', value: '3', icon: 'AlertTriangle' },
+    ],
+    salesFlow: [
+      { stage: 'Leads', value: 412, conversion: null },
+      { stage: 'Gespräche', value: 182, conversion: '44%' },
+      { stage: 'Termine', value: 48, conversion: '26%' },
+      { stage: 'Abschlüsse', value: 12, conversion: '25%' },
+    ],
+  },
+  aktivitaet: {
+      calls: 182,
+      reachedLeads: 110,
+      meetings: 48,
+      overdueFollowups: 8,
+      ranking: [
+          { assignee: 'Leo Sales', calls: 98, meetings: 25, followupsDone: 50, followupsOverdue: 2 },
+          { assignee: 'Anna Schmidt', calls: 84, meetings: 23, followupsDone: 45, followupsOverdue: 6 },
+      ]
+  },
+  abschluesse: {
+      wonDeals: { count: 12, value: 180000 },
+      lostDeals: { count: 36, value: 450000 },
+      winRate: 25,
+      avgDealValue: 15000,
+      avgCycleTime: 28,
+      deals: [
+          { id: 1, name: 'Innovate GmbH', value: 50000, status: 'Won', durationDays: 25, assignee: 'Leo Sales' },
+          { id: 2, name: 'Global Corp', value: 120000, status: 'Won', durationDays: 45, assignee: 'Anna Schmidt' },
+          { id: 3, name: 'Data Corp', value: 40000, status: 'Lost', durationDays: 32, assignee: 'Leo Sales' },
+      ]
+  },
+  risiko: {
+      atRiskDeals: qsalesLeads.filter(l => l.health.status === 'at_risk'),
+      warningDeals: qsalesLeads.filter(l => l.health.status === 'warning'),
+      overdueActions: 5,
+      noResponse: 2,
+  },
+  learnings: {
+    lostReasonData: [
+      { reason: 'Preis zu hoch', count: 4 },
+      { reason: 'Kein Bedarf', count: 2 },
+      { reason: 'Wettbewerber', count: 1 },
+      { reason: 'Timing', count: 1 },
+    ],
+    aiSummary: "Fast 50% der verlorenen Deals scheitern am Preis. Eine frühere und präzisere Budget-Qualifizierung im Discovery-Prozess könnte die Effizienz erheblich steigern."
+  }
+};
+
+
 export const qSalesSystemViews = [
   {
     id: 'system-call-now',
@@ -525,135 +654,6 @@ export const qSalesSystemViews = [
     ui: { icon: 'XCircle' }
   }
 ];
-
-export const qSalesReportingData = {
-  uebersicht: {
-    kpis: [
-      { title: 'Anrufe (30 T.)', value: '182', icon: 'Phone' },
-      { title: 'Termine (30 T.)', value: '48', icon: 'Calendar' },
-      { title: 'Abschlüsse (30 T.)', value: '12', icon: 'Handshake' },
-      { title: 'Abschlussquote', value: '25%', icon: 'Percent' },
-      { title: 'Pipeline-Wert', value: '€215.000', icon: 'DollarSign' },
-      { title: 'At-Risk Deals', value: '3', icon: 'AlertTriangle' },
-    ],
-    salesFlow: [
-      { stage: 'Leads', value: 412, conversion: null },
-      { stage: 'Gespräche', value: 182, conversion: '44%' },
-      { stage: 'Termine', value: 48, conversion: '26%' },
-      { stage: 'Abschlüsse', value: 12, conversion: '25%' },
-    ],
-  },
-  aktivitaet: {
-      calls: 182,
-      reachedLeads: 110,
-      meetings: 48,
-      overdueFollowups: 8,
-      ranking: [
-          { assignee: 'Leo Sales', calls: 98, meetings: 25, followupsDone: 50, followupsOverdue: 2 },
-          { assignee: 'Anna Schmidt', calls: 84, meetings: 23, followupsDone: 45, followupsOverdue: 6 },
-      ]
-  },
-  abschluesse: {
-      wonDeals: { count: 12, value: 180000 },
-      lostDeals: { count: 36, value: 450000 },
-      winRate: 25,
-      avgDealValue: 15000,
-      avgCycleTime: 28,
-      deals: [
-          { id: 1, name: 'Innovate GmbH', value: 50000, status: 'Won', durationDays: 25, assignee: 'Leo Sales' },
-          { id: 2, name: 'Global Corp', value: 120000, status: 'Won', durationDays: 45, assignee: 'Anna Schmidt' },
-          { id: 3, name: 'Data Corp', value: 40000, status: 'Lost', durationDays: 32, assignee: 'Leo Sales' },
-      ]
-  },
-  risiko: {
-      atRiskDeals: qsalesLeads.filter(l => l.health.status === 'at_risk'),
-      warningDeals: qsalesLeads.filter(l => l.health.status === 'warning'),
-      overdueActions: 5,
-      noResponse: 2,
-  },
-  learnings: {
-    lostReasonData: [
-      { reason: 'Preis zu hoch', count: 4 },
-      { reason: 'Kein Bedarf', count: 2 },
-      { reason: 'Wettbewerber', count: 1 },
-      { reason: 'Timing', count: 1 },
-    ],
-    aiSummary: "Fast 50% der verlorenen Deals scheitern am Preis. Eine frühere und präzisere Budget-Qualifizierung im Discovery-Prozess könnte die Effizienz erheblich steigern."
-  }
-};
-
-
-export const eventTypes = [
-  { id: 'et-1', name: 'Erstgespräch 30 Min', slug: 'erstgespraech-30', description: 'Ein kurzes Kennenlernen, um Ihre Anforderungen zu besprechen.', durationMinutes: 30, meetingType: 'video', active: true },
-  { id: 'et-2', name: 'Technische Demo 60 Min', slug: 'tech-demo-60', description: 'Eine detaillierte Vorführung unserer Plattform und ihrer Funktionen.', durationMinutes: 60, meetingType: 'video', active: true },
-  { id: 'et-3', name: 'Support-Call 15 Min', slug: 'support-15', description: 'Schnelle Hilfe bei technischen Fragen oder Problemen.', durationMinutes: 15, meetingType: 'phone', active: false },
-];
-
-export const qalenderTeams = [
-    { id: 'team-1', name: 'Sales Team', slug: 'sales', memberIds: ['LS', 'AM'], routingType: 'round_robin' },
-    { id: 'team-2', name: 'Support Team', slug: 'support', memberIds: ['AA', 'TS'], routingType: 'least_busy' },
-];
-
-export function getDynamicQalenderBookings() {
-    const today = new Date();
-    const tomorrow = addDays(new Date(), 1);
-    const dayAfter = addDays(new Date(), 2);
-    
-    const overdue = subDays(new Date(), 2);
-    const past = subDays(new Date(), 7);
-
-    return [
-        // Today
-        { bookingId: 'bk-today-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Max Mustermann', guestEmail: 'max@beispiel.com', startAt: new Date(new Date().setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Interessent', context: 'Verkaufschance #123' },
-        { bookingId: 'bk-today-2', eventTypeName: 'Q-Hub Sync', guestName: 'Anna Schmidt', guestEmail: 'anna.schmidt@qore.com', startAt: new Date(new Date().setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Projekt Phoenix' },
-
-        // Tomorrow
-        { bookingId: 'bk-tomorrow-1', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: new Date(tomorrow.setHours(11, 30, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Kunde', context: 'Deal #456' },
-
-        // This Week
-        { bookingId: 'bk-week-1', eventTypeName: 'Support-Call 15 Min', guestName: 'Ben Weber', guestEmail: 'ben.weber@qore.com', startAt: new Date(addDays(new Date(),3).setHours(15, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'bestätigt', role: 'Intern', context: 'Ticket #9981' },
-        
-        // Later
-        { bookingId: 'bk-later-1', eventTypeName: 'Strategie-Session', guestName: 'Management Team', guestEmail: '-', startAt: new Date(addDays(new Date(), 14).setHours(9, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Q2 Planung' },
-
-        // Critical / Open
-        { bookingId: 'bk-overdue-1', eventTypeName: 'Follow-Up Call', guestName: 'Peter Panik', guestEmail: 'peter.panik@alt.com', startAt: new Date(overdue.setHours(16, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'überfällig', role: 'Interessent', context: 'Verkaufschance #098' },
-        { bookingId: 'bk-unconfirmed-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Wanda Warter', guestEmail: 'wanda.warter@mail.com', startAt: new Date(dayAfter.setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'unbestätigt', role: 'Interessent', context: 'Verkaufschance #111' },
-        { bookingId: 'bk-no-result-1', eventTypeName: 'Kundenfeedback', guestName: 'Zufrieden GmbH', guestEmail: 'kontakt@zufrieden.de', startAt: new Date(overdue.setHours(11, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'ohne Ergebnis', role: 'Kunde', context: 'Ticket #887' },
-
-        // Past
-        { bookingId: 'bk-past-1', eventTypeName: 'Kick-Off Projekt Phoenix', guestName: 'Projektteam', guestEmail: '-', startAt: new Date(past.setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'erledigt', role: 'Intern', context: 'Projekt Phoenix' },
-    ];
-}
-
-export const mockContacts = [
-    { id: 1, name: 'John Doe', company: 'Innovate GmbH', email: 'john.doe@innovate.de', leadStatus: 'Qualifiziert', owner: 'Leo Sales', status: 'Aktiv', lastActivity: 'Heute', priority: 'attention' },
-    { id: 2, name: 'Jane Smith', company: 'Data Corp', email: 'jane.s@datacorp.co', leadStatus: 'Kunde', owner: 'Ava Assist', status: 'Aktiv', lastActivity: 'Vor 2 Tagen', priority: 'neutral' },
-    { id: 3, name: 'Peter Jones', company: 'Tech Solutions', email: 'peter.j@tech.io', leadStatus: 'Neu', owner: 'Leo Sales', status: 'Aktiv', lastActivity: 'Vor 5 Tagen', priority: 'neutral' },
-    { id: 4, name: 'Maria Garcia', company: 'Global Exports', email: 'm.garcia@globalexports.com', leadStatus: 'In Betreuung', owner: 'Ava Assist', status: 'Inaktiv', lastActivity: 'Vor 3 Wochen', priority: 'critical' },
-    { id: 5, name: 'Sam Wilson', company: 'Innovate GmbH', email: 'sam.w@innovate.de', leadStatus: 'Kunde', owner: 'Ava Assist', status: 'Aktiv', lastActivity: 'Gestern', priority: 'neutral' }
-];
-
-export const mockCompanies = [
-    { id: 1, name: 'Innovate GmbH', industry: 'Technologie', owner: 'Leo Sales', status: 'Aktiv', aktiveVorgange: '1 Verkaufschance', priority: 'attention' },
-    { id: 2, name: 'Data Corp', industry: 'Datenanalyse', owner: 'Leo Sales', status: 'Aktiv', aktiveVorgange: '1 Verkaufschance', priority: 'attention' },
-    { id: 3, name: 'Tech Solutions', industry: 'IT-Dienstleistungen', owner: 'Ava Assist', status: 'Aktiv', aktiveVorgange: 'Keine', priority: 'neutral' },
-    { id: 4, name: 'Global Exports', industry: 'Handel', owner: 'Ava Assist', status: 'Inaktiv', aktiveVorgange: '1 Servicefall', priority: 'critical' },
-];
-
-
-export const mockDeals = [
-    { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen', aiNextStepSuggestion: 'Anrufen und offene Fragen zum Angebot klären.', aiRisk: null },
-    { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 5, nextStep: 'Bedarf klären', aiNextStepSuggestion: 'E-Mail mit Terminvorschlag für Bedarfsanalyse senden.', aiRisk: "Hohe Inaktivität. Deal könnte verloren gehen." },
-    { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen', aiNextStepSuggestion: 'Kurze E-Mail mit Frage nach Feedback zum Angebot.', aiRisk: null },
-    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden', aiNextStepSuggestion: null, aiRisk: null },
-    { id: 5, name: 'Global Exports - Logistik-Suite', stage: 'Verhandlung', value: '€75,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 2, nextStep: 'Finale Konditionen klären', aiNextStepSuggestion: 'Internen Call zur Klärung der letzten Rabattstufe ansetzen.', aiRisk: null },
-    { id: 6, name: 'Abgeschlossener Deal', stage: 'Gewonnen', value: '€100,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 30, nextStep: 'Projektübergabe', aiNextStepSuggestion: null, aiRisk: null },
-    { id: 7, name: 'Altes Projekt', stage: 'Angebot', value: '€5,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 12, nextStep: 'Angebot nachfassen', aiNextStepSuggestion: 'Deal als verloren markieren oder letzte E-Mail senden.', aiRisk: 'Sehr hohe Inaktivität. Wahrscheinlich verloren.' },
-];
-
-export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
-
 
 export const kpiMitarbeiter = [
     { id: 'ben-weber', role: 'Developer', name: 'Ben Weber', abteilung: 'IT', team: 'Core-Backend', mitarbeitertyp: 'Mensch', zWert: 65, status: 'Eskalation', trend: 'down', letzteAbweichung: 'Deployment-Verzug (+3 Tage)', eskalation: 'Ja', prevZ: 72, activeTasks: 8, activeProjects: 2, overdueTasks: 3, blockedTasks: 1, kpiBreakdown: [{deduction: 7, reason: 'Deployment-Verzug (+3 Tage)'}, {deduction: 2, reason: '2 überfällige Aufgaben'}] },
