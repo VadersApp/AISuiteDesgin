@@ -16,6 +16,14 @@ function initializeFirebase(): FirebaseApp {
     return getApp();
   }
 
+  // If the API key is a placeholder, initialize a minimal app to avoid crashing.
+  // Firebase functionality will not work correctly, but the UI can be built.
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes('...')) {
+    console.warn("Firebase API key is a placeholder. Initializing a minimal Firebase app to prevent crashing. No Firebase features will work.");
+    return initializeApp({ projectId: firebaseConfig.projectId || "qore-os-for-enterprises-gcp" });
+  }
+
+
   return initializeApp(firebaseConfig);
 }
 

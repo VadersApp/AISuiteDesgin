@@ -9,6 +9,13 @@ export function useUser() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If auth object is not a real instance (e.g. mock from provider), do nothing.
+    if (!auth?.app) {
+      setLoading(false);
+      setUser(null);
+      return;
+    }
+    
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
