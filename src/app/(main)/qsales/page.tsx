@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,38 +41,17 @@ import {
   AlertTriangle,
   TrendingUp,
   Clock,
-  Briefcase
+  Briefcase,
+  Plus,
+  Settings,
 } from 'lucide-react';
-import { qsalesLeads as allLeads, salesKpiGroups } from '@/lib/data';
+import { qsalesLeads as allLeads, salesKpiGroups, qSalesSystemViews } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
-
-const actionViews = [
-  { name: '🔥 Jetzt anrufen', slug: 'call-now' },
-  { name: '📅 Heute geplant', slug: 'due-today' },
-  { name: '🧠 KI-priorisiert', slug: 'ai-priority' },
-  { name: '🔁 Follow-ups', slug: 'follow-up' },
-  { name: '✅ Abgeschlossen', slug: 'done' },
-  { name: '❌ Kein Interesse', slug: 'lost' },
-];
-
-const priorityColors: { [key: string]: string } = {
-  Hoch: 'border-rose-500/50 text-rose-400',
-  Mittel: 'border-amber-500/50 text-amber-400',
-  Niedrig: 'border-slate-500/50 text-slate-400',
-};
-
-const statusColors: { [key: string]: string } = {
-  Neu: 'bg-blue-500/20 text-blue-400',
-  Kontaktiert: 'bg-amber-500/20 text-amber-400',
-  'Follow-up geplant': 'bg-purple-500/20 text-purple-400',
-  'Termin gelegt': 'bg-emerald-500/20 text-emerald-400',
-  Abgeschlossen: 'bg-slate-500/20 text-slate-400',
-  Verloren: 'bg-rose-500/20 text-rose-400',
-};
+import { useUser } from '@/firebase';
 
 type Lead = (typeof allLeads)[0];
 
@@ -121,26 +100,41 @@ const SalesFocusHeader = ({ leads, onLeadSelect }: { leads: Lead[], onLeadSelect
     )
 }
 
+const actionViews = qSalesSystemViews.map(view => ({
+    name: view.name,
+    slug: view.id,
+}));
+
 
 export default function QSalesPage() {
   const [activeView, setActiveView] = useState(actionViews[0].slug);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(allLeads[0]);
+  // In a real app, custom smart views would be fetched from Firestore
+  const [customSmartViews, setCustomSmartViews] = useState([
+      { id: 'custom-1', name: 'Meine Follow-Ups Q1', isPinned: true },
+      { id: 'custom-2', name: 'Leads aus Berlin', isPinned: false },
+  ]);
+
+  const { user } = useUser(); // Example of using a hook from Firebase setup.
 
   const filteredLeads = useMemo(() => {
+    // This is a simplified filtering logic. In a real app, this would use
+    // the query builder to fetch data from Firestore based on the active view's filters.
     switch (activeView) {
-      case 'call-now':
+      case 'system-call-now':
         return allLeads.filter(l => l.nextAction.includes('Heute') || l.nextAction.includes('Überfällig'));
-      case 'due-today':
+      case 'system-due-today':
         return allLeads.filter(l => l.nextAction.includes('Heute'));
-      case 'follow-up':
+      case 'system-follow-ups':
         return allLeads.filter(l => l.status === 'Follow-up geplant');
-      case 'done':
+      case 'system-done':
          return allLeads.filter(l => l.status === 'Abgeschlossen');
-      case 'lost':
+      case 'system-lost':
          return allLeads.filter(l => l.status === 'Verloren');
-      case 'ai-priority':
+      case 'system-ai-priority':
         return [...allLeads].filter(l => l.status !== 'Abgeschlossen' && l.status !== 'Verloren').sort((a,b) => b.aiRecommendation.probability - a.aiRecommendation.probability);
       default:
+        // For custom views, we'd apply their specific filters
         return allLeads.filter(l => l.status !== 'Abgeschlossen' && l.status !== 'Verloren');
     }
   }, [activeView]);
@@ -182,16 +176,33 @@ export default function QSalesPage() {
         {/* Left Sidebar */}
         <Card className="p-2 lg:col-span-2">
             <div className="space-y-1">
-            {actionViews.map(view => (
-                <Button 
-                    key={view.slug}
-                    variant={activeView === view.slug ? 'secondary' : 'ghost'}
-                    onClick={() => setActiveView(view.slug)}
-                    className="w-full justify-start text-sm font-bold gap-2"
-                >
-                    {view.name}
+                <p className="px-2 pt-1 pb-2 text-xs font-bold uppercase text-muted-foreground">SmartViews</p>
+                {actionViews.map(view => (
+                    <Button 
+                        key={view.slug}
+                        variant={activeView === view.slug ? 'secondary' : 'ghost'}
+                        onClick={() => setActiveView(view.slug)}
+                        className="w-full justify-start text-sm font-bold gap-2"
+                    >
+                        {view.name}
+                    </Button>
+                ))}
+            </div>
+             <div className="space-y-1 mt-4">
+                <p className="px-2 pt-1 pb-2 text-xs font-bold uppercase text-muted-foreground">Meine SmartViews</p>
+                {customSmartViews.map(view => (
+                    <Button 
+                        key={view.id}
+                        variant={activeView === view.id ? 'secondary' : 'ghost'}
+                        onClick={() => setActiveView(view.id)}
+                        className="w-full justify-start text-sm font-bold gap-2"
+                    >
+                        {view.name}
+                    </Button>
+                ))}
+                 <Button variant="ghost" className="w-full justify-start text-sm font-normal text-muted-foreground gap-2">
+                    <Plus className="w-4 h-4"/> SmartView erstellen
                 </Button>
-            ))}
             </div>
         </Card>
 
@@ -199,7 +210,7 @@ export default function QSalesPage() {
         <div className={cn("transition-all duration-300", selectedLead ? "lg:col-span-7" : "lg:col-span-10")}>
           <Card>
             <div className="p-4 border-b border-border flex justify-between items-center">
-                <h3 className="font-bold text-foreground">{actionViews.find(v => v.slug === activeView)?.name} ({filteredLeads.length})</h3>
+                <h3 className="font-bold text-foreground">{actionViews.find(v => v.slug === activeView)?.name || customSmartViews.find(v => v.id === activeView)?.name} ({filteredLeads.length})</h3>
                 <div className="flex items-center gap-2">
                     <div className="relative w-48">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -232,8 +243,8 @@ export default function QSalesPage() {
                       <p className="text-[10px] text-blue-400 italic mt-1">{lead.kiHint}</p>
                     </TableCell>
                     <TableCell className="text-sm font-bold">{lead.nextAction}</TableCell>
-                    <TableCell><Badge variant="outline" className={cn("text-xs font-bold", priorityColors[lead.priority])}>{lead.priority}</Badge></TableCell>
-                    <TableCell><Badge variant="outline" className={cn("text-[10px] uppercase font-bold", statusColors[lead.status])}>{lead.status}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={cn("text-xs font-bold", lead.priority === 'Hoch' ? 'border-rose-500/50 text-rose-400' : lead.priority === 'Mittel' ? 'border-amber-500/50 text-amber-400' : 'border-slate-500/50 text-slate-400')}>{lead.priority}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className={cn("text-[10px] uppercase font-bold", lead.status === 'Neu' ? 'bg-blue-500/20 text-blue-400' : 'bg-muted')}>{lead.status}</Badge></TableCell>
                     <TableCell className="text-right">
                         <Button variant="default" size="sm" className="h-8">
                             <Phone className="w-3.5 h-3.5 mr-2" /> Jetzt anrufen

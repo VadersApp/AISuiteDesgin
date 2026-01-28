@@ -411,6 +411,89 @@ export const qsalesLeads = [
   },
 ];
 
+export const qSalesSystemViews = [
+  {
+    id: 'system-call-now',
+    type: 'system',
+    entity: 'leads',
+    name: '🔥 Jetzt anrufen',
+    scope: 'org',
+    filters: [
+      { field: 'nextActionType', operator: '==', value: 'call' },
+      { field: 'nextActionAt', operator: '<=', value: 'now' },
+      { field: 'isClosed', operator: '==', value: false }
+    ],
+    sort: { field: 'nextActionAt', direction: 'asc' },
+    ui: { icon: 'Flame' }
+  },
+  {
+    id: 'system-due-today',
+    type: 'system',
+    entity: 'leads',
+    name: '📅 Heute geplant',
+    scope: 'org',
+    filters: [
+      { field: 'nextActionAt', operator: 'between', value: ['startOfToday', 'endOfToday'] },
+      { field: 'isClosed', operator: '==', value: false }
+    ],
+    sort: { field: 'nextActionAt', direction: 'asc' },
+    ui: { icon: 'Calendar' }
+  },
+    {
+    id: 'system-ai-priority',
+    type: 'system',
+    entity: 'leads',
+    name: '🧠 KI-priorisiert',
+    scope: 'org',
+    filters: [
+      { field: 'isClosed', operator: '==', value: false },
+      { field: 'ai.score', operator: '>=', value: 70 }
+    ],
+    sort: { field: 'ai.score', direction: 'desc' },
+    ui: { icon: 'BrainCircuit' }
+  },
+  {
+    id: 'system-follow-ups',
+    type: 'system',
+    entity: 'leads',
+    name: '🔁 Follow-ups',
+    scope: 'org',
+    filters: [
+      { field: 'nextActionType', operator: '==', value: 'followup' },
+      { field: 'nextActionAt', operator: '<=', value: 'now' },
+      { field: 'isClosed', operator: '==', value: false }
+    ],
+    sort: { field: 'nextActionAt', direction: 'asc' },
+    ui: { icon: 'Repeat' }
+  },
+  {
+    id: 'system-done',
+    type: 'system',
+    entity: 'leads',
+    name: '✅ Abgeschlossen',
+    scope: 'org',
+    filters: [
+      { field: 'isClosed', operator: '==', value: true },
+      { field: 'closedReason', operator: '==', value: 'won' }
+    ],
+    sort: { field: 'lastActivityAt', direction: 'desc' },
+    ui: { icon: 'CheckCircle2' }
+  },
+  {
+    id: 'system-lost',
+    type: 'system',
+    entity: 'leads',
+    name: '❌ Kein Interesse',
+    scope: 'org',
+    filters: [
+      { field: 'isClosed', operator: '==', value: true },
+      { field: 'closedReason', operator: '==', value: 'lost' }
+    ],
+    sort: { field: 'lastActivityAt', direction: 'desc' },
+    ui: { icon: 'XCircle' }
+  }
+];
+
 export const eventTypes = [
   { id: 'et-1', name: 'Erstgespräch 30 Min', slug: 'erstgespraech-30', description: 'Ein kurzes Kennenlernen, um Ihre Anforderungen zu besprechen.', durationMinutes: 30, meetingType: 'video', active: true },
   { id: 'et-2', name: 'Technische Demo 60 Min', slug: 'tech-demo-60', description: 'Eine detaillierte Vorführung unserer Plattform und ihrer Funktionen.', durationMinutes: 60, meetingType: 'video', active: true },

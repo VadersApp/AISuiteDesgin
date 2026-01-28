@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // SmartViews rules
+    match /organizations/{orgId}/q_sales_smartviews/{viewId} {
+        // All authenticated users in the org can read system views.
+        // For custom views, check scope.
+        allow read: if request.auth != null && (
+            resource.data.type == 'system' ||
+            (resource.data.scope == 'private' && resource.data.createdBy.userId == request.auth.uid) ||
+            resource.data.scope == 'team' || // V1: team is org-wide for reads
+            resource.data.scope == 'org'
+        );
+
+        // Can create custom views.
+        allow create: if request.auth != null && request.resource.data.type == 'custom' && request.resource.data.createdBy.userId == request.auth.uid;
+        
+        // Cannot update system views.
+        // Can update custom views based on permissions.
+        allow update: if request.auth != null && resource.data.type == 'custom' && (
+            (resource.data.scope == 'private' && resource.data.createdBy.userId == request.auth.uid) ||
+            (resource.data.scope == 'team' && resource.data.createdBy.userId == request.auth.uid) // V1: only owner can edit team views
+        );
+
+        // Cannot delete system views.
+        // Can delete (archive) their own private/team views.
+        allow delete: if request.auth != null && resource.data.type == 'custom' && resource.data.createdBy.userId == request.auth.uid;
+    }
+
+    // User Preferences rules
+    match /organizations/{orgId}/users/{userId}/q_sales_preferences/smartviews {
+        // Users can only read and write their own preferences.
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /organizations/{orgId}/leads/{leadId} {
+        // Allow read/write for authenticated users.
+        // In a real app, this would be more granular based on org/team membership.
+        allow read, write: if request.auth != null;
+    }
+  }
+}

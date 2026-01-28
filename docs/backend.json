@@ -1,0 +1,126 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile in the system.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        }
+      },
+      "required": ["displayName", "email"]
+    },
+    "SmartView": {
+      "title": "SmartView",
+      "description": "A saved view for filtering and sorting entities in Q-Sales.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["system", "custom"] },
+        "entity": { "type": "string", "enum": ["leads"] },
+        "name": { "type": "string" },
+        "scope": { "type": "string", "enum": ["private", "team", "org"] },
+        "createdBy": { "type": "object", "properties": { "userId": { "type": "string" }, "name": { "type": "string" } } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "isArchived": { "type": "boolean" },
+        "filters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "operator": { "type": "string" },
+              "value": {}
+            }
+          }
+        },
+        "sort": {
+          "type": "object",
+          "properties": {
+            "field": { "type": "string" },
+            "direction": { "type": "string", "enum": ["asc", "desc"] }
+          }
+        },
+        "ui": {
+            "type": "object",
+            "properties": {
+                "icon": { "type": "string" },
+                "color": { "type": "string" },
+                "description": { "type": "string" }
+            }
+        },
+        "permissions": {
+            "type": "object",
+            "properties": {
+                "editableBy": { "type": "string", "enum": ["owner", "team", "admin"] }
+            }
+        }
+      },
+      "required": ["id", "type", "entity", "name", "scope", "createdBy", "createdAt", "updatedAt"]
+    },
+    "QSalesUserPreferences": {
+        "title": "Q-Sales User Preferences",
+        "description": "User-specific preferences for Q-Sales, like pinned or hidden SmartViews.",
+        "type": "object",
+        "properties": {
+            "hiddenSystemViewIds": { "type": "array", "items": { "type": "string" } },
+            "pinnedViewIds": { "type": "array", "items": { "type": "string" } },
+            "customOrder": { "type": "array", "items": { "type": "string" } },
+            "lastSelectedViewId": { "type": "string" },
+            "updatedAt": { "type": "string", "format": "date-time" }
+        }
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "A sales lead in Q-Sales.",
+      "type": "object",
+      "properties": {
+          "nextActionAt": { "type": "string", "format": "date-time" },
+          "nextActionType": { "type": "string", "enum": ["call", "followup", "email", "meeting", null] },
+          "lastActivityAt": { "type": "string", "format": "date-time" },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+          "stage": { "type": "string" },
+          "status": { "type": "string", "enum": ["open", "won", "lost", "snooze"] },
+          "assigneeId": { "type": "string" },
+          "isClosed": { "type": "boolean" },
+          "closedReason": { "type": "string", "enum": ["won", "lost", null] },
+          "ai": {
+              "type": "object",
+              "properties": {
+                  "score": { "type": "number" },
+                  "label": { "type": "string" }
+              }
+          }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["anonymous"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/backend/entities/UserProfile" },
+      "description": "Stores user profile information."
+    },
+     "/organizations/{orgId}/q_sales_smartviews/{viewId}": {
+      "schema": { "$ref": "#/backend/entities/SmartView" },
+      "description": "Stores custom and system SmartViews for Q-Sales."
+    },
+    "/organizations/{orgId}/users/{userId}/q_sales_preferences/smartviews": {
+        "schema": { "$ref": "#/backend/entities/QSalesUserPreferences" },
+        "description": "Stores user preferences for Q-Sales SmartViews."
+    },
+     "/organizations/{orgId}/leads/{leadId}": {
+      "schema": { "$ref": "#/backend/entities/Lead" },
+      "description": "Stores sales leads."
+    }
+  }
+}
