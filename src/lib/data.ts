@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { PhoneCall, UserCheck, CalendarPlus, Percent, MailQuestion, AlertTriangle, Flame } from 'lucide-react';
+import { PhoneCall, UserCheck, CalendarPlus, Percent, MailQuestion, AlertTriangle, Flame, Phone, Calendar, Handshake, DollarSign } from 'lucide-react';
 
 export const bots = [
     { name: 'Ava Assist', id: 'ava', role: 'Support-Spezialistin', desc: 'Beantwortet Kundenanfragen und managt Tickets basierend auf der FAQ.', tasksCount: 14, timeSaved: '142h', kpis: [{ label: 'Zufriedenh.', value: '98%', icon: 'star' }, { label: 'Tickets', value: '1.2k', icon: 'message-square' }, { label: 'Response', value: '0.8s', icon: 'clock' }], currentActivity: 'Analysiert aktuell 14 offene Tickets in der Warteschlange.', lastAction: { desc: 'Beschwerde #8291 erfolgreich gelöst.', time: 'Vor 12 Minuten' }, complianceNote: 'DSGVO konform. Datenanonymisierung aktiv.', focusReports: [{ date: 'HEUTE', title: 'Sentiment Q1', content: 'Kundenzufriedenheit um 14% gestiegen.', type: 'Performance' }] },
@@ -496,6 +496,35 @@ export const qSalesSystemViews = [
     ui: { icon: 'XCircle' }
   }
 ];
+
+export const qSalesReportingData = {
+  uebersicht: {
+    kpis: [
+      { title: 'Anrufe (30 T.)', value: '182', icon: 'Phone' },
+      { title: 'Termine (30 T.)', value: '48', icon: 'Calendar' },
+      { title: 'Abschlüsse (30 T.)', value: '12', icon: 'Handshake' },
+      { title: 'Abschlussquote', value: '25%', icon: 'Percent' },
+      { title: 'Pipeline-Wert', value: '€215.000', icon: 'DollarSign' },
+      { title: 'At-Risk Deals', value: '3', icon: 'AlertTriangle' },
+    ],
+    salesFlow: [
+      { stage: 'Leads', value: 412, conversion: null },
+      { stage: 'Gespräche', value: 182, conversion: '44%' },
+      { stage: 'Termine', value: 48, conversion: '26%' },
+      { stage: 'Abschlüsse', value: 12, conversion: '25%' },
+    ],
+  },
+  learnings: {
+    lostReasonData: [
+      { reason: 'Preis zu hoch', count: 4 },
+      { reason: 'Kein Bedarf', count: 2 },
+      { reason: 'Wettbewerber', count: 1 },
+      { reason: 'Timing', count: 1 },
+    ],
+    aiSummary: "Fast 50% der verlorenen Deals scheitern am Preis. Eine frühere und präzisere Budget-Qualifizierung im Discovery-Prozess könnte die Effizienz erheblich steigern."
+  }
+};
+
 
 export const eventTypes = [
   { id: 'et-1', name: 'Erstgespräch 30 Min', slug: 'erstgespraech-30', description: 'Ein kurzes Kennenlernen, um Ihre Anforderungen zu besprechen.', durationMinutes: 30, meetingType: 'video', active: true },

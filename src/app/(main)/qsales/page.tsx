@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect, type FormEvent } from 'react';
@@ -48,8 +49,11 @@ import {
   MoreVertical,
   Star,
   BarChart2,
+  Handshake,
+  DollarSign,
+  ChevronsRight,
 } from 'lucide-react';
-import { qsalesLeads as allLeads, salesKpiGroups, qSalesSystemViews, mockSequences } from '@/lib/data';
+import { qsalesLeads as allLeads, salesKpiGroups, qSalesSystemViews, mockSequences, qSalesReportingData } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -63,6 +67,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+
 
 type Lead = (typeof allLeads)[0];
 type Sequence = (typeof mockSequences)[0];
@@ -360,6 +367,152 @@ const CloseLeadDialog = ({ lead, open, onOpenChange }: { lead: Lead, open: boole
     )
 }
 
+const UebersichtTab = () => {
+    const { uebersicht } = qSalesReportingData;
+    const IconMap: { [key: string]: React.ElementType } = { Phone, Calendar, Handshake, Percent, DollarSign, AlertTriangle };
+  
+    return (
+      <div className="space-y-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {uebersicht.kpis.map(kpi => {
+            const Icon = IconMap[kpi.icon as string] || Activity;
+            return (
+              <Card key={kpi.title}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+                    {kpi.title} <Icon className="w-4 h-4" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{kpi.value}</p>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Sales Flow</CardTitle>
+                <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-around flex-wrap gap-4">
+                {uebersicht.salesFlow.map((step, index) => (
+                    <React.Fragment key={step.stage}>
+                        <div className="text-center">
+                            <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
+                            <p className="text-3xl font-bold">{step.value}</p>
+                        </div>
+                        {index < uebersicht.salesFlow.length - 1 && (
+                            <div className="text-center">
+                                <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
+                                <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
+                            </div>
+                        )}
+                    </React.Fragment>
+                ))}
+            </CardContent>
+        </Card>
+      </div>
+    );
+};
+
+const AktivitaetTab = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Aktivität</CardTitle>
+            <CardDescription>Hier werden Diagramme zur Team-Aktivität angezeigt.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <p className="text-muted-foreground italic">Ansicht wird aufgebaut.</p>
+        </CardContent>
+    </Card>
+);
+const AbschluesseTab = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Abschlüsse</CardTitle>
+             <CardDescription>Hier werden Diagramme zu gewonnenen und verlorenen Deals angezeigt.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <p className="text-muted-foreground italic">Ansicht wird aufgebaut.</p>
+        </CardContent>
+    </Card>
+);
+const RisikoTab = () => (
+     <Card>
+        <CardHeader>
+            <CardTitle>Risiko</CardTitle>
+             <CardDescription>Hier werden Deals mit Handlungsbedarf angezeigt.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <p className="text-muted-foreground italic">Ansicht wird aufgebaut.</p>
+        </CardContent>
+    </Card>
+);
+const LearningsTab = () => {
+    const { learnings } = qSalesReportingData;
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Top Verlustgründe</CardTitle>
+                </CardHeader>
+                <CardContent>
+                     <ChartContainer config={{}} className="h-64">
+                         <BarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
+                             <XAxis type="number" hide />
+                             <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
+                             <RechartsTooltip cursor={{fill: 'hsl(var(--accent))'}} content={<ChartTooltipContent />} />
+                             <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
+                         </BarChart>
+                     </ChartContainer>
+                </CardContent>
+            </Card>
+             <Card className="bg-blue-500/10 border-blue-500/20">
+                <CardHeader>
+                    <CardTitle className="text-blue-300 text-base flex items-center gap-2"><BrainCircuit/> KI-Zusammenfassung</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-blue-200">{learnings.aiSummary}</p>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+
+const ReportingView = () => {
+    return (
+        <Tabs defaultValue="uebersicht">
+            <div className="flex justify-between items-center mb-6">
+                <TabsList>
+                    <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
+                    <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
+                    <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
+                    <TabsTrigger value="risiko">Risiko</TabsTrigger>
+                    <TabsTrigger value="learnings">Learnings</TabsTrigger>
+                </TabsList>
+                <div className="flex items-center gap-2">
+                    <Select defaultValue="30d">
+                        <SelectTrigger className="w-[180px] bg-input">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="today">Heute</SelectItem>
+                            <SelectItem value="7d">Diese Woche</SelectItem>
+                            <SelectItem value="30d">Dieser Monat</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+            <TabsContent value="uebersicht"><UebersichtTab /></TabsContent>
+            <TabsContent value="aktivitaet"><AktivitaetTab /></TabsContent>
+            <TabsContent value="abschluesse"><AbschluesseTab /></TabsContent>
+            <TabsContent value="risiko"><RisikoTab /></TabsContent>
+            <TabsContent value="learnings"><LearningsTab /></TabsContent>
+        </Tabs>
+    )
+}
 
 export default function QSalesPage() {
   const [activeView, setActiveView] = useState(qSalesSystemViews[0].id);
@@ -398,7 +551,7 @@ export default function QSalesPage() {
         case 'sequences':
             return <SequencesView />;
         case 'reporting':
-            return <Card><CardHeader><CardTitle>Reporting</CardTitle></CardHeader><CardContent><p className="text-muted-foreground italic">Reporting-Ansicht wird hier aufgebaut.</p></CardContent></Card>;
+            return <ReportingView />;
         case 'settings':
             return <Card><CardHeader><CardTitle>Einstellungen</CardTitle></CardHeader><CardContent><div className="flex items-center space-x-2"><Switch id="advanced-view"/><Label htmlFor="advanced-view">Erweiterte Ansicht (Pro)</Label></div></CardContent></Card>;
         case 'leads':
@@ -439,7 +592,9 @@ export default function QSalesPage() {
         <p className="text-muted-foreground">Ihre operative Vertriebsoberfläche für die tägliche Sales-Arbeit.</p>
       </header>
       
-      <SalesFocusHeader leads={allLeads} onLeadSelect={setSelectedLead} />
+      <div className="hidden">
+        <SalesFocusHeader leads={allLeads} onLeadSelect={setSelectedLead} />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <aside className="p-2 lg:col-span-2">
@@ -490,4 +645,3 @@ export default function QSalesPage() {
     </div>
   );
 }
-
