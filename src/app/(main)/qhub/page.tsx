@@ -87,6 +87,9 @@ import {
   Info,
   CheckCircle2,
   GitBranch,
+  PhoneIncoming,
+  PhoneMissed,
+  PhoneOutgoing,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -108,12 +111,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 const modules = [
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'Termine', icon: CalendarDays },
+    { name: 'Aufgaben', icon: CheckSquare },
     { name: 'Kontakte', icon: Users },
     { name: 'Firmen', icon: Building2 },
     { name: 'Deals', icon: Handshake },
     { name: 'Pipeline', icon: Kanban },
     { name: 'Aktivitäten', icon: Activity },
-    { name: 'Aufgaben', icon: CheckSquare },
     { name: 'Notizen', icon: FileText },
     { name: 'E-Mails', icon: Mail },
     { name: 'Anrufe', icon: Phone },
@@ -555,10 +558,10 @@ const DealsView = () => {
         return 'hover:bg-muted/50';
     };
     
-    const formatSlaStatus = (slaDue: string | null) => {
+    const formatFristStatus = (slaDue: string | null) => {
         if (!slaDue) return "Im Plan";
-        if (slaDue === 'überschritten') return "SLA überschritten";
-        return `SLA ${slaDue} fällig`;
+        if (slaDue === 'überschritten') return "Reaktionsfrist überschritten";
+        return `Nächster Schritt ${slaDue} fällig`;
     };
 
     return (
@@ -579,7 +582,7 @@ const DealsView = () => {
                     <TabsList>
                         <TabsTrigger value="Alle">Alle</TabsTrigger>
                         <TabsTrigger value="Mit Handlungsbedarf">Mit Handlungsbedarf</TabsTrigger>
-                        <TabsTrigger value="SLA kritisch">SLA kritisch</TabsTrigger>
+                        <TabsTrigger value="SLA kritisch">Frist kritisch</TabsTrigger>
                         <TabsTrigger value="In Verhandlung">In Verhandlung</TabsTrigger>
                     </TabsList>
                 </Tabs>
@@ -593,7 +596,7 @@ const DealsView = () => {
                         <TableHead>Nächster Schritt</TableHead>
                         <TableHead>Phase</TableHead>
                         <TableHead>Wert</TableHead>
-                        <TableHead>SLA-Status</TableHead>
+                        <TableHead>Frist-Status</TableHead>
                         <TableHead>Zuständig</TableHead>
                         <TableHead className="text-right">KI-Analyse</TableHead>
                     </TableRow>
@@ -610,7 +613,7 @@ const DealsView = () => {
                                     'text-xs',
                                     d.slaDue === 'überschritten' && 'border-rose-500/50 text-rose-400',
                                     (d.slaDue === 'heute' || d.slaDue === 'morgen') && 'border-amber-500/50 text-amber-400',
-                                )}>{formatSlaStatus(d.slaDue)}</Badge>
+                                )}>{formatFristStatus(d.slaDue)}</Badge>
                             </TableCell>
                             <TableCell>{d.owner}</TableCell>
                              <TableCell className="text-right">
@@ -653,10 +656,10 @@ const PipelineView = () => {
         return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
     };
 
-    const formatSlaStatus = (slaDue: string | null): string => {
+    const formatFristStatus = (slaDue: string | null): string => {
         if (!slaDue) return "";
-        if (slaDue === 'überschritten') return "SLA überschritten";
-        return `SLA ${slaDue} fällig`;
+        if (slaDue === 'überschritten') return "Reaktionsfrist überschritten";
+        return `Nächster Schritt ${slaDue} fällig`;
     };
 
     return (
@@ -701,7 +704,7 @@ const PipelineView = () => {
                                                 {deal.slaDue && (
                                                     <div className={cn("flex items-center gap-1.5 font-medium", isCritical ? "text-rose-500" : isAttention ? "text-amber-500" : "text-muted-foreground")}>
                                                         <AlertTriangle className="w-3.5 h-3.5" />
-                                                        <span>{formatSlaStatus(deal.slaDue)}</span>
+                                                        <span>{formatFristStatus(deal.slaDue)}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -1732,12 +1735,12 @@ export default function QhubPage() {
       switch (activeModule) {
           case 'Dashboard': return <DashboardView currentUser={currentUser} filteredKpiMitarbeiter={kpiMitarbeiter} filteredChatThreads={chatThreads} filteredTasks={mockTasks} />;
           case 'Termine': return <TerminboardView />;
+          case 'Aufgaben': return <AufgabenView />;
           case 'Kontakte': return <ContactsView />;
           case 'Firmen': return <CompaniesView />;
           case 'Deals': return <DealsView />;
           case 'Pipeline': return <PipelineView />;
           case 'Aktivitäten': return <ActivitiesView />;
-          case 'Aufgaben': return <AufgabenView />;
           case 'Notizen': return <NotesView />;
           case 'E-Mails': return <EmailsView />;
           case 'Anrufe': return <AnrufeView />;

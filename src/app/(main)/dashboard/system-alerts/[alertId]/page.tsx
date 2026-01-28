@@ -566,7 +566,7 @@ const DealStagnationView = () => {
                           <AlertTriangle className="w-4 h-4 text-rose-500" /> Warum kritisch?
                         </h3>
                         <p className="text-white text-lg">
-                            Deal ist seit 5 Tagen inaktiv und SLA wurde überschritten.
+                            Deal ist seit 5 Tagen inaktiv und die Reaktionsfrist wurde überschritten.
                         </p>
                         <p className="text-sm text-slate-400 mt-2">
                            Inaktivität in dieser Phase führt erfahrungsgemäß zu einem hohen Verlustrisiko.
