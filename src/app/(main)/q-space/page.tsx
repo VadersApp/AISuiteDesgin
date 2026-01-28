@@ -83,6 +83,7 @@ import {
   Workflow,
   X,
   Building,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -947,7 +948,7 @@ const MitarbeiterView = ({ mitarbeiter }: { mitarbeiter: any[]}) => {
                                             <TableCell className="text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal /></Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical /></Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         <DropdownMenuItem>Erneut senden</DropdownMenuItem>
@@ -1092,6 +1093,12 @@ export default function QSpacePage() {
   const [currentUserId, setCurrentUserId] = useState('dr-mueller');
   const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
 
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useEffect(() => {
     if (pathname.startsWith('/q-space/chat')) {
       if (activeModule !== 'Q-Chat') {
@@ -1164,7 +1171,7 @@ export default function QSpacePage() {
       0
     );
 
-  if (!currentUser) {
+  if (!currentUser || !isClient) {
     return <div className="p-8">Benutzer wird geladen oder konnte nicht gefunden werden...</div>;
   }
 

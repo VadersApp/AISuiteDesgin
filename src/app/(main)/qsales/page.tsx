@@ -49,12 +49,12 @@ import {
   MoreVertical,
   Star,
   BarChart,
-  BarChart2,
   Handshake,
   DollarSign,
   ChevronsRight,
   UserX,
   Target,
+  BarChart2,
 } from 'lucide-react';
 import { allLeads, salesKpiGroups, qSalesSystemViews, mockSequences, qSalesReportingData, kpiMitarbeiter } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -72,6 +72,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResponsiveContainer, Line, ComposedChart } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import Link from 'next/link';
 
 
 type Lead = (typeof allLeads)[0];
@@ -627,7 +628,7 @@ const LearningsTab = () => {
                          <BarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
                              <XAxis type="number" hide />
                              <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
-                             <RechartsTooltip cursor={{fill: 'hsl(var(--accent))'}} content={<ChartTooltipContent />} />
+                             <Tooltip content={<ChartTooltipContent />} />
                              <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
                          </BarChart>
                      </ChartContainer>
@@ -690,6 +691,11 @@ export default function QSalesPage() {
   const [activeMainView, setActiveMainView] = useState('leads'); // 'leads', 'sequences', 'reporting', 'settings'
 
   const { user } = useUser();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredLeads = useMemo(() => {
     if (!activeView.startsWith('system-')) return allLeads; // Simplified for custom views
@@ -748,6 +754,10 @@ export default function QSalesPage() {
                 </div>
             )
     }
+  }
+
+  if (!isClient) {
+      return null;
   }
 
   return (
