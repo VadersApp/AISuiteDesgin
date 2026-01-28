@@ -410,8 +410,37 @@ export const qsalesLeads = [
       einwaende: ['Noch in früher Evaluierungsphase', 'Vergleich mit Wettbewerbern steht an.'],
       gespraechseinstieg: 'Hallo Frau Richter, ich wollte nachhaken, ob meine Informations-Mail gut bei Ihnen angekommen ist und ob sich bereits konkretere Fragen ergeben haben.',
     },
-    health: { status: 'at_risk', reasons: ['Seit 5 Tagen keine Antwort', 'Nächster Schritt überfällig']}
+    health: { status: 'at_risk', reasons: ['Seit 5 Tagen keine Antwort', 'Nächster Schritt überfällig'], riskFlags: ["NO_RESPONSE", "NEXT_ACTION_OVERDUE"]}
   },
+  {
+    id: 'lead-004',
+    name: 'Global Corp',
+    company: 'Global Corp',
+    status: 'Neu',
+    lastActivity: 'Vor 1 Tag',
+    nextAction: 'Heute',
+    priority: 'Hoch',
+    agent: 'Anna Schmidt',
+    agentAvatar: 'AS',
+    dealValue: 120000,
+    profile: {
+      email: 'contact@globalcorp.com',
+      phone: '+49 30 98765432',
+      source: 'Website',
+    },
+    callHistory: [],
+    notes: [],
+    kiHint: 'Hoher potenzieller Wert, benötigt schnelle Qualifizierung.',
+    aiRecommendation: {
+      score: 90,
+      probability: 90,
+      probabilityLabel: 'Sehr hoch',
+      bedarf: 'Suchen eine Enterprise-Lösung zur globalen Prozess-Standardisierung.',
+      einwaende: ['Komplexität der Implementierung in bestehende IT-Landschaft'],
+      gespraechseinstieg: 'Guten Tag, wir haben Ihre Anfrage über unsere Website erhalten. Ich würde gerne verstehen, wie wir Sie bei der Standardisierung Ihrer Prozesse unterstützen können.',
+    },
+    health: { status: 'warning', reasons: ['Hoher Deal-Wert, noch kein persönlicher Kontakt'], riskFlags: ["BUDGET_UNCLEAR"] }
+  }
 ];
 
 export const qSalesSystemViews = [
@@ -513,6 +542,34 @@ export const qSalesReportingData = {
       { stage: 'Termine', value: 48, conversion: '26%' },
       { stage: 'Abschlüsse', value: 12, conversion: '25%' },
     ],
+  },
+  aktivitaet: {
+      calls: 182,
+      reachedLeads: 110,
+      meetings: 48,
+      overdueFollowups: 8,
+      ranking: [
+          { assignee: 'Leo Sales', calls: 98, meetings: 25, followupsDone: 50, followupsOverdue: 2 },
+          { assignee: 'Anna Schmidt', calls: 84, meetings: 23, followupsDone: 45, followupsOverdue: 6 },
+      ]
+  },
+  abschluesse: {
+      wonDeals: { count: 12, value: 180000 },
+      lostDeals: { count: 36, value: 450000 },
+      winRate: 25,
+      avgDealValue: 15000,
+      avgCycleTime: 28,
+      deals: [
+          { id: 1, name: 'Innovate GmbH', value: 50000, status: 'Won', durationDays: 25, assignee: 'Leo Sales' },
+          { id: 2, name: 'Global Corp', value: 120000, status: 'Won', durationDays: 45, assignee: 'Anna Schmidt' },
+          { id: 3, name: 'Data Corp', value: 40000, status: 'Lost', durationDays: 32, assignee: 'Leo Sales' },
+      ]
+  },
+  risiko: {
+      atRiskDeals: allLeads.filter(l => l.health.status === 'at_risk'),
+      warningDeals: allLeads.filter(l => l.health.status === 'warning'),
+      overdueActions: 5,
+      noResponse: 2,
   },
   learnings: {
     lostReasonData: [

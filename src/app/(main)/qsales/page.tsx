@@ -52,8 +52,10 @@ import {
   Handshake,
   DollarSign,
   ChevronsRight,
+  UserX,
+  Target,
 } from 'lucide-react';
-import { qsalesLeads as allLeads, salesKpiGroups, qSalesSystemViews, mockSequences, qSalesReportingData } from '@/lib/data';
+import { qsalesLeads as allLeads, salesKpiGroups, qSalesSystemViews, mockSequences, qSalesReportingData, kpiMitarbeiter } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -67,7 +69,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Line, ComposedChart } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 
@@ -89,7 +91,6 @@ const lostReasonCodes = [
     { code: 'COMPETITOR', label: 'Wettbewerber gewählt' },
     { code: 'NO_NEED', label: 'Kein Bedarf erkannt' },
     { code: 'NO_RESPONSE', label: 'Keine Reaktion' },
-    { code: 'INTERNAL', label: 'Interne Gründe' },
     { code: 'OTHER', label: 'Sonstiges' },
 ];
 
@@ -416,39 +417,202 @@ const UebersichtTab = () => {
     );
 };
 
-const AktivitaetTab = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Aktivität</CardTitle>
-            <CardDescription>Hier werden Diagramme zur Team-Aktivität angezeigt.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground italic">Ansicht wird aufgebaut.</p>
-        </CardContent>
-    </Card>
-);
-const AbschluesseTab = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Abschlüsse</CardTitle>
-             <CardDescription>Hier werden Diagramme zu gewonnenen und verlorenen Deals angezeigt.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground italic">Ansicht wird aufgebaut.</p>
-        </CardContent>
-    </Card>
-);
-const RisikoTab = () => (
-     <Card>
-        <CardHeader>
-            <CardTitle>Risiko</CardTitle>
-             <CardDescription>Hier werden Deals mit Handlungsbedarf angezeigt.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <p className="text-muted-foreground italic">Ansicht wird aufgebaut.</p>
-        </CardContent>
-    </Card>
-);
+const AktivitaetTab = () => {
+    const { aktivitaet } = qSalesReportingData;
+    const kpiData = [
+        { title: 'Anrufe', value: aktivitaet.calls, target: 80, icon: Phone, color: 'blue' },
+        { title: 'Erreichte Leads', value: aktivitaet.reachedLeads, target: 60, icon: UserCheck, color: 'emerald' },
+        { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: Calendar, color: 'purple' },
+        { title: 'Überfällige Follow-ups', value: aktivitaet.overdueFollowups, target: 5, icon: AlertTriangle, color: 'amber', invertColor: true },
+    ];
+
+    const getKpiColor = (value: number, target: number, invert: boolean = false) => {
+        const performance = value / target;
+        if (invert) {
+            if (value === 0) return 'text-emerald-400';
+            if (value < target) return 'text-amber-400';
+            return 'text-rose-400';
+        }
+        if (performance >= 1) return 'text-emerald-400';
+        if (performance >= 0.8) return 'text-amber-400';
+        return 'text-rose-400';
+    }
+
+    return (
+         <div className="space-y-8">
+            <CardHeader className="p-0">
+                <CardTitle>Aktivität</CardTitle>
+                <CardDescription>So aktiv war dein Team im ausgewählten Zeitraum.</CardDescription>
+            </CardHeader>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {kpiData.map(kpi => {
+                    const Icon = kpi.icon;
+                    return(
+                    <Card key={kpi.title}>
+                        <CardHeader className="pb-2 flex-row items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                            <Icon className={cn('w-4 h-4', getKpiColor(kpi.value, kpi.target, kpi.invertColor))} />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-bold">{kpi.value}</p>
+                        </CardContent>
+                    </Card>
+                )})}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                    <CardHeader><CardTitle className="text-base">Anrufe über Zeit</CardTitle></CardHeader>
+                    <CardContent><p className="text-muted-foreground italic text-center p-8">Chart für Anrufe über Zeit</p></CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader><CardTitle className="text-base">Termine über Zeit</CardTitle></CardHeader>
+                    <CardContent><p className="text-muted-foreground italic text-center p-8">Chart für Termine über Zeit</p></CardContent>
+                </Card>
+            </div>
+             <Card>
+                <CardHeader><CardTitle className="text-base">Wer macht was?</CardTitle></CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead>Anrufe</TableHead><TableHead>Termine</TableHead><TableHead>Follow-ups (erledigt)</TableHead><TableHead>Follow-ups (überfällig)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {aktivitaet.ranking.map(r => (
+                                <TableRow key={r.assignee}>
+                                    <TableCell className="font-medium">{r.assignee}</TableCell>
+                                    <TableCell>{r.calls}</TableCell>
+                                    <TableCell>{r.meetings}</TableCell>
+                                    <TableCell>{r.followupsDone}</TableCell>
+                                    <TableCell className={r.followupsOverdue > 0 ? 'text-rose-400 font-bold' : ''}>{r.followupsOverdue}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                 <CardFooter className="gap-2">
+                     <Button variant="outline" size="sm">Call-Queue starten (Überfällige)</Button>
+                     <Button variant="outline" size="sm">Überfällige Follow-ups verteilen</Button>
+                     <Button variant="outline" size="sm">KI: Tagesplan erstellen</Button>
+                 </CardFooter>
+            </Card>
+         </div>
+    )
+};
+const AbschluesseTab = () => {
+    const { abschluesse } = qSalesReportingData;
+    const kpiData = [
+        { title: 'Gewonnene Deals', value: abschluesse.wonDeals.count, icon: CheckCircle2, color: 'emerald' },
+        { title: 'Verlorene Deals', value: abschluesse.lostDeals.count, icon: XCircle, color: 'rose' },
+        { title: 'Win-Rate', value: `${abschluesse.winRate}%`, icon: Percent, color: 'blue' },
+        { title: 'Ø Deal-Wert', value: `€${(abschluesse.avgDealValue/1000).toFixed(1)}k`, icon: DollarSign, color: 'emerald' },
+        { title: 'Ø Abschlussdauer', value: `${abschluesse.avgCycleTime} Tage`, icon: Clock, color: 'purple' },
+    ];
+    return (
+        <div className="space-y-8">
+            <CardHeader className="p-0">
+                <CardTitle>Abschlüsse</CardTitle>
+                <CardDescription>Gewonnene und verlorene Deals im Zeitraum – inkl. Deal-Wert und Dauer.</CardDescription>
+            </CardHeader>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {kpiData.map(kpi => {
+                    const Icon = kpi.icon;
+                    return(
+                    <Card key={kpi.title}>
+                        <CardHeader className="pb-2 flex-row items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                            <Icon className={cn('w-4 h-4', `text-${kpi.color}-400`)} />
+                        </CardHeader>
+                        <CardContent><p className="text-3xl font-bold">{kpi.value}</p></CardContent>
+                    </Card>
+                )})}
+            </div>
+             <Card>
+                <CardHeader><CardTitle>Deals im Zeitraum</CardTitle></CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead>Wert</TableHead><TableHead>Zuständig</TableHead><TableHead>Status</TableHead><TableHead>Dauer</TableHead></TableRow></TableHeader>
+                         <TableBody>
+                            {abschluesse.deals.map(d => (
+                                <TableRow key={d.id}>
+                                    <TableCell className="font-medium">{d.name}</TableCell>
+                                    <TableCell>€{d.value.toLocaleString('de-DE')}</TableCell>
+                                    <TableCell>{d.assignee}</TableCell>
+                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'} className={d.status === 'Won' ? 'bg-emerald-500/20 text-emerald-400' : ''}>{d.status}</Badge></TableCell>
+                                    <TableCell>{d.durationDays} Tage</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+            <Card className="bg-blue-950/50 border-blue-500/20 p-4">
+                <h4 className="text-sm font-bold text-blue-300">KI: Top Gründe für Gewinne</h4>
+                <p className="text-xs text-blue-200 mt-1">Schnelle Reaktionszeit und klare Bedarfsanalyse im Erstgespräch.</p>
+                <h4 className="text-sm font-bold text-blue-300 mt-3">KI: Top Gründe für Verluste</h4>
+                <p className="text-xs text-blue-200 mt-1">Preis wurde zu spät im Prozess thematisiert.</p>
+            </Card>
+        </div>
+    )
+};
+
+const RisikoTab = () => {
+    const { risiko } = qSalesReportingData;
+    const kpiData = [
+        { title: 'At-Risk Deals', value: risiko.atRiskDeals.length, icon: Flame, color: 'rose' },
+        { title: 'Warning Deals', value: risiko.warningDeals.length, icon: AlertTriangle, color: 'amber' },
+        { title: 'Überfällige Aktionen', value: risiko.overdueActions, icon: Clock, color: 'amber' },
+        { title: 'Keine Reaktion (>7 T.)', value: risiko.noResponse, icon: UserX, color: 'rose' },
+    ];
+    return (
+         <div className="space-y-8">
+            <CardHeader className="p-0">
+                <CardTitle>Risiko</CardTitle>
+                <CardDescription>Deals, die gerade drohen zu kippen – inklusive klarer Gründe und Sofort-Aktionen.</CardDescription>
+            </CardHeader>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {kpiData.map(kpi => {
+                     const Icon = kpi.icon;
+                    return (
+                        <Card key={kpi.title}>
+                            <CardHeader className="pb-2 flex-row items-center justify-between">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                                <Icon className={cn('w-4 h-4', `text-${kpi.color}-400`)} />
+                            </CardHeader>
+                            <CardContent><p className="text-3xl font-bold">{kpi.value}</p></CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
+             <Card>
+                <CardHeader><CardTitle>Risiko-Liste</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                    {risiko.atRiskDeals.map(d => (
+                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="font-bold text-foreground">{d.name}</p>
+                                    <p className="text-sm text-muted-foreground">€{d.value.toLocaleString('de-DE')}</p>
+                                </div>
+                                <div className="text-right">
+                                     <Badge variant="destructive">At Risk</Badge>
+                                     <p className="text-xs text-rose-400 mt-1">{d.reason}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-rose-500/20">
+                                <p className="text-sm"><strong className="text-muted-foreground">Nächste Aktion:</strong> {d.nextAction}</p>
+                                <div className="flex gap-2">
+                                    <Button size="sm" variant="outline">Task: Jetzt anrufen</Button>
+                                    <Button size="sm" variant="outline">Follow-up Draft</Button>
+                                </div>
+                            </div>
+                         </Card>
+                    ))}
+                </CardContent>
+                 <CardFooter>
+                     <Button><BrainCircuit className="w-4 h-4 mr-2"/>KI: Rettungsplan für Top 10 erstellen</Button>
+                 </CardFooter>
+            </Card>
+        </div>
+    )
+};
 const LearningsTab = () => {
     const { learnings } = qSalesReportingData;
     return (
