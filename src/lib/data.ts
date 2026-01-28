@@ -566,8 +566,8 @@ export const qSalesReportingData = {
       ]
   },
   risiko: {
-      atRiskDeals: allLeads.filter(l => l.health.status === 'at_risk'),
-      warningDeals: allLeads.filter(l => l.health.status === 'warning'),
+      atRiskDeals: qsalesLeads.filter(l => l.health.status === 'at_risk'),
+      warningDeals: qsalesLeads.filter(l => l.health.status === 'warning'),
       overdueActions: 5,
       noResponse: 2,
   },
