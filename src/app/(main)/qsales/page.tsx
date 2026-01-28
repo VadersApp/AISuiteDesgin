@@ -47,6 +47,7 @@ import {
   Repeat,
   MoreVertical,
   Star,
+  BarChart2,
 } from 'lucide-react';
 import { qsalesLeads as allLeads, salesKpiGroups, qSalesSystemViews, mockSequences } from '@/lib/data';
 import { cn } from '@/lib/utils';
@@ -489,4 +490,3 @@ export default function QSalesPage() {
   );
 }
 
-    
