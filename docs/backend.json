@@ -250,6 +250,71 @@
             "aiOverridesEnabled": { "type": "boolean" },
             "scenarioPresets": { "type": "array" }
         }
+    },
+    "BusinessBuilderRun": {
+      "title": "Business Builder Run",
+      "description": "Represents a single run of the KI-powered Business Builder, either for auditing or creating processes.",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["audit", "new"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "analyzing", "ready", "imported", "failed"]
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "input": {
+          "type": "object",
+          "properties": {
+            "industry": { "type": "string" },
+            "companySize": { "type": "number" },
+            "deptIds": { "type": "array", "items": { "type": "string" } },
+            "goals": { "type": "array", "items": { "type": "string" } },
+            "sources": {
+              "type": "object",
+              "properties": {
+                "workInstructions": { "type": "boolean" },
+                "docs": { "type": "boolean" },
+                "tasks": { "type": "boolean" },
+                "projects": { "type": "boolean" },
+                "kpis": { "type": "boolean" }
+              }
+            }
+          }
+        },
+        "resultsSummary": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "problem": { "type": "string" },
+              "recommendation": { "type": "string" },
+              "deptId": { "type": "string" },
+              "effort": { "type": "string", "enum": ["S", "M", "L"] },
+              "impact": { "type": "string", "enum": ["Low", "Med", "High"] },
+              "outputType": { "type": "string", "enum": ["workInstruction", "taskPack", "project"] },
+              "selected": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "required": ["mode", "status", "createdBy", "createdAt"]
     }
   },
   "auth": {
@@ -268,7 +333,7 @@
         "schema": { "$ref": "#/backend/entities/QSalesUserPreferences" },
         "description": "Stores user preferences for Q-Sales SmartViews."
     },
-    "/organizations/{orgId}/leads/{leadId}": {
+    "/organizations/{orgId}/q_sales_leads/{leadId}": {
       "schema": { "$ref": "#/backend/entities/Lead" },
       "description": "Stores sales leads."
     },
@@ -299,8 +364,10 @@
     "/organizations/{orgId}/q_sales_forecast_config/main": {
         "schema": { "$ref": "#/backend/entities/QSalesForecastConfig" },
         "description": "Stores sales forecast configurations."
+    },
+    "/organizations/{orgId}/businessBuilderRuns/{runId}": {
+      "schema": { "$ref": "#/backend/entities/BusinessBuilderRun" },
+      "description": "Stores the configuration and results of Business Builder runs."
     }
   }
 }
-
-    

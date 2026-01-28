@@ -3,7 +3,7 @@
 import { useState, useMemo, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -31,47 +31,51 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
-  LayoutDashboard,
-  FileText,
-  Users,
   Activity,
-  Settings,
-  Search,
-  Plus,
-  Briefcase,
-  BarChart3,
-  HeartPulse,
-  UserCheck,
   AlertTriangle,
-  Flame,
-  ArrowUp,
-  ArrowDown,
-  ArrowRight,
-  MessageSquare,
   ArrowLeft,
-  Search as SearchIcon,
+  ArrowRight,
+  BarChart3,
   Bot as BotIcon,
-  X,
-  MoreHorizontal,
-  Folder,
-  CheckSquare,
-  User as UserIcon,
-  Calendar as CalendarIcon,
-  Upload,
-  File as FileIcon,
-  FolderPlus,
-  MoreVertical,
-  Tag,
-  Archive,
-  Send,
   BrainCircuit,
-  ChevronRight,
+  Briefcase,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  CheckSquare,
+  ChevronDown,
+  Clock,
+  DollarSign,
+  FileText,
+  Flame,
+  GitBranch,
+  Handshake,
+  HeartPulse,
+  Info,
+  Kanban,
+  LayoutDashboard,
+  Mail,
+  MessageSquare,
+  MoreVertical,
+  Phone,
+  PhoneIncoming,
+  PhoneMissed,
+  PhoneOutgoing,
+  Plus,
+  Search,
+  Ticket,
+  TrendingUp,
+  User as UserIcon,
+  Users,
+  Workflow,
+  Building,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks } from '@/lib/data';
+import { cn } from "@/lib/utils";
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -80,10 +84,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 
 const modules = [
     { name: 'Q-Chat', icon: MessageSquare },
+    { name: 'Business Builder', icon: Building },
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'Workspace', icon: Briefcase },
     { name: 'KPI-Dashboard', icon: BarChart3 },
@@ -1069,13 +1078,17 @@ export default function QSpacePage() {
   const router = useRouter();
 
   // Simulate the currently logged-in user. In a real app, this would come from an auth context.
-  const [currentUserId, setCurrentUserId] = useState('ben-weber');
+  const [currentUserId, setCurrentUserId] = useState('dr-mueller');
   const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
 
   useEffect(() => {
     if (pathname.startsWith('/q-space/chat')) {
       if (activeModule !== 'Q-Chat') {
           setActiveModule('Q-Chat');
+      }
+    } else if (pathname.startsWith('/q-space/business-builder')) {
+       if (activeModule !== 'Business Builder') {
+          setActiveModule('Business Builder');
       }
     }
   }, [pathname, activeModule]);
@@ -1152,6 +1165,7 @@ export default function QSpacePage() {
           case 'Mitarbeiter': return <MitarbeiterView mitarbeiter={filteredKpiMitarbeiter} />;
           case 'System Admin (Q-Space)': return <SystemAdminView />;
           case 'Q-Chat': return null; // Should redirect
+          case 'Business Builder': return null; // Should redirect
           default: return <OverviewView currentUser={currentUser} filteredKpiMitarbeiter={filteredKpiMitarbeiter} filteredChatThreads={filteredChatThreads} filteredTasks={filteredTasks} />;
       }
   };
@@ -1159,8 +1173,11 @@ export default function QSpacePage() {
   const handleModuleClick = (moduleName: string) => {
     if (moduleName === 'Q-Chat') {
         router.push('/q-space/chat');
-    } else {
-        if (pathname.startsWith('/q-space/chat')) {
+    } else if (moduleName === 'Business Builder') {
+        router.push('/q-space/business-builder');
+    }
+     else {
+        if (pathname.startsWith('/q-space/chat') || pathname.startsWith('/q-space/business-builder')) {
             router.push('/q-space');
         }
         setActiveModule(moduleName);
@@ -1176,7 +1193,16 @@ export default function QSpacePage() {
             {modules.map((mod) => {
                 const Icon = mod.icon;
                 const isChatLink = mod.name === 'Q-Chat';
-                const isActive = isChatLink ? pathname.startsWith('/q-space/chat') : activeModule === mod.name && !pathname.startsWith('/q-space/chat');
+                const isBusinessBuilderLink = mod.name === 'Business Builder';
+                let isActive = false;
+                if (isChatLink) {
+                    isActive = pathname.startsWith('/q-space/chat');
+                } else if (isBusinessBuilderLink) {
+                    isActive = pathname.startsWith('/q-space/business-builder');
+                } else {
+                    isActive = activeModule === mod.name && !pathname.startsWith('/q-space/chat') && !pathname.startsWith('/q-space/business-builder');
+                }
+
 
                  return (
                     <div key={mod.name} className="relative">

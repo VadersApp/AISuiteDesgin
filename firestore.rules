@@ -37,7 +37,7 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    match /organizations/{orgId}/leads/{leadId} {
+    match /organizations/{orgId}/q_sales_leads/{leadId} {
         // Allow read/write for authenticated users.
         // In a real app, this would be more granular based on org/team membership.
         allow read, write: if request.auth != null;
@@ -70,7 +70,12 @@ service cloud.firestore {
     match /organizations/{orgId}/q_sales_forecast_config/main {
       allow read, write: if request.auth != null; // Should be admin only in real app
     }
+    
+    // Business Builder Rules
+    match /organizations/{orgId}/businessBuilderRuns/{runId} {
+      // For now, allow authenticated users to read/write.
+      // In a real app, this would be more granular (e.g., admin/owner roles).
+      allow read, write: if request.auth != null;
+    }
   }
 }
-
-    
