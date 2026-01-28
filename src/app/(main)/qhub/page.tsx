@@ -36,60 +36,43 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 import {
-  LayoutDashboard,
-  FileText,
-  Users,
   Activity,
-  Settings,
-  Search,
-  Plus,
-  Briefcase,
-  BarChart3,
-  HeartPulse,
-  UserCheck,
   AlertTriangle,
-  Flame,
-  ArrowUp,
-  ArrowDown,
-  ArrowRight,
   ArrowLeft,
-  MessageSquare,
+  ArrowRight,
+  BarChart3,
   Bot as BotIcon,
-  X,
-  MoreHorizontal,
-  Folder,
-  CheckSquare,
-  User as UserIcon,
-  Calendar as CalendarIcon,
-  Upload,
-  File as FileIcon,
-  FolderPlus,
-  MoreVertical,
-  Tag,
-  Archive,
-  Send,
   BrainCircuit,
-  ChevronRight,
-  ChevronDown,
-  Timer,
-  Workflow,
+  Briefcase,
   Building2,
-  Handshake,
-  Kanban,
-  Mail,
-  Phone,
-  TrendingUp,
-  Ticket,
   CalendarDays,
-  Clock,
-  History,
-  DollarSign,
-  Info,
   CheckCircle2,
+  CheckSquare,
+  ChevronDown,
+  Clock,
+  DollarSign,
+  FileText,
+  Flame,
   GitBranch,
+  Handshake,
+  HeartPulse,
+  Info,
+  Kanban,
+  LayoutDashboard,
+  Mail,
+  MessageSquare,
+  MoreVertical,
+  Phone,
   PhoneIncoming,
   PhoneMissed,
   PhoneOutgoing,
+  Plus,
+  Search,
+  Ticket,
+  TrendingUp,
+  User as UserIcon,
+  Users,
+  Workflow,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -251,7 +234,7 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                             <CardTitle className="text-rose-400 text-base">KI-Eskalation</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm">Deal 'Data Corp' ist seit 5 Tagen inaktiv.</p>
+                            <p className="text-sm">Deal 'Data Corp' stagniert, da seit 5 Tagen keine Aktivität verzeichnet wurde. Die Reaktionsfrist ist überschritten.</p>
                         </CardContent>
                         <CardFooter>
                             <Button asChild variant="outline" size="sm">
@@ -542,7 +525,7 @@ const DealsView = () => {
         switch (filter) {
             case 'Mit Handlungsbedarf':
                 return deals.filter(d => d.slaDue === 'heute' || d.slaDue === 'morgen' || d.slaDue === 'überschritten');
-            case 'SLA kritisch':
+            case 'Frist kritisch':
                 return deals.filter(d => d.slaDue === 'überschritten');
             case 'In Verhandlung':
                 return deals.filter(d => d.stage === 'Verhandlung');
@@ -582,7 +565,7 @@ const DealsView = () => {
                     <TabsList>
                         <TabsTrigger value="Alle">Alle</TabsTrigger>
                         <TabsTrigger value="Mit Handlungsbedarf">Mit Handlungsbedarf</TabsTrigger>
-                        <TabsTrigger value="SLA kritisch">Frist kritisch</TabsTrigger>
+                        <TabsTrigger value="Frist kritisch">Frist kritisch</TabsTrigger>
                         <TabsTrigger value="In Verhandlung">In Verhandlung</TabsTrigger>
                     </TabsList>
                 </Tabs>
@@ -1401,6 +1384,7 @@ const EmailsView = () => {
             Deal: Handshake,
             Kontakt: UserIcon,
             Firma: Building2,
+            Ticket: Ticket,
         };
         const ContextIcon = contextIcons[email.contextType as keyof typeof contextIcons] || Briefcase;
 
@@ -1765,7 +1749,7 @@ export default function QhubPage() {
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
         {/* Left Sidebar for Modules */}
         <aside className="w-56 border-r border-border pr-4 space-y-1">
-            <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">CRM Module</p>
+            <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">Q-Hub</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
                 const isActive = activeModule === mod.name;
