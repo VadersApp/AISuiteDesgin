@@ -323,6 +323,7 @@ export const qsalesLeads = [
     priority: 'Hoch',
     agent: 'Leo Sales',
     agentAvatar: 'LS',
+    dealValue: 50000,
     profile: {
       email: 'eva.schmidt@innovatech.de',
       phone: '+49 176 12345678',
@@ -336,14 +337,14 @@ export const qsalesLeads = [
     ],
     kiHint: 'Hohes Interesse an Prozessautomatisierung.',
     aiRecommendation: {
-      nextStatus: 'Kontaktiert',
-      bestTime: 'Morgen, 10-12 Uhr',
+      score: 75,
       probability: 75,
       probabilityLabel: 'Hoch',
       bedarf: 'Sucht nach einer Lösung zur Automatisierung wiederkehrender Vertriebsaufgaben.',
       einwaende: ['Implementierungsaufwand', 'Kosten im Vergleich zu manuellem Aufwand'],
       gespraechseinstieg: 'Ich habe gesehen, Sie suchen nach Wegen, Ihre Vertriebsprozesse zu optimieren. Wäre jetzt ein guter Zeitpunkt für ein kurzes Gespräch dazu?',
-    }
+    },
+    health: { status: 'healthy', reasons: []}
   },
   {
     id: 'lead-002',
@@ -355,6 +356,7 @@ export const qsalesLeads = [
     priority: 'Hoch',
     agent: 'Leo Sales',
     agentAvatar: 'LS',
+    dealValue: 25000,
     profile: {
       email: 'markus.weber@quantum.com',
       phone: '+49 151 87654321',
@@ -368,14 +370,14 @@ export const qsalesLeads = [
     ],
     kiHint: 'Positives Gespräch, wartet auf Detail-Informationen.',
     aiRecommendation: {
-      nextStatus: 'Termin gelegt',
-      bestTime: 'Jetzt',
+      score: 85,
       probability: 85,
       probabilityLabel: 'Sehr hoch',
       bedarf: 'Benötigt eine Lösung für Datenanalyse in Echtzeit. Hat konkrete Anwendungsfälle genannt.',
       einwaende: ['Integration mit bestehendem BI-Tool (Tableau)'],
       gespraechseinstieg: 'Hallo Herr Weber, hier ist [Ihr Name]. Wie besprochen, komme ich auf Sie zu, um die Details für die Echtzeit-Analyse zu klären.',
-    }
+    },
+     health: { status: 'healthy', reasons: []}
   },
     {
     id: 'lead-003',
@@ -387,6 +389,7 @@ export const qsalesLeads = [
     priority: 'Mittel',
     agent: 'Leo Sales',
     agentAvatar: 'LS',
+    dealValue: 75000,
      profile: {
       email: 'j.richter@nextgen-robotics.io',
       phone: '+49 162 11223344',
@@ -400,14 +403,14 @@ export const qsalesLeads = [
     ],
     kiHint: 'Wartet auf proaktive Meldung vom Lead.',
     aiRecommendation: {
-      nextStatus: 'Follow-up geplant',
-      bestTime: 'Nachmittag',
+      score: 60,
       probability: 60,
       probabilityLabel: 'Mittel',
       bedarf: 'Allgemeines Interesse an KI-gestützter Robotik-Steuerung, aber noch unkonkret.',
       einwaende: ['Noch in früher Evaluierungsphase', 'Vergleich mit Wettbewerbern steht an.'],
       gespraechseinstieg: 'Hallo Frau Richter, ich wollte nachhaken, ob meine Informations-Mail gut bei Ihnen angekommen ist und ob sich bereits konkretere Fragen ergeben haben.',
-    }
+    },
+    health: { status: 'at_risk', reasons: ['Seit 5 Tagen keine Antwort', 'Nächster Schritt überfällig']}
   },
 ];
 
@@ -1618,3 +1621,11 @@ export const kiManagementSummary = [
     { type: 'handlungsbedarf', text: 'Hohe Ticket-Last im Support', grund: 'Das Verhältnis von offenen zu erledigten Tickets deutet auf eine mögliche Überlastung hin (43 offen).' },
     { type: 'handlungsbedarf', text: 'Marketing-Leads ohne Follow-up', grund: '8 als "heiß" eingestufte Leads aus dem Marketing haben noch keinen ersten Kontaktversuch im Vertrieb erhalten.' },
 ];
+
+export const mockSequences = [
+    { id: 'seq-1', name: 'Standard Follow-Up (Kalt)', scope: 'team', steps: 3, createdBy: 'Leo Sales' },
+    { id: 'seq-2', name: 'Webinar Nachfass', scope: 'private', steps: 5, createdBy: 'Anna Schmidt' },
+    { id: 'seq-3', name: 'Messe-Leads Q1', scope: 'team', steps: 4, createdBy: 'Leo Sales' },
+];
+
+    

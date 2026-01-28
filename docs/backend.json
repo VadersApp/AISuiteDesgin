@@ -83,23 +83,173 @@
       "description": "A sales lead in Q-Sales.",
       "type": "object",
       "properties": {
+          "pipelineId": { "type": "string" },
+          "stageId": { "type": "string" },
+          "dealValue": { "type": "number" },
+          "currency": { "type": "string" },
+          "isClosed": { "type": "boolean" },
+          "closedReason": { "type": "string", "enum": ["won", "lost", null] },
+          "closedAt": { "type": "string", "format": "date-time" },
+          "lostReasonCode": { "type": "string" },
+          "lostReasonNote": { "type": "string" },
           "nextActionAt": { "type": "string", "format": "date-time" },
           "nextActionType": { "type": "string", "enum": ["call", "followup", "email", "meeting", null] },
           "lastActivityAt": { "type": "string", "format": "date-time" },
-          "priority": { "type": "string", "enum": ["high", "medium", "low"] },
-          "stage": { "type": "string" },
-          "status": { "type": "string", "enum": ["open", "won", "lost", "snooze"] },
           "assigneeId": { "type": "string" },
-          "isClosed": { "type": "boolean" },
-          "closedReason": { "type": "string", "enum": ["won", "lost", null] },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+          "status": { "type": "string" },
           "ai": {
               "type": "object",
               "properties": {
                   "score": { "type": "number" },
-                  "label": { "type": "string" }
+                  "label": { "type": "string" },
+                  "reasoning": { "type": "string" },
+                  "riskFlags": { "type": "array", "items": { "type": "string" } },
+                  "lastEvaluatedAt": { "type": "string", "format": "date-time" }
+              }
+          },
+          "health": {
+              "type": "object",
+              "properties": {
+                  "status": { "type": "string", "enum": ["healthy", "warning", "at_risk", null] },
+                  "reasons": { "type": "array", "items": { "type": "string" } },
+                  "lastCalculatedAt": { "type": "string", "format": "date-time" }
               }
           }
       }
+    },
+    "QSalesActivity": {
+        "title": "Q-Sales Activity",
+        "description": "Represents an activity like a call, email, or note in Q-Sales.",
+        "type": "object",
+        "properties": {
+            "leadId": { "type": "string" },
+            "type": { "type": "string", "enum": ["call", "email", "note", "meeting", "task_update"] },
+            "createdBy": { "type": "object", "properties": { "userId": { "type": "string" }, "name": { "type": "string" }, "agent": { "type": "string" } } },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "meta": {
+                "type": "object",
+                "properties": {
+                    "direction": { "type": "string", "enum": ["inbound", "outbound"] },
+                    "durationSec": { "type": "number" },
+                    "recordingUrl": { "type": "string" },
+                    "subject": { "type": "string" },
+                    "channel": { "type": "string", "enum": ["phone", "email", "calendar", "manual"] }
+                }
+            },
+            "content": {
+                "type": "object",
+                "properties": {
+                    "text": { "type": "string" },
+                    "transcript": { "type": "string" }
+                }
+            },
+            "ai": {
+                "type": "object",
+                "properties": {
+                    "summary": { "type": "string" },
+                    "keyPoints": { "type": "array", "items": { "type": "string" } },
+                    "objections": { "type": "array", "items": { "type": "string" } },
+                    "nextSteps": { "type": "array", "items": { "type": "string" } },
+                    "sentiment": { "type": "string", "enum": ["positive", "neutral", "negative", null] }
+                }
+            }
+        }
+    },
+    "QSalesTask": {
+        "title": "Q-Sales Task",
+        "description": "Represents a next action or follow-up in Q-Sales.",
+        "type": "object",
+        "properties": {
+            "leadId": { "type": "string" },
+            "title": { "type": "string" },
+            "type": { "type": "string", "enum": ["call", "email", "followup", "meeting"] },
+            "dueAt": { "type": "string", "format": "date-time" },
+            "status": { "type": "string", "enum": ["open", "done", "canceled"] },
+            "assigneeId": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" },
+            "source": { "type": "object", "properties": { "kind": { "type": "string" }, "refId": { "type": "string" } } },
+            "ai": { "type": "object", "properties": { "suggestion": { "type": "string" } } }
+        }
+    },
+    "QSalesSequence": {
+        "title": "Q-Sales Sequence",
+        "description": "A template for a series of follow-up actions.",
+        "type": "object",
+        "properties": {
+            "name": { "type": "string" },
+            "scope": { "type": "string", "enum": ["private", "team", "org"] },
+            "createdBy": { "type": "object", "properties": { "userId": { "type": "string" } } },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" },
+            "isArchived": { "type": "boolean" },
+            "stopRules": { "type": "object", "properties": { "stopOnReply": { "type": "boolean" }, "stopOnMeetingBooked": { "type": "boolean" }, "stopOnDealClosed": { "type": "boolean" } } },
+            "steps": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "stepId": { "type": "string" },
+                        "dayOffset": { "type": "number" },
+                        "actionType": { "type": "string", "enum": ["email", "call", "followup"] },
+                        "template": { "type": "object", "properties": { "subject": { "type": "string" }, "body": { "type": "string" }, "talkTrack": { "type": "string" } } }
+                    }
+                }
+            },
+            "aiAssist": { "type": "object", "properties": { "enabled": { "type": "boolean" }, "style": { "type": "string" } } }
+        }
+    },
+    "QSalesSequenceEnrollment": {
+        "title": "Q-Sales Sequence Enrollment",
+        "description": "Links a lead to a sequence.",
+        "type": "object",
+        "properties": {
+            "sequenceId": { "type": "string" },
+            "leadId": { "type": "string" },
+            "status": { "type": "string", "enum": ["active", "paused", "completed", "stopped"] },
+            "startedAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" },
+            "currentStepIndex": { "type": "number" },
+            "nextRunAt": { "type": "string", "format": "date-time" },
+            "stoppedReason": { "type": "string" },
+            "logs": { "type": "array", "items": { "type": "object", "properties": { "at": { "type": "string", "format": "date-time" }, "event": { "type": "string" }, "detail": { "type": "string" } } } }
+        }
+    },
+    "QSalesConversationInsight": {
+        "title": "Q-Sales Conversation Insight",
+        "description": "AI-powered analysis of a sales call.",
+        "type": "object",
+        "properties": {
+            "leadId": { "type": "string" },
+            "activityId": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "scorecard": { "type": "object", "properties": { "talkRatio": { "type": "number" }, "decisionQuestionsAsked": { "type": "boolean" }, "budgetDiscussed": { "type": "boolean" }, "timelineDiscussed": { "type": "boolean" }, "nextStepConfirmed": { "type": "boolean" } } },
+            "coaching": { "type": "object", "properties": { "strengths": { "type": "array", "items": { "type": "string" } }, "improvements": { "type": "array", "items": { "type": "string" } }, "recommendedNextQuestion": { "type": "string" } } }
+        }
+    },
+    "QSalesReportingSnapshot": {
+        "title": "Q-Sales Reporting Snapshot",
+        "description": "Aggregated sales data for a specific period.",
+        "type": "object",
+        "properties": {
+            "period": { "type": "string", "enum": ["daily", "weekly", "monthly"] },
+            "startAt": { "type": "string", "format": "date-time" },
+            "endAt": { "type": "string", "format": "date-time" },
+            "metrics": { "type": "object" },
+            "breakdowns": { "type": "object" }
+        }
+    },
+    "QSalesForecastConfig": {
+        "title": "Q-Sales Forecast Config",
+        "description": "Configuration for sales forecasting.",
+        "type": "object",
+        "properties": {
+            "forecastModel": { "type": "string" },
+            "stageWeights": { "type": "object" },
+            "aiOverridesEnabled": { "type": "boolean" },
+            "scenarioPresets": { "type": "array" }
+        }
     }
   },
   "auth": {
@@ -110,7 +260,7 @@
       "schema": { "$ref": "#/backend/entities/UserProfile" },
       "description": "Stores user profile information."
     },
-     "/organizations/{orgId}/q_sales_smartviews/{viewId}": {
+    "/organizations/{orgId}/q_sales_smartviews/{viewId}": {
       "schema": { "$ref": "#/backend/entities/SmartView" },
       "description": "Stores custom and system SmartViews for Q-Sales."
     },
@@ -118,9 +268,39 @@
         "schema": { "$ref": "#/backend/entities/QSalesUserPreferences" },
         "description": "Stores user preferences for Q-Sales SmartViews."
     },
-     "/organizations/{orgId}/leads/{leadId}": {
+    "/organizations/{orgId}/leads/{leadId}": {
       "schema": { "$ref": "#/backend/entities/Lead" },
       "description": "Stores sales leads."
+    },
+    "/organizations/{orgId}/q_sales_activities/{activityId}": {
+        "schema": { "$ref": "#/backend/entities/QSalesActivity" },
+        "description": "Stores sales activities like calls, emails, notes."
+    },
+    "/organizations/{orgId}/q_sales_tasks/{taskId}": {
+        "schema": { "$ref": "#/backend/entities/QSalesTask" },
+        "description": "Stores sales tasks and follow-ups."
+    },
+    "/organizations/{orgId}/q_sales_sequences/{sequenceId}": {
+        "schema": { "$ref": "#/backend/entities/QSalesSequence" },
+        "description": "Stores sales sequence templates."
+    },
+    "/organizations/{orgId}/q_sales_sequence_enrollments/{enrollmentId}": {
+        "schema": { "$ref": "#/backend/entities/QSalesSequenceEnrollment" },
+        "description": "Tracks which leads are in which sequences."
+    },
+    "/organizations/{orgId}/q_sales_conversation_insights/{insightId}": {
+        "schema": { "$ref": "#/backend/entities/QSalesConversationInsight" },
+        "description": "Stores AI-generated insights from sales conversations."
+    },
+    "/organizations/{orgId}/q_sales_reporting_snapshots/{snapshotId}": {
+        "schema": { "$ref": "#/backend/entities/QSalesReportingSnapshot" },
+        "description": "Stores aggregated reporting data."
+    },
+    "/organizations/{orgId}/q_sales_forecast_config/main": {
+        "schema": { "$ref": "#/backend/entities/QSalesForecastConfig" },
+        "description": "Stores sales forecast configurations."
     }
   }
 }
+
+    
