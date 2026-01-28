@@ -93,7 +93,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -139,6 +139,30 @@ const mockUploadJob = {
     }
 };
 
+const KiTagesfokus = () => (
+    <Card className="bg-blue-950/50 border-blue-500/20">
+        <CardHeader>
+            <CardTitle className="text-base text-blue-300 flex items-center gap-2">
+                <BrainCircuit className="w-5 h-5"/>
+                KI-Tagesfokus
+            </CardTitle>
+            <CardDescription className="text-blue-400/70">Ihre Top 5 Prioritäten für heute, basierend auf Dringlichkeit und Relevanz.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+            {kiTagesfokus.map((item, index) => (
+                <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-500/10">
+                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
+                    <div>
+                        <p className="text-sm font-bold text-white">{item.title}</p>
+                        <p className="text-xs text-blue-400/80">{item.reason}</p>
+                    </div>
+                </div>
+            ))}
+        </CardContent>
+    </Card>
+);
+
+
 const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
     
     const geschaeftsueberblickData = [
@@ -177,46 +201,51 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
     return (
         <div className="space-y-8">
             
-            {/* ZONE A: Geschäftsüberblick */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {geschaeftsueberblickData.map(item => (
-                    <Card key={item.title}>
-                        <CardHeader>
-                            <CardTitle className="text-base">{item.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-4xl font-bold">{item.value}</p>
-                            <p className="text-xs text-muted-foreground">{item.subtitle}</p>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    {/* ZONE A: Geschäftsüberblick */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {geschaeftsueberblickData.map(item => (
+                            <Card key={item.title}>
+                                <CardHeader>
+                                    <CardTitle className="text-base">{item.title}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-4xl font-bold">{item.value}</p>
+                                    <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
 
-            {/* ZONE B: Handlungsbedarf & Systemzustand */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {handlungsbedarfData.map(item => {
-                    const Icon = item.icon;
-                    return (
-                        <Card key={item.title} className={`p-4 bg-card/50 border-l-4 border-${item.color}-500/50`}>
-                             <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div className="flex items-center gap-4">
-                                            <Icon className={`h-6 w-6 text-${item.color}-400`} />
-                                            <div>
-                                                <p className="text-2xl font-bold">{item.value}</p>
-                                                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-                                            </div>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>{item.tooltip}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </Card>
-                    );
-                })}
+                    {/* ZONE B: Handlungsbedarf & Systemzustand */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {handlungsbedarfData.map(item => {
+                            const Icon = item.icon;
+                            return (
+                                <Card key={item.title} className={`p-4 bg-card/50 border-l-4 border-${item.color}-500/50`}>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex items-center gap-4">
+                                                    <Icon className={`h-6 w-6 text-${item.color}-400`} />
+                                                    <div>
+                                                        <p className="text-2xl font-bold">{item.value}</p>
+                                                        <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                                                    </div>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{item.tooltip}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                </div>
+                <KiTagesfokus />
             </div>
             
             {/* ZONE C: Operative Bereiche */}
@@ -490,6 +519,7 @@ const CompaniesView = () => {
 
 const DealsView = () => {
     const [filter, setFilter] = useState('Alle');
+    const [selectedDealId, setSelectedDealId] = useState<number | null>(null);
 
     const filteredDeals = useMemo(() => {
         let deals = mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren');
@@ -506,16 +536,10 @@ const DealsView = () => {
         }
     }, [filter]);
 
-    const getPriorityClass = (slaStatus?: string | null) => {
-        switch (slaStatus) {
-            case 'überschritten':
-                return 'bg-rose-500/5 hover:bg-rose-500/10';
-            case 'heute':
-            case 'morgen':
-                return 'bg-amber-500/5 hover:bg-amber-500/10';
-            default:
-                return 'hover:bg-muted/50';
-        }
+    const getPriorityClass = (slaDue?: string | null) => {
+        if (slaDue === 'überschritten') return 'bg-rose-500/5 hover:bg-rose-500/10';
+        if (slaDue === 'heute' || slaDue === 'morgen') return 'bg-amber-500/5 hover:bg-amber-500/10';
+        return 'hover:bg-muted/50';
     };
     
     const formatSlaStatus = (slaDue: string | null) => {
@@ -558,6 +582,7 @@ const DealsView = () => {
                         <TableHead>Wert</TableHead>
                         <TableHead>SLA-Status</TableHead>
                         <TableHead>Zuständig</TableHead>
+                        <TableHead className="text-right">KI-Analyse</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -575,6 +600,31 @@ const DealsView = () => {
                                 )}>{formatSlaStatus(d.slaDue)}</Badge>
                             </TableCell>
                             <TableCell>{d.owner}</TableCell>
+                             <TableCell className="text-right">
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button variant="ghost" size="sm"><BrainCircuit className="w-4 h-4 mr-2" /> Analysieren</Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>KI-Dealcheck: {d.name}</DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4 py-4 text-sm">
+                                            <p><strong className="text-muted-foreground">Aktuelle Phase:</strong> {d.stage}</p>
+                                            <h4 className="font-bold text-base mt-4">Checkliste für Phase '{d.stage}'</h4>
+                                            <ul className="list-disc pl-5 space-y-1">
+                                                <li>Angebot vollständig versendet?</li>
+                                                <li>Entscheider identifiziert?</li>
+                                                <li>Budget bestätigt?</li>
+                                            </ul>
+                                            <h4 className="font-bold text-base mt-4">KI-Risikoanalyse</h4>
+                                            <p>Der Deal stagniert, da seit 5 Tagen keine Aktivität verzeichnet wurde. Nächster Schritt sollte dringend erfolgen.</p>
+                                            <h4 className="font-bold text-base mt-4">Vorgeschlagener nächster Schritt</h4>
+                                            <p>Anruf zur Klärung des Angebotsstatus.</p>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -647,6 +697,21 @@ const PipelineView = () => {
                                                 <p className="text-[9px] font-bold text-primary/80 uppercase">Nächster Schritt:</p>
                                                 <p className="text-sm font-bold text-primary">{deal.nextStep}</p>
                                             </div>
+                                            
+                                            {deal.aiNextStepSuggestion && (
+                                                <Collapsible className="mt-2">
+                                                    <CollapsibleTrigger asChild>
+                                                        <Button variant="ghost" size="sm" className="w-full text-xs gap-2 text-blue-400 hover:text-blue-300">
+                                                            <BrainCircuit className="w-4 h-4"/> KI-Vorschlag
+                                                        </Button>
+                                                    </CollapsibleTrigger>
+                                                    <CollapsibleContent className="p-2 bg-blue-950/50 rounded-md border border-blue-500/20 mt-1 text-xs">
+                                                        <p className="font-bold">Vorschlag:</p>
+                                                        <p>{deal.aiNextStepSuggestion}</p>
+                                                        {deal.aiRisk && <p className="mt-1 text-amber-400/80"><strong className="font-bold">Risiko:</strong> {deal.aiRisk}</p>}
+                                                    </CollapsibleContent>
+                                                </Collapsible>
+                                            )}
                                         </Card>
                                     );
                                 })}
@@ -907,6 +972,7 @@ const ActivityItem = ({ activity }: { activity: any }) => {
   }[activity.type] || CheckSquare;
 
   return (
+    <Collapsible>
     <div className={cn("flex items-center gap-4 p-3 rounded-lg border-l-4", priorityColor)}>
       <div className={cn("w-2 h-2 rounded-full shrink-0", priorityDotColor)}></div>
       <div className="flex-1 grid grid-cols-12 gap-4 items-center">
@@ -929,11 +995,21 @@ const ActivityItem = ({ activity }: { activity: any }) => {
         <div className="col-span-2 text-sm text-muted-foreground">
              {activity.status !== 'Erledigt' && <Button variant="outline" size="sm">Erledigen</Button>}
         </div>
-        <div className="col-span-1 text-right">
+        <div className="col-span-1 text-right flex items-center gap-1">
+            <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-8 h-8"><BrainCircuit className="w-4 h-4 text-blue-400"/></Button>
+            </CollapsibleTrigger>
             <Button variant="ghost" size="icon" className="w-8 h-8"><MoreVertical className="w-4 h-4"/></Button>
         </div>
       </div>
     </div>
+    <CollapsibleContent className="p-3 pl-10 border-l-4 bg-blue-950/40 rounded-b-lg -mt-1" style={{borderColor: isOverdue ? 'hsl(var(--destructive)/0.5)' : isTodayTask ? 'hsl(var(--accent))' : 'hsl(var(--border))'}}>
+        <div className="text-xs text-blue-300 space-y-1">
+            <p className="font-bold">KI-Hinweis</p>
+            <p>{activity.aiSuggestion}</p>
+        </div>
+    </CollapsibleContent>
+    </Collapsible>
   );
 };
 
@@ -1010,6 +1086,7 @@ const AufgabenView = () => {
     type TaskStatus = 'Offen' | 'Erledigt';
 
     const [tasks, setTasks] = useState(mockTasks.map(t => ({...t, status: t.status as TaskStatus})));
+    const [selectedTask, setSelectedTask] = useState<any | null>(null);
 
     const handleSetDone = (taskId: string) => {
         setTasks(currentTasks => currentTasks.map(t => t.id === taskId ? {...t, status: 'Erledigt'} : t));
@@ -1052,6 +1129,21 @@ const AufgabenView = () => {
                 <div className="text-sm text-muted-foreground w-48">{task.desc}</div>
                 <div className="w-24 text-sm">{overdue ? 'Überfällig' : task.due}</div>
                 <div className="w-24 text-sm">{task.prio}</div>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                       <Button variant="ghost" size="sm"><BrainCircuit className="w-4 h-4 mr-2 text-blue-400" /> KI verbessern</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>KI-Vorschläge für: {task.title}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4 text-sm">
+                            <div><strong className="text-muted-foreground block">Klarere Formulierung</strong>{task.aiSuggestions.newTitle}</div>
+                            <div><strong className="text-muted-foreground block">Teilaufgaben</strong><ul className="list-disc pl-5">{(task.aiSuggestions.subtasks || []).map((st: string, i: number) => <li key={i}>{st}</li>)}</ul></div>
+                            <div><strong className="text-muted-foreground block">Vorgeschlagene Deadline</strong>{task.aiSuggestions.newDeadline}</div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
                 <Button variant="outline" size="sm" onClick={() => handleSetDone(task.id)}>Erledigen</Button>
             </div>
         )
@@ -1154,12 +1246,34 @@ const NotesView = () => {
                         <p className="text-xs text-muted-foreground">{format(new Date(note.createdAt), "dd.MM.yyyy, HH:mm")}</p>
                     </div>
                 </div>
-                {note.contextType !== 'Intern' && (
-                     <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-xs text-muted-foreground">
-                        <ContextIcon className="w-3.5 h-3.5" />
-                        <span>{note.contextType}: {note.contextName}</span>
-                     </div>
-                )}
+                
+                <Separator className="my-3"/>
+
+                <div className="flex justify-between items-end">
+                    {note.contextType !== 'Intern' && (
+                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <ContextIcon className="w-3.5 h-3.5" />
+                            <span>{note.contextType}: {note.contextName}</span>
+                         </div>
+                    )}
+                     {note.aiSummary && (
+                         <Collapsible>
+                            <CollapsibleTrigger asChild><Button variant="ghost" size="sm" className="text-xs text-blue-400 gap-2"><BrainCircuit className="w-4 h-4"/> KI-Zusammenfassung</Button></CollapsibleTrigger>
+                            <CollapsibleContent>
+                               <div className="mt-2 p-3 bg-blue-950/50 rounded-md border border-blue-500/20 text-xs">
+                                   <p className="font-bold text-blue-300">Stichpunkte:</p>
+                                   <ul className="list-disc pl-4 text-blue-300/80">
+                                       {note.aiSummary.bulletPoints.map((bp:string, i:number) => <li key={i}>{bp}</li>)}
+                                   </ul>
+                                    <p className="font-bold text-blue-300 mt-2">Nächste Schritte:</p>
+                                   <ul className="list-disc pl-4 text-blue-300/80">
+                                        {note.aiSummary.nextSteps.map((ns:string, i:number) => <li key={i}>{ns}</li>)}
+                                   </ul>
+                               </div>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    )}
+                </div>
             </Card>
         )
     }
@@ -1236,6 +1350,7 @@ const EmailsView = () => {
         const ContextIcon = contextIcons[email.contextType as keyof typeof contextIcons] || Briefcase;
 
         return (
+            <Collapsible>
             <div className="flex items-center gap-4 p-4 border-b border-border hover:bg-muted/50 cursor-pointer">
                 <div className="flex-1">
                     <p className="font-bold text-sm text-foreground">{email.subject}</p>
@@ -1245,15 +1360,25 @@ const EmailsView = () => {
                             {email.direction}
                         </span>
                         <span>{email.contactName} ({email.companyName})</span>
-                        <span className="flex items-center gap-1.5"><ContextIcon className="w-3 h-3"/> {email.contextType}: {email.contextName}</span>
+                        <span className="flex items-center gap-1.5"><ContextIcon className="w-3.5 h-3.5"/> {email.contextType}: {email.contextName}</span>
                     </div>
                 </div>
                 <div className="text-right">
                     <Badge variant={email.status === 'Antwort offen' ? 'destructive' : 'secondary'} className="capitalize">{email.status}</Badge>
                     <p className="text-xs text-muted-foreground mt-1">{formatDistanceToNow(new Date(email.createdAt), { addSuffix: true, locale: de })}</p>
                 </div>
-                <Button variant="outline" size="sm">In Q-Mail öffnen</Button>
+                <div className="flex gap-2">
+                    <CollapsibleTrigger asChild><Button variant="ghost" size="sm"><BrainCircuit className="w-4 h-4 mr-2 text-blue-400" /> KI-Vorschlag</Button></CollapsibleTrigger>
+                    <Button asChild variant="outline" size="sm"><Link href="/qmail">In Q-Mail öffnen</Link></Button>
+                </div>
             </div>
+             <CollapsibleContent className="p-4 pt-0">
+                <div className="p-3 bg-blue-950/50 rounded-md border border-blue-500/20 text-xs text-blue-300 space-y-2">
+                    <p><strong>Vorschlag:</strong> "{email.aiSuggestion.text}"</p>
+                    <p><strong>Analyse:</strong> {email.aiSuggestion.analysis}</p>
+                </div>
+            </CollapsibleContent>
+            </Collapsible>
         );
     };
 
@@ -1377,9 +1502,29 @@ const AnrufeView = () => {
                            <Badge variant="outline" className={cn('capitalize', statusBadgeColors[call.status])}>{call.status}</Badge>
                         </div>
                     </div>
-                     <Button asChild variant="outline" size="sm">
-                        <Link href="/qsales">In Q-Sales öffnen</Link>
-                     </Button>
+                    <div className="flex items-center gap-2">
+                         <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm"><BrainCircuit className="w-4 h-4 mr-2 text-blue-400"/> KI-Hilfe</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>KI-Hilfe für Anruf bei: {call.contactName}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4 text-sm">
+                                    <h4 className="font-bold text-base mt-4">Rückrufleitfaden</h4>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                       {(call.aiHelpContent.leitfaden || []).map((l:string, i:number) => <li key={i}>{l}</li>)}
+                                    </ul>
+                                    <h4 className="font-bold text-base mt-4">Nachbearbeitungsvorschlag</h4>
+                                    <p>{call.aiHelpContent.nachbearbeitung}</p>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href="/qsales">In Q-Sales öffnen</Link>
+                        </Button>
+                     </div>
                 </div>
             </Card>
         );

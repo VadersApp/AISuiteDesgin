@@ -1,3 +1,4 @@
+
 import { formatDistanceToNow, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -483,12 +484,13 @@ export const mockCompanies = [
 
 
 export const mockDeals = [
-    { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen' },
-    { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 5, nextStep: 'Bedarf klären' },
-    { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen' },
-    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden' },
-    { id: 5, name: 'Global Exports - Logistik-Suite', stage: 'Verhandlung', value: '€75,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 2, nextStep: 'Finale Konditionen klären' },
-    { id: 6, name: 'Abgeschlossener Deal', stage: 'Gewonnen', value: '€100,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 30, nextStep: 'Projektübergabe' }
+    { id: 1, name: 'Innovate GmbH - Q1 Projekt', stage: 'Angebot', value: '€50,000', owner: 'Leo Sales', slaDue: 'morgen', inactiveDays: 0, nextStep: 'Angebot nachfassen', aiNextStepSuggestion: 'Anrufen und offene Fragen zum Angebot klären.', aiRisk: null },
+    { id: 2, name: 'Data Corp - Analyse-Software', stage: 'Discovery', value: '€40,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 5, nextStep: 'Bedarf klären', aiNextStepSuggestion: 'E-Mail mit Terminvorschlag für Bedarfsanalyse senden.', aiRisk: "Hohe Inaktivität. Deal könnte verloren gehen." },
+    { id: 3, name: 'Test Deal 1', stage: 'Angebot', value: '€10,000', owner: 'Leo Sales', slaDue: 'heute', inactiveDays: 1, nextStep: 'Feedback einholen', aiNextStepSuggestion: 'Kurze E-Mail mit Frage nach Feedback zum Angebot.', aiRisk: null },
+    { id: 4, name: 'Test Deal 2', stage: 'Verhandlung', value: '€25,000', owner: 'Leo Sales', slaDue: 'in 5 Tagen', inactiveDays: 0, nextStep: 'Vertrag senden', aiNextStepSuggestion: null, aiRisk: null },
+    { id: 5, name: 'Global Exports - Logistik-Suite', stage: 'Verhandlung', value: '€75,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 2, nextStep: 'Finale Konditionen klären', aiNextStepSuggestion: 'Internen Call zur Klärung der letzten Rabattstufe ansetzen.', aiRisk: null },
+    { id: 6, name: 'Abgeschlossener Deal', stage: 'Gewonnen', value: '€100,000', owner: 'Anna Schmidt', slaDue: null, inactiveDays: 30, nextStep: 'Projektübergabe', aiNextStepSuggestion: null, aiRisk: null },
+    { id: 7, name: 'Altes Projekt', stage: 'Angebot', value: '€5,000', owner: 'Leo Sales', slaDue: 'überschritten', inactiveDays: 12, nextStep: 'Angebot nachfassen', aiNextStepSuggestion: 'Deal als verloren markieren oder letzte E-Mail senden.', aiRisk: 'Sehr hohe Inaktivität. Wahrscheinlich verloren.' },
 ];
 
 export const pipelineStages = ['Discovery', 'Qualifiziert', 'Angebot', 'Verhandlung', 'Gewonnen', 'Verloren'];
@@ -941,6 +943,11 @@ export const mockTasks = Object.values(tasksMockByDepartment).flat().map((task, 
   ...(task as any),
   id: `task-mock-${index + 1}`,
   owner: (task as any).agent,
+  aiSuggestions: {
+    newTitle: `[Finalisieren] ${(task as any).title}`,
+    subtasks: ['Entwurf erstellen', 'Feedback einholen', 'Finale Version anfertigen'],
+    newDeadline: 'In 3 Tagen'
+  }
 }));
 
 export const qOnboardingModules = [
@@ -1228,7 +1235,8 @@ export const allActivities = [
             description: t.title,
             context: `Mitarbeiter: ${t.owner}`,
             dueDate: dueDate,
-            status: t.status === 'Erledigt' ? 'Erledigt' : 'Offen'
+            status: t.status === 'Erledigt' ? 'Erledigt' : 'Offen',
+            aiSuggestion: 'KI-Vorschlag für diese Aufgabe.',
         }
     }),
     // From mockDeals
@@ -1253,7 +1261,8 @@ export const allActivities = [
             description: d.nextStep,
             context: `Deal: ${d.name}`,
             dueDate: dueDate,
-            status: 'Offen'
+            status: 'Offen',
+            aiSuggestion: 'Nächsten Schritt zur Qualifizierung durchführen.',
         }
     }),
     // From qalenderBookings
@@ -1264,7 +1273,8 @@ export const allActivities = [
             description: b.eventTypeName,
             context: `Gast: ${b.guestName}`,
             dueDate: new Date(b.startAt),
-            status: b.status === 'erledigt' ? 'Erledigt' : 'Offen'
+            status: b.status === 'erledigt' ? 'Erledigt' : 'Offen',
+            aiSuggestion: 'Termin bestätigen und Agenda vorbereiten.',
         }
     })
 ];
@@ -1278,6 +1288,10 @@ export const mockNotes = [
         contextName: 'Innovate GmbH - Q1 Projekt',
         createdBy: 'Anna Schmidt',
         createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+        aiSummary: {
+            bulletPoints: ['Kunde will Q3 live gehen', 'Budget bestätigt'],
+            nextSteps: ['Detail-Workshop planen']
+        }
     },
     {
         id: 'note-2',
@@ -1287,6 +1301,10 @@ export const mockNotes = [
         contextName: 'John Doe',
         createdBy: 'Dr. Müller',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+        aiSummary: {
+            bulletPoints: ['Kundenunzufriedenheit (Lieferung)', 'Servicefall #SF-123 erstellt'],
+            nextSteps: ['Ava Assist kontaktieren', 'Status des Servicefalls prüfen']
+        }
     },
     {
         id: 'note-3',
@@ -1296,6 +1314,10 @@ export const mockNotes = [
         contextName: null,
         createdBy: 'Sophie Lang',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+        aiSummary: {
+            bulletPoints: ['Marketingbudget für Q3 um 10% erhöht'],
+            nextSteps: ['Anpassung der Ads durch Sophie']
+        }
     },
     {
         id: 'note-4',
@@ -1305,6 +1327,10 @@ export const mockNotes = [
         contextName: 'Data Corp',
         createdBy: 'Leo Sales',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8), // 8 days ago
+        aiSummary: {
+            bulletPoints: ['Angebot gesendet', 'Keine Rückmeldung bisher'],
+            nextSteps: ['Follow-up durch Leo Sales am Freitag']
+        }
     },
     {
         id: 'note-5',
@@ -1314,6 +1340,10 @@ export const mockNotes = [
         contextName: null,
         createdBy: 'Dr. Müller',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 40), // 40 days ago
+        aiSummary: {
+            bulletPoints: ['Altes Projekt abgeschlossen'],
+            nextSteps: ['Archivierung des Projekts prüfen']
+        }
     },
 ];
 
@@ -1328,6 +1358,10 @@ export const mockEmails = [
         contextName: 'Max Mustermann',
         createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
         status: 'Antwort offen',
+        aiSuggestion: {
+            text: 'Sehr geehrter Herr Mustermann, vielen Dank für Ihre Nachricht. Ich prüfe Ihre Rechnung und melde mich umgehend bei Ihnen. Mit freundlichen Grüßen.',
+            analysis: 'Dringlichkeit: Hoch. Kunde hat eine konkrete Frage zu einer Rechnung.'
+        }
     },
     {
         id: 'email-2',
@@ -1339,6 +1373,10 @@ export const mockEmails = [
         contextName: 'Data Corp - Analyse-Software',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
         status: 'Beantwortet',
+        aiSuggestion: {
+            text: 'Vielen Dank für die schnelle Rückmeldung, Frau Musterfrau.',
+            analysis: 'Information gesendet. Keine offene Aktion.'
+        }
     },
     {
         id: 'email-3',
@@ -1350,6 +1388,10 @@ export const mockEmails = [
         contextName: 'Peter Jones',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString(), // 1 day ago
         status: 'Beantwortet',
+        aiSuggestion: {
+            text: 'Kein Vorschlag nötig.',
+            analysis: 'Reine Info-Mail.'
+        }
     },
     {
         id: 'email-4',
@@ -1361,6 +1403,10 @@ export const mockEmails = [
         contextName: 'Global Exports',
         createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
         status: 'Neu eingegangen',
+        aiSuggestion: {
+            text: 'Sehr geehrte Frau Garcia, wir haben Ihre dringende Nachricht erhalten und leiten sie sofort an unser technisches Team weiter. Sie erhalten in Kürze eine Rückmeldung.',
+            analysis: 'Dringlichkeit: Sehr Hoch. Kundenproblem mit einem Update.'
+        }
     },
      {
         id: 'email-5',
@@ -1372,6 +1418,10 @@ export const mockEmails = [
         contextName: 'Hans Guck',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 9).toISOString(), // 9 days ago
         status: 'Beantwortet',
+        aiSuggestion: {
+            text: 'Kein Vorschlag nötig.',
+            analysis: 'Terminbestätigung.'
+        }
     },
 ];
 
@@ -1386,6 +1436,10 @@ export const mockCalls = [
         createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(), // 20 mins ago
         duration: null,
         status: 'Rückruf offen',
+        aiHelpContent: {
+            leitfaden: ['Bezug auf verpassten Anruf nehmen.', 'Fragen, ob jetzt ein guter Zeitpunkt ist.', 'Ziel: Neuen Termin für Deal-Besprechung finden.'],
+            nachbearbeitung: 'Aufgabe "Rückruf Peter Panik" anlegen und Termin im Qalender eintragen.'
+        }
     },
     {
         id: 'call-2',
@@ -1397,6 +1451,10 @@ export const mockCalls = [
         createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 90 mins ago
         duration: '5:32',
         status: 'Erfolgreich geführt',
+        aiHelpContent: {
+            leitfaden: [],
+            nachbearbeitung: 'Notiz zum Gesprächsinhalt anlegen und mit Kontakt verknüpfen.'
+        }
     },
     {
         id: 'call-3',
@@ -1408,6 +1466,10 @@ export const mockCalls = [
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
         duration: '12:15',
         status: 'Erfolgreich geführt',
+        aiHelpContent: {
+            leitfaden: [],
+            nachbearbeitung: 'Deal-Status auf "Verhandlung" setzen und Wert aktualisieren.'
+        }
     },
     {
         id: 'call-4',
@@ -1419,6 +1481,10 @@ export const mockCalls = [
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours ago
         duration: null,
         status: 'Rückruf offen',
+        aiHelpContent: {
+            leitfaden: ['Bezug auf verpassten Anruf nehmen.', 'Grund des Anrufs erfragen.', 'Ggf. an zuständigen Agenten weiterleiten.'],
+            nachbearbeitung: 'Aufgabe für Rückruf anlegen.'
+        }
     },
     {
         id: 'call-5',
@@ -1430,6 +1496,10 @@ export const mockCalls = [
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString(), // 1 day ago
         duration: '3:45',
         status: 'Erfolgreich geführt',
+        aiHelpContent: {
+            leitfaden: [],
+            nachbearbeitung: 'Ticket #9982 mit Anrufinformationen aktualisieren.'
+        }
     },
     {
         id: 'call-6',
@@ -1441,6 +1511,10 @@ export const mockCalls = [
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(), // 8 days ago
         duration: '7:11',
         status: 'Erfolgreich geführt',
+        aiHelpContent: {
+            leitfaden: [],
+            nachbearbeitung: 'Notiz zum Gespräch anlegen.'
+        }
     },
      {
         id: 'call-7',
@@ -1452,5 +1526,17 @@ export const mockCalls = [
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 40).toISOString(), // 40 days ago
         duration: '4:20',
         status: 'Erfolgreich geführt',
+        aiHelpContent: {
+            leitfaden: [],
+            nachbearbeitung: 'Keine Nachbearbeitung nötig.'
+        }
     },
+];
+
+export const kiTagesfokus = [
+    { title: "Deal 'Data Corp'", reason: "SLA überschritten, seit 5 Tagen inaktiv.", type: 'deal' },
+    { title: "Rückruf Peter Panik", reason: "Anruf verpasst, Rückruf offen.", type: 'call' },
+    { title: "E-Mail von Max Mustermann", reason: "Antwort auf Rechnungsfrage offen.", type: 'email' },
+    { title: "Lead 'Dr. Eva Schmidt'", reason: "Hohe Priorität, seit gestern keine Aktion.", type: 'lead' },
+    { title: "Aufgabe 'Follow-ups'", reason: "Heute fällig, hohe Priorität.", type: 'task' },
 ];
