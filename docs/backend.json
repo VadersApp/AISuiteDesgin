@@ -315,6 +315,73 @@
         }
       },
       "required": ["mode", "status", "createdBy", "createdAt"]
+    },
+    "SuccessPlan": {
+      "title": "Success Plan",
+      "description": "Defines goals and targets for a specific period.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "periodType": { "type": "string", "enum": ["year", "quarter", "month"] },
+        "startAt": { "type": "string", "format": "date-time" },
+        "endAt": { "type": "string", "format": "date-time" },
+        "scope": { "type": "string", "enum": ["org", "dept", "team"] },
+        "deptId": { "type": "string" },
+        "teamId": { "type": "string" },
+        "ownerUserId": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "active", "archived"] },
+        "targets": {
+          "type": "object",
+          "properties": {
+            "revenue": { "type": "number" },
+            "profit": { "type": "number" },
+            "marginPct": { "type": "number" },
+            "leads": { "type": "number" },
+            "meetings": { "type": "number" },
+            "closes": { "type": "number" }
+          }
+        },
+        "breakdown": {
+          "type": "object",
+          "properties": {
+            "monthlyTargets": {
+              "type": "array",
+              "items": { "type": "object" }
+            }
+          }
+        },
+        "aiSuggestion": { "type": "object" }
+      },
+      "required": ["name", "periodType", "startAt", "endAt", "scope", "ownerUserId", "status"]
+    },
+    "SuccessPlanActuals": {
+      "title": "Success Plan Actuals",
+      "description": "Tracks the actual performance against a success plan for a given period.",
+      "type": "object",
+      "properties": {
+        "periodStart": { "type": "string", "format": "date-time" },
+        "revenueActual": { "type": "number" },
+        "leadsActual": { "type": "number" },
+        "meetingsActual": { "type": "number" },
+        "closesActual": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["periodStart", "updatedAt"]
+    },
+    "SuccessPlanAction": {
+      "title": "Success Plan Action",
+      "description": "A measure or action item derived from a success plan.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["taskPack", "project"] },
+        "linkedTaskIds": { "type": "array", "items": { "type": "string" } },
+        "linkedProjectId": { "type": "string" },
+        "ownerUserId": { "type": "string" },
+        "dueAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["open", "in_progress", "done"] }
+      },
+      "required": ["title", "type", "ownerUserId", "status"]
     }
   },
   "auth": {
@@ -368,6 +435,18 @@
     "/organizations/{orgId}/businessBuilderRuns/{runId}": {
       "schema": { "$ref": "#/backend/entities/BusinessBuilderRun" },
       "description": "Stores the configuration and results of Business Builder runs."
+    },
+    "/organizations/{orgId}/successPlans/{planId}": {
+      "schema": { "$ref": "#/backend/entities/SuccessPlan" },
+      "description": "Stores success plans for the organization, departments, or teams."
+    },
+    "/organizations/{orgId}/successPlans/{planId}/actuals/{periodId}": {
+      "schema": { "$ref": "#/backend/entities/SuccessPlanActuals" },
+      "description": "Stores the actual performance data for each period of a success plan."
+    },
+    "/organizations/{orgId}/successPlans/{planId}/actions/{actionId}": {
+      "schema": { "$ref": "#/backend/entities/SuccessPlanAction" },
+      "description": "Stores actions and measures derived from a success plan."
     }
   }
 }

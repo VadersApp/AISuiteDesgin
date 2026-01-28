@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, FormEvent, useEffect } from 'react';
+import React, { useState, useMemo, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -45,16 +45,19 @@ import {
   Bot as BotIcon,
   BrainCircuit,
   Briefcase,
+  Building,
   Building2,
+  Calendar as CalendarIcon,
   CalendarDays,
+  Check,
   CheckCircle2,
   CheckSquare,
   ChevronDown,
   ChevronRight,
   Clock,
   DollarSign,
-  FileText,
   File as FileIcon,
+  FileText,
   Flame,
   Folder,
   FolderPlus,
@@ -75,6 +78,7 @@ import {
   Plus,
   Search,
   Settings,
+  Target,
   Ticket,
   TrendingUp,
   Upload,
@@ -82,8 +86,6 @@ import {
   Users,
   Workflow,
   X,
-  Building,
-  Calendar as CalendarIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -105,6 +107,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 const modules = [
     { name: 'Q-Chat', icon: MessageSquare },
     { name: 'Business Builder', icon: Building },
+    { name: 'Erfolgsplaner', icon: Target },
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'Workspace', icon: Briefcase },
     { name: 'KPI-Dashboard', icon: BarChart3 },
@@ -1108,6 +1111,10 @@ export default function QSpacePage() {
        if (activeModule !== 'Business Builder') {
           setActiveModule('Business Builder');
       }
+    } else if (pathname.startsWith('/q-space/erfolgsplaner')) {
+       if (activeModule !== 'Erfolgsplaner') {
+          setActiveModule('Erfolgsplaner');
+      }
     }
   }, [pathname, activeModule]);
 
@@ -1184,6 +1191,7 @@ export default function QSpacePage() {
           case 'System Admin (Q-Space)': return <SystemAdminView />;
           case 'Q-Chat': return null; // Should redirect
           case 'Business Builder': return null; // Should redirect
+          case 'Erfolgsplaner': return null; // Should redirect
           default: return <OverviewView currentUser={currentUser} filteredKpiMitarbeiter={filteredKpiMitarbeiter} filteredChatThreads={filteredChatThreads} filteredTasks={filteredTasks} />;
       }
   };
@@ -1193,9 +1201,13 @@ export default function QSpacePage() {
         router.push('/q-space/chat');
     } else if (moduleName === 'Business Builder') {
         router.push('/q-space/business-builder');
-    }
-     else {
-        if (pathname.startsWith('/q-space/chat') || pathname.startsWith('/q-space/business-builder')) {
+    } else if (moduleName === 'Erfolgsplaner') {
+        router.push('/q-space/erfolgsplaner');
+    } else {
+        const isExternal = pathname.startsWith('/q-space/chat') || 
+                           pathname.startsWith('/q-space/business-builder') ||
+                           pathname.startsWith('/q-space/erfolgsplaner');
+        if (isExternal) {
             router.push('/q-space');
         }
         setActiveModule(moduleName);
@@ -1212,13 +1224,20 @@ export default function QSpacePage() {
                 const Icon = mod.icon;
                 const isChatLink = mod.name === 'Q-Chat';
                 const isBusinessBuilderLink = mod.name === 'Business Builder';
+                const isErfolgsplanerLink = mod.name === 'Erfolgsplaner';
                 let isActive = false;
+
                 if (isChatLink) {
                     isActive = pathname.startsWith('/q-space/chat');
                 } else if (isBusinessBuilderLink) {
                     isActive = pathname.startsWith('/q-space/business-builder');
+                } else if (isErfolgsplanerLink) {
+                    isActive = pathname.startsWith('/q-space/erfolgsplaner');
                 } else {
-                    isActive = activeModule === mod.name && !pathname.startsWith('/q-space/chat') && !pathname.startsWith('/q-space/business-builder');
+                    isActive = activeModule === mod.name && 
+                               !pathname.startsWith('/q-space/chat') && 
+                               !pathname.startsWith('/q-space/business-builder') &&
+                               !pathname.startsWith('/q-space/erfolgsplaner');
                 }
 
 
