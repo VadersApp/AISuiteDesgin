@@ -7,10 +7,10 @@ import { FirebaseOptions } from 'firebase/app';
 // actual Firebase project configuration. The configuration is safe to be exposed
 // on the client-side.
 export const firebaseConfig: FirebaseOptions = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  projectId: "qore-os-for-enterprises-gcp",
+  appId: "1:596181745482:web:697227c3e5362a75163b65",
+  storageBucket: "qore-os-for-enterprises-gcp.appspot.com",
+  apiKey: "...",
+  authDomain: "qore-os-for-enterprises-gcp.firebaseapp.com",
+  messagingSenderId: "596181745482",
 };
