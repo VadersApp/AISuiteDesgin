@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, type FormEvent } from 'react';
+import React, { useState, useMemo, useEffect, type FormEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -592,7 +592,7 @@ export default function QSalesPage() {
         <p className="text-muted-foreground">Ihre operative Vertriebsoberfläche für die tägliche Sales-Arbeit.</p>
       </header>
       
-      <div className="hidden">
+      <div className="">
         <SalesFocusHeader leads={allLeads} onLeadSelect={setSelectedLead} />
       </div>
 
