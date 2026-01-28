@@ -68,7 +68,7 @@ const SalesFocusHeader = ({ leads, onLeadSelect }: { leads: Lead[], onLeadSelect
     const todayAppointments = leads.filter(l => l.nextAction.includes('Heute') && l.status === 'Termin gelegt');
 
     return (
-        <Card className="p-4 sticky top-4 z-20 bg-background/80 backdrop-blur-lg">
+        <Card className="p-4">
              <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3">Dein heutiger Sales-Fokus</h3>
              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                  <div className="space-y-2">
