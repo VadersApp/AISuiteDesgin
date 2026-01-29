@@ -382,6 +382,33 @@
         "status": { "type": "string", "enum": ["open", "in_progress", "done"] }
       },
       "required": ["title", "type", "ownerUserId", "status"]
+    },
+    "LeaveRequest": {
+      "title": "Leave Request",
+      "description": "Represents an employee's request for leave.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "deptId": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "leaveType": { "type": "string", "enum": ["urlaub", "krankheit", "sonderurlaub"] },
+        "comment": { "type": "string" },
+        "status": { "type": "string", "enum": ["submitted", "approved", "rejected"] },
+        "approverUserId": { "type": "string" },
+        "aiAssessment": {
+          "type": "object",
+          "properties": {
+            "riskLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+            "summary": { "type": "string" },
+            "conflicts": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "escalationThreadId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "deptId", "startDate", "endDate", "leaveType", "status", "createdAt", "updatedAt"]
     }
   },
   "auth": {
@@ -447,6 +474,10 @@
     "/organizations/{orgId}/successPlans/{planId}/actions/{actionId}": {
       "schema": { "$ref": "#/backend/entities/SuccessPlanAction" },
       "description": "Stores actions and measures derived from a success plan."
+    },
+    "/organizations/{orgId}/leaveRequests/{requestId}": {
+      "schema": { "$ref": "#/backend/entities/LeaveRequest" },
+      "description": "Stores employee leave requests."
     }
   }
 }

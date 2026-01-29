@@ -33,8 +33,9 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { type DateRange } from 'react-day-picker';
 import {
   Activity,
   AlertTriangle,
@@ -54,6 +55,7 @@ import {
   CheckSquare,
   ChevronDown,
   ChevronRight,
+  Circle,
   Clock,
   DollarSign,
   File as FileIcon,
@@ -64,7 +66,7 @@ import {
   GitBranch,
   Handshake,
   HeartPulse,
-  History,
+  History as HistoryIcon,
   Info,
   Kanban,
   LayoutDashboard,
@@ -89,7 +91,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, mockLeaveRequests } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -102,6 +104,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 
 const modules = [
@@ -543,6 +546,125 @@ const DocumentsView = ({ currentUser, filteredDocs, filteredFolders } : { curren
     )
 }
 
+const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [newRequestDate, setNewRequestDate] = useState<DateRange | undefined>();
+
+    const filteredRequests = useMemo(() => {
+        if (currentUser.role === 'exec') {
+            return mockLeaveRequests;
+        }
+        if (currentUser.role === 'dept_head') {
+            return mockLeaveRequests.filter(req => req.deptId === currentUser.abteilung);
+        }
+        // Simplified for team_lead and employee
+        return mockLeaveRequests.filter(req => req.userId === currentUser.id);
+    }, [currentUser]);
+
+    const statusColors = {
+        approved: 'bg-emerald-500/20 text-emerald-300',
+        submitted: 'bg-amber-500/20 text-amber-300',
+        rejected: 'bg-rose-500/20 text-rose-300',
+    };
+
+    const statusDayModifiers: Record<string, Date[]> = {
+        approved: filteredRequests.filter(r => r.status === 'approved').flatMap(r => eachDayOfInterval({ start: r.startDate, end: r.endDate })),
+        submitted: filteredRequests.filter(r => r.status === 'submitted').flatMap(r => eachDayOfInterval({ start: r.startDate, end: r.endDate })),
+        rejected: filteredRequests.filter(r => r.status === 'rejected').flatMap(r => eachDayOfInterval({ start: r.startDate, end: r.endDate })),
+    };
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Urlaubsplaner</CardTitle>
+                    <CardDescription>Urlaube beantragen und Übersicht behalten.</CardDescription>
+                </div>
+                <Button onClick={() => setIsCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />Urlaub beantragen</Button>
+            </CardHeader>
+            <CardContent>
+                <Calendar
+                    mode="multiple"
+                    selected={[]}
+                    onMonthChange={setCurrentMonth}
+                    month={currentMonth}
+                    className="p-0"
+                    classNames={{
+                        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                        month: "space-y-4 w-full",
+                        table: "w-full border-collapse",
+                        head_cell: "w-1/7 text-muted-foreground rounded-md text-xs font-normal",
+                        cell: "h-24 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                        day: "h-full w-full p-1.5 focus:relative font-normal aria-selected:opacity-100 flex flex-col items-start justify-start"
+                    }}
+                    modifiers={statusDayModifiers}
+                    modifiersClassNames={{
+                        approved: 'bg-emerald-500/10',
+                        submitted: 'bg-amber-500/10',
+                        rejected: 'bg-rose-500/10',
+                    }}
+                    components={{
+                        DayContent: ({ date, ...props }) => {
+                            const dailyRequests = filteredRequests.filter(r => isSameDay(r.startDate, date));
+                            return (
+                                <>
+                                <span>{format(date, "d")}</span>
+                                <div className="mt-1 space-y-0.5 w-full overflow-hidden">
+                                {dailyRequests.map(r => (
+                                    <div key={r.id} className={cn("text-[9px] font-bold p-0.5 rounded-sm truncate", statusColors[r.status as keyof typeof statusColors])}>
+                                        {r.userName}
+                                    </div>
+                                ))}
+                                </div>
+                                </>
+                            )
+                        },
+                    }}
+                />
+            </CardContent>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                 <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Urlaub beantragen</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="grid gap-2">
+                             <Label>Zeitraum</Label>
+                             <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn("w-full justify-start text-left font-normal", !newRequestDate && "text-muted-foreground")}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {newRequestDate?.from ? (
+                                    newRequestDate.to ? (
+                                        <>{format(newRequestDate.from, "LLL dd, y")} - {format(newRequestDate.to, "LLL dd, y")}</>
+                                    ) : (
+                                        format(newRequestDate.from, "LLL dd, y")
+                                    )
+                                    ) : (
+                                    <span>Datum wählen</span>
+                                    )}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="range" selected={newRequestDate} onSelect={setNewRequestDate} numberOfMonths={2} />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                        <div className="space-y-2"><Label htmlFor="leave-type">Art</Label><Select defaultValue="urlaub"><SelectTrigger id="leave-type" className="bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="urlaub">Urlaub</SelectItem><SelectItem value="sonderurlaub">Sonderurlaub</SelectItem><SelectItem value="krankheit">Krankheit</SelectItem></SelectContent></Select></div>
+                        <div className="space-y-2"><Label htmlFor="leave-comment">Kommentar (optional)</Label><Textarea id="leave-comment" placeholder="z.B. Jahresurlaub" className="bg-input"/></div>
+                    </div>
+                    <DialogFooter><Button>Antrag einreichen</Button></DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </Card>
+    );
+};
+
 
 const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredSops, filteredDocs, filteredFolders } : { currentUser: any, filteredTasks: any[], filteredProjects: any[], filteredSops: any[], filteredDocs: any[], filteredFolders: any[]}) => (
     <div>
@@ -553,6 +675,7 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
                 <TabsTrigger value="projekte">Projekte</TabsTrigger>
                 <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
                 <TabsTrigger value="sops">Arbeitsanweisungen</TabsTrigger>
+                <TabsTrigger value="urlaubsplaner">Urlaubsplaner</TabsTrigger>
             </TabsList>
             <TabsContent value="aufgaben" className="mt-4">
                 <Card><CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader><CardContent>
@@ -577,6 +700,9 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
                         <TableBody>{filteredSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
                     </Table>
                 </CardContent></Card>
+            </TabsContent>
+            <TabsContent value="urlaubsplaner" className="mt-4">
+                <UrlaubsplanerView currentUser={currentUser} />
             </TabsContent>
         </Tabs>
     </div>

@@ -88,5 +88,20 @@ service cloud.firestore {
     match /organizations/{orgId}/successPlans/{planId}/actions/{actionId} {
       allow read, write: if request.auth != null;
     }
+
+    // Leave Planner Rules
+    match /organizations/{orgId}/leaveRequests/{requestId} {
+      // Users can read their own requests. In a real app, managers would have broader read access.
+      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec'); // Simplified for now
+      
+      // Users can create requests for themselves.
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+
+      // Approvers can update status. Users can cancel their own if submitted.
+      allow update: if request.auth != null; // Simplified: in a real app, check for manager/exec role.
+      
+      // Users can delete their own requests if they haven't been processed yet.
+      allow delete: if request.auth != null && resource.data.status == 'submitted' && request.auth.uid == resource.data.userId;
+    }
   }
 }
