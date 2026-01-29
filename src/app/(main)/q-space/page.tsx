@@ -90,6 +90,7 @@ import {
   TrendingUp,
   Upload,
   User as UserIcon,
+  UserCheck,
   Users,
   Workflow,
   X,
@@ -648,7 +649,7 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
                                 <span className={cn("text-xs", isToday(day) && "font-bold text-primary")}>{format(day, 'd')}</span>
                                 <div className="space-y-1 mt-1">
                                     {dayRequests.map(req => {
-                                         const showLabel = isSameDay(req.startDate, day) || day.getDay() === 1 || isBefore(req.startDate, calendarStart) && day.getDate() === 1;
+                                         const showLabel = isSameDay(req.startDate, day) || day.getDay() === 1 || (isBefore(req.startDate, calendarStart) && isSameDay(day, calendarStart)) ;
                                          return (
                                             <div key={req.id} className={cn("text-[10px] text-white font-bold p-1 rounded-sm truncate", getDeptColor(req.deptId), req.status === 'submitted' && 'opacity-70 ring-2 ring-inset ring-white/50 ring-dashed')}>
                                                 {showLabel && req.userName}
