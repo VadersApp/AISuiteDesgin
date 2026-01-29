@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameDay, isBefore } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameDay, isBefore, startOfMonth, addMonths, subMonths, isSameMonth, endOfMonth } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { type DateRange } from 'react-day-picker';
 import {
@@ -55,6 +55,7 @@ import {
   CheckCircle2,
   CheckSquare,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Circle,
   Clock,
@@ -92,10 +93,12 @@ import {
   Users,
   Workflow,
   X,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, mockLeaveRequests } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, mockLeaveRequests } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -551,88 +554,115 @@ const DocumentsView = ({ currentUser, filteredDocs, filteredFolders } : { curren
 }
 
 const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
-    const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
-    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-    const [newRequestDate, setNewRequestDate] = useState<DateRange | undefined>();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<'month' | 'week'>('month');
+  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newRequestDate, setNewRequestDate] = useState<DateRange | undefined>();
 
-    const filteredRequests = useMemo(() => {
-        if (currentUser.role === 'exec') {
-            return mockLeaveRequests;
-        }
-        if (currentUser.role === 'dept_head') {
-            return mockLeaveRequests.filter(req => req.deptId === currentUser.abteilung);
-        }
-        // Simplified for team_lead and employee
-        return mockLeaveRequests.filter(req => req.userId === currentUser.id);
-    }, [currentUser]);
+  const filteredRequests = useMemo(() => {
+    if (!currentUser) return [];
+    if (currentUser.role === 'exec') {
+      return mockLeaveRequests;
+    }
+    if (currentUser.role === 'dept_head') {
+      return mockLeaveRequests.filter(req => req.deptId === currentUser.abteilung);
+    }
+    // Employees see their own requests and approved requests from their department
+    return mockLeaveRequests.filter(req => req.userId === currentUser.id || (req.deptId === currentUser.abteilung && req.status === 'approved'));
+  }, [currentUser]);
 
-    const statusColors: { [key: string]: string } = {
-        approved: 'bg-emerald-500/20 text-emerald-300',
-        submitted: 'bg-amber-500/20 text-amber-300',
-        rejected: 'bg-rose-500/20 text-rose-300',
-    };
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  
+  const todayAbsent = useMemo(() => new Set(filteredRequests.filter(r => isToday(new Date()) && isWithinInterval(new Date(), {start: r.startDate, end: r.endDate})).map(r => r.userId)).size, [filteredRequests]);
+  const thisWeekAbsent = useMemo(() => {
+      const start = startOfWeek(new Date(), { weekStartsOn: 1 });
+      const end = endOfWeek(new Date(), { weekStartsOn: 1 });
+      return new Set(filteredRequests.filter(r => isWithinInterval(start, {start: r.startDate, end: r.endDate}) || isWithinInterval(end, {start: r.startDate, end: r.endDate}) || (r.startDate < start && r.endDate > end)).map(r => r.userId)).size
+  }, [filteredRequests]);
+  const openRequests = useMemo(() => filteredRequests.filter(r => r.status === 'submitted').length, [filteredRequests]);
+  const approvedThisMonth = useMemo(() => filteredRequests.filter(r => r.status === 'approved' && isSameMonth(r.startDate, currentDate)).length, [filteredRequests, currentDate]);
+  const conflictsThisMonth = useMemo(() => filteredRequests.filter(r => isSameMonth(r.startDate, currentDate) && r.aiAssessment?.riskLevel === 'high').length, [filteredRequests, currentDate]);
+  
+  const miniDashboardKpis = [
+      { title: "Heute abwesend", value: todayAbsent },
+      { title: "Diese Woche abwesend", value: thisWeekAbsent },
+      { title: "Offene Anträge", value: openRequests },
+      { title: "Genehmigt (Monat)", value: approvedThisMonth },
+      ...(currentUser.role !== 'employee' ? [{ title: "Konflikte (Monat)", value: conflictsThisMonth }] : []),
+  ];
 
-    const statusDayModifiers: Record<string, Date[]> = {
-        approved: filteredRequests.filter(r => r.status === 'approved').flatMap(r => eachDayOfInterval({ start: r.startDate, end: r.endDate })),
-        submitted: filteredRequests.filter(r => r.status === 'submitted').flatMap(r => eachDayOfInterval({ start: r.startDate, end: r.endDate })),
-        rejected: filteredRequests.filter(r => r.status === 'rejected').flatMap(r => eachDayOfInterval({ start: r.startDate, end: r.endDate })),
-    };
+  const deptColors: { [key: string]: string } = {
+    'IT': 'bg-blue-500/80',
+    'Vertrieb': 'bg-emerald-500/80',
+    'Marketing': 'bg-purple-500/80',
+    'Geschäftsführung': 'bg-slate-500/80',
+    'Personalwesen (HR)': 'bg-amber-500/80',
+    'Finanzen & Controlling': 'bg-rose-500/80',
+    'default': 'bg-gray-500/80',
+  };
 
-    return (
+  const getDeptColor = (deptId: string) => deptColors[deptId] || deptColors.default;
+
+  return (
+    <div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            {miniDashboardKpis.map(kpi => (
+                <Card key={kpi.title}>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-3xl font-bold">{kpi.value}</p>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Urlaubsplaner</CardTitle>
-                    <CardDescription>Urlaube beantragen und Übersicht behalten.</CardDescription>
+                <div className="flex items-center gap-2">
+                     <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}><ChevronLeft className="w-4 h-4"/></Button>
+                     <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}><ChevronRight className="w-4 h-4"/></Button>
+                     <h2 className="text-xl font-bold capitalize">{format(currentDate, 'MMMM yyyy', { locale: de })}</h2>
                 </div>
-                <Button onClick={() => setIsCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />Urlaub beantragen</Button>
+                <div className="flex items-center gap-2">
+                    <Select value={view} onValueChange={(v) => setView(v as 'month' | 'week')}>
+                        <SelectTrigger className="w-[120px] bg-input"><SelectValue /></SelectTrigger>
+                        <SelectContent><SelectItem value="month">Monat</SelectItem><SelectItem value="week">Woche</SelectItem></SelectContent>
+                    </Select>
+                    <Button onClick={() => setIsCreateDialogOpen(true)}><Plus className="w-4 h-4 mr-2" />Antrag stellen</Button>
+                </div>
             </CardHeader>
             <CardContent>
-                <Calendar
-                    mode="multiple"
-                    selected={[]}
-                    onMonthChange={setCurrentMonth}
-                    month={currentMonth}
-                    className="p-0"
-                    classNames={{
-                        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                        month: "space-y-4 w-full",
-                        table: "w-full border-collapse",
-                        head_cell: "w-1/7 text-muted-foreground rounded-md text-xs font-normal",
-                        cell: "h-24 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-                        day: "h-full w-full p-1.5 focus:relative font-normal aria-selected:opacity-100 flex flex-col items-start justify-start"
-                    }}
-                    modifiers={statusDayModifiers}
-                    modifiersClassNames={{
-                        approved: 'bg-emerald-500/10',
-                        submitted: 'bg-amber-500/10',
-                        rejected: 'bg-rose-500/10',
-                    }}
-                    components={{
-                        DayContent: ({ date, ...props }) => {
-                            const dailyRequests = filteredRequests.filter(r => isWithinInterval(date, { start: r.startDate, end: r.endDate }));
-                
-                            return (
-                                <>
-                                <span>{format(date, "d")}</span>
-                                <div className="mt-1 space-y-0.5 w-full overflow-hidden">
-                                {dailyRequests.map(r => {
-                                  const showLabel = isSameDay(r.startDate, date) || (startOfWeek(date, {weekStartsOn: 1}) > r.startDate && date.getDay() === 1) || (startOfMonth(date) > r.startDate && date.getDate() === 1) ;
-                                  return (
-                                    <div key={r.id} className={cn("text-[9px] font-bold p-0.5 rounded-sm truncate", statusColors[r.status as keyof typeof statusColors])}>
-                                        {showLabel ? r.userName : ''}
-                                    </div>
-                                  )
-                                })}
+                <div className="grid grid-cols-7 border-t border-l">
+                    {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(day => <div key={day} className="text-center text-xs font-bold text-muted-foreground p-2 border-b border-r bg-muted/50">{day}</div>)}
+                    {days.map(day => {
+                        const dayRequests = filteredRequests.filter(r => isWithinInterval(day, {start: r.startDate, end: r.endDate}));
+                        return (
+                            <div key={day.toISOString()} className={cn("relative p-1 border-b border-r min-h-[100px]", !isSameMonth(day, currentDate) && "bg-muted/30")}>
+                                <span className={cn("text-xs", isToday(day) && "font-bold text-primary")}>{format(day, 'd')}</span>
+                                <div className="space-y-1 mt-1">
+                                    {dayRequests.map(req => {
+                                         const showLabel = isSameDay(req.startDate, day) || day.getDay() === 1 || day.getDate() === 1;
+                                         return (
+                                            <div key={req.id} className={cn("text-[10px] text-white font-bold p-1 rounded-sm truncate", getDeptColor(req.deptId), req.status === 'submitted' && 'opacity-70 ring-2 ring-inset ring-white/50 ring-dashed')}>
+                                                {showLabel && req.userName}
+                                            </div>
+                                         )
+                                    })}
                                 </div>
-                                </>
-                            )
-                        },
-                    }}
-                />
+                            </div>
+                        )
+                    })}
+                </div>
             </CardContent>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        </Card>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                  <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Urlaub beantragen</DialogTitle>
@@ -669,8 +699,8 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
                     <DialogFooter><Button>Antrag einreichen</Button></DialogFooter>
                 </DialogContent>
             </Dialog>
-        </Card>
-    );
+    </div>
+  );
 };
 
 

@@ -91,14 +91,26 @@ service cloud.firestore {
 
     // Leave Planner Rules
     match /organizations/{orgId}/leaveRequests/{requestId} {
-      // Users can read their own requests. In a real app, managers would have broader read access.
-      allow read: if request.auth != null && (request.auth.uid == resource.data.userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec'); // Simplified for now
+      // Users can read their own requests.
+      // Department heads can read requests in their department.
+      // Execs can read all requests.
+      allow read: if request.auth != null && (
+          request.auth.uid == resource.data.userId ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec' ||
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == resource.data.deptId)
+      );
       
       // Users can create requests for themselves.
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
 
-      // Approvers can update status. Users can cancel their own if submitted.
-      allow update: if request.auth != null; // Simplified: in a real app, check for manager/exec role.
+      // Approvers (exec, dept_head) can update status. Users can cancel their own if submitted.
+      allow update: if request.auth != null && (
+          (
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec' ||
+            (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == resource.data.deptId)
+          ) ||
+          (resource.data.status == 'submitted' && request.auth.uid == resource.data.userId) // User can cancel their own submitted requests
+      );
       
       // Users can delete their own requests if they haven't been processed yet.
       allow delete: if request.auth != null && resource.data.status == 'submitted' && request.auth.uid == resource.data.userId;

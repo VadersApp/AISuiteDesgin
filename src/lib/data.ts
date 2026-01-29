@@ -1775,5 +1775,20 @@ export const mockLeaveRequests = [
     createdAt: new Date(),
     updatedAt: new Date(),
   },
+   {
+    id: 'lr-5',
+    userId: 'dr-mueller',
+    userName: 'Dr. Müller',
+    deptId: 'Geschäftsführung',
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 22),
+    endDate: new Date(new Date().getFullYear(), new Date().getMonth(), 28),
+    leaveType: 'urlaub',
+    comment: 'Jahresurlaub',
+    status: 'approved',
+    approverUserId: 'system',
+    aiAssessment: { riskLevel: 'low', summary: 'Keine Konflikte.', conflicts: [] },
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
 ];
     
