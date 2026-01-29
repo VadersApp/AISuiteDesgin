@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameDay, isBefore } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { type DateRange } from 'react-day-picker';
 import {
@@ -51,6 +51,7 @@ import {
   Calendar as CalendarIcon,
   CalendarDays,
   Check,
+  CheckCircle,
   CheckCircle2,
   CheckSquare,
   ChevronDown,
@@ -59,11 +60,14 @@ import {
   Clock,
   DollarSign,
   File as FileIcon,
+  FileQuestion,
   FileText,
   Flame,
   Folder,
+  FolderKanban,
   FolderPlus,
   GitBranch,
+  GraduationCap,
   Handshake,
   HeartPulse,
   History as HistoryIcon,
@@ -607,7 +611,19 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
                     }}
                     components={{
                         DayContent: ({ date, ...props }) => {
-                            const dailyRequests = filteredRequests.filter(r => isSameDay(r.startDate, date));
+                            const dailyRequests = filteredRequests.filter(r => {
+                                const isWithin = isWithinInterval(date, { start: r.startDate, end: r.endDate });
+                                if (!isWithin) return false;
+                
+                                const isRequestStartDate = isSameDay(date, r.startDate);
+                                
+                                const startOfWeekForDate = startOfWeek(date, { weekStartsOn: 1 });
+                                const isMonday = isSameDay(date, startOfWeekForDate);
+                                const requestStartedBeforeThisWeek = isBefore(r.startDate, startOfWeekForDate);
+                
+                                return isRequestStartDate || (isMonday && requestStartedBeforeThisWeek);
+                            });
+                
                             return (
                                 <>
                                 <span>{format(date, "d")}</span>
@@ -671,11 +687,11 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
         <h2 className="text-xl font-bold text-foreground mb-4">Workspace</h2>
         <Tabs defaultValue="aufgaben">
             <TabsList>
-                <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
-                <TabsTrigger value="projekte">Projekte</TabsTrigger>
                 <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
                 <TabsTrigger value="sops">Arbeitsanweisungen</TabsTrigger>
                 <TabsTrigger value="urlaubsplaner">Urlaubsplaner</TabsTrigger>
+                <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
+                <TabsTrigger value="projekte">Projekte</TabsTrigger>
             </TabsList>
             <TabsContent value="aufgaben" className="mt-4">
                 <Card><CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader><CardContent>
