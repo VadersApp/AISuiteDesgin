@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameDay, isBefore } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { type DateRange } from 'react-day-picker';
 import {
@@ -567,7 +567,7 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
         return mockLeaveRequests.filter(req => req.userId === currentUser.id);
     }, [currentUser]);
 
-    const statusColors = {
+    const statusColors: { [key: string]: string } = {
         approved: 'bg-emerald-500/20 text-emerald-300',
         submitted: 'bg-amber-500/20 text-amber-300',
         rejected: 'bg-rose-500/20 text-rose-300',
@@ -617,11 +617,14 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
                                 <>
                                 <span>{format(date, "d")}</span>
                                 <div className="mt-1 space-y-0.5 w-full overflow-hidden">
-                                {dailyRequests.map(r => (
+                                {dailyRequests.map(r => {
+                                  const showLabel = isSameDay(r.startDate, date) || (startOfWeek(date, {weekStartsOn: 1}) > r.startDate && date.getDay() === 1) || (startOfMonth(date) > r.startDate && date.getDate() === 1) ;
+                                  return (
                                     <div key={r.id} className={cn("text-[9px] font-bold p-0.5 rounded-sm truncate", statusColors[r.status as keyof typeof statusColors])}>
-                                        {r.userName}
+                                        {showLabel ? r.userName : ''}
                                     </div>
-                                ))}
+                                  )
+                                })}
                                 </div>
                                 </>
                             )
@@ -676,11 +679,11 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
         <h2 className="text-xl font-bold text-foreground mb-4">Workspace</h2>
         <Tabs defaultValue="aufgaben">
             <TabsList>
+                <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
+                <TabsTrigger value="projekte">Projekte</TabsTrigger>
                 <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
                 <TabsTrigger value="sops">Arbeitsanweisungen</TabsTrigger>
                 <TabsTrigger value="urlaubsplaner">Urlaubsplaner</TabsTrigger>
-                <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
-                <TabsTrigger value="projekte">Projekte</TabsTrigger>
             </TabsList>
             <TabsContent value="aufgaben" className="mt-4">
                 <Card><CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader><CardContent>
