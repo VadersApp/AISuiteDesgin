@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameDay, isBefore } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { type DateRange } from 'react-day-picker';
 import {
@@ -611,18 +611,7 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
                     }}
                     components={{
                         DayContent: ({ date, ...props }) => {
-                            const dailyRequests = filteredRequests.filter(r => {
-                                const isWithin = isWithinInterval(date, { start: r.startDate, end: r.endDate });
-                                if (!isWithin) return false;
-                
-                                const isRequestStartDate = isSameDay(date, r.startDate);
-                                
-                                const startOfWeekForDate = startOfWeek(date, { weekStartsOn: 1 });
-                                const isMonday = isSameDay(date, startOfWeekForDate);
-                                const requestStartedBeforeThisWeek = isBefore(r.startDate, startOfWeekForDate);
-                
-                                return isRequestStartDate || (isMonday && requestStartedBeforeThisWeek);
-                            });
+                            const dailyRequests = filteredRequests.filter(r => isWithinInterval(date, { start: r.startDate, end: r.endDate }));
                 
                             return (
                                 <>
