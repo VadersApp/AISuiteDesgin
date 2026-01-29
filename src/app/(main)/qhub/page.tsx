@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo, FormEvent, useEffect } from 'react';
+import React, { useState, useMemo, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -40,7 +40,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  BarChart3,
+  BarChart2,
   Bot as BotIcon,
   BrainCircuit,
   Briefcase,
@@ -56,6 +56,7 @@ import {
   GitBranch,
   Handshake,
   HeartPulse,
+  History as HistoryIcon,
   Info,
   Kanban,
   LayoutDashboard,
@@ -73,10 +74,11 @@ import {
   User as UserIcon,
   Users,
   Workflow,
+  X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, testLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -724,122 +726,52 @@ const PipelineView = () => {
 };
 
 const ReportsView = () => {
-    const { kpis: execKpis, processKpis, agentKpis, attribution } = execKpiData;
-
-    const summaryIconMap: { [key: string]: React.ElementType } = {
-        gut: CheckCircle2,
-        kritisch: Flame,
-        handlungsbedarf: AlertTriangle,
-    };
-    
-    const summaryColorMap: { [key: string]: string } = {
-        gut: 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300 [&>svg]:text-emerald-400',
-        kritisch: 'bg-rose-500/5 border-rose-500/20 text-rose-300 [&>svg]:text-rose-400',
-        handlungsbedarf: 'bg-amber-500/5 border-amber-500/20 text-amber-300 [&>svg]:text-amber-400',
-    };
-
+    const { uebersicht } = qSalesReportingData;
+    const IconMap: { [key: string]: React.ElementType } = { Phone, Calendar, Handshake, Percent, DollarSign, AlertTriangle };
+  
     return (
-        <div className="space-y-8">
-            <Card className="bg-blue-950/50 border-blue-500/20">
-                <CardHeader>
-                    <CardTitle className="text-base text-blue-300 flex items-center gap-2">
-                        <BrainCircuit className="w-5 h-5"/>
-                        KI-Management-Zusammenfassung
-                    </CardTitle>
-                    <CardDescription className="text-blue-400/70">Was Sie heute wissen müssen – automatisch von der KI aufbereitet.</CardDescription>
+      <div className="space-y-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {uebersicht.kpis.map(kpi => {
+            const Icon = IconMap[kpi.icon as string] || Activity;
+            return (
+              <Card key={kpi.title}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+                    {kpi.title} <Icon className="w-4 h-4" />
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    {kiManagementSummary.map((item, index) => {
-                        const Icon = summaryIconMap[item.type];
-                        return (
-                            <Alert key={index} className={cn("flex items-start", summaryColorMap[item.type])}>
-                                <Icon className="h-5 w-5" />
-                                <div className='ml-4'>
-                                    <AlertTitle className="font-bold text-white">{item.text}</AlertTitle>
-                                    <AlertDescription>
-                                        {item.grund}
-                                    </AlertDescription>
-                                </div>
-                            </Alert>
-                        );
-                    })}
-                </CardContent>
-            </Card>
-
-            <div>
-                <h2 className="text-2xl font-bold text-foreground">Executive Overview</h2>
-                <p className="text-sm text-muted-foreground">Live-Übersicht der wichtigsten Unternehmens-KPIs.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {execKpis.map(kpi => {
-                    const Icon = {
-                        'DollarSign': DollarSign,
-                        'TrendingUp': TrendingUp,
-                        'Flame': Flame,
-                        'Workflow': Workflow
-                    }[kpi.icon] || HeartPulse;
-                     return (
-                        <Card key={kpi.title} className="p-4 bg-card/50">
-                            <CardHeader className="p-2 pt-0 flex-row items-center justify-between">
-                                <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                                <Icon className={`h-4 w-4 text-${kpi.color}-400`} />
-                            </CardHeader>
-                            <CardContent className="p-2 pt-0">
-                                <div className="text-2xl font-bold">{kpi.value}</div>
-                                {kpi.change && <p className="text-xs text-muted-foreground">{kpi.change}</p>}
-                            </CardContent>
-                        </Card>
-                    )
-                })}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                 <Card>
-                    <CardHeader><CardTitle>Prozess-KPIs (Sales)</CardTitle></CardHeader>
-                    <CardContent>
-                         <Table>
-                            <TableHeader><TableRow><TableHead>Metrik</TableHead><TableHead className="text-right">Wert</TableHead></TableRow></TableHeader>
-                            <TableBody>
-                                {processKpis.map(kpi => (
-                                    <TableRow key={kpi.metric}><TableCell>{kpi.metric}</TableCell><TableCell className="text-right font-mono">{kpi.value}</TableCell></TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader><CardTitle>KI-Performance</CardTitle></CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader><TableRow><TableHead>Agent</TableHead><TableHead className="text-right">Aktionen</TableHead><TableHead className="text-right">Erfolgsquote</TableHead></TableRow></TableHeader>
-                            <TableBody>
-                                {agentKpis.map(kpi => (
-                                     <TableRow key={kpi.agent}><TableCell>{kpi.agent}</TableCell><TableCell className="text-right font-mono">{kpi.actions}</TableCell><TableCell className="text-right font-mono">{kpi.successRate}</TableCell></TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </div>
-             <Card>
-                <CardHeader><CardTitle>Marketing Attribution</CardTitle></CardHeader>
                 <CardContent>
-                    <p className="text-sm font-bold text-foreground">Deal: {attribution.dealName}</p>
-                    <div className="mt-4 space-y-4 relative pl-5 before:absolute before:left-[9px] before:top-0 before:h-full before:w-0.5 before:bg-border">
-                        {attribution.timeline.map((item, index) => (
-                            <div key={index} className="flex items-center gap-4 relative">
-                                <div className="h-5 w-5 rounded-full bg-background border-2 border-primary flex-shrink-0 z-10"></div>
-                                <div>
-                                    <p className="font-bold text-sm">{item.event}</p>
-                                    <p className="text-xs text-muted-foreground">{item.channel} • {item.source} • {item.timestamp}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                  <p className="text-3xl font-bold">{kpi.value}</p>
                 </CardContent>
-            </Card>
+              </Card>
+            )
+          })}
         </div>
-    )
+        <Card>
+            <CardHeader>
+                <CardTitle>Sales Flow</CardTitle>
+                <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-around flex-wrap gap-4">
+                {uebersicht.salesFlow.map((step, index) => (
+                    <React.Fragment key={step.stage}>
+                        <div className="text-center">
+                            <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
+                            <p className="text-3xl font-bold">{step.value}</p>
+                        </div>
+                        {index < uebersicht.salesFlow.length - 1 && (
+                            <div className="text-center">
+                                <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
+                                <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
+                            </div>
+                        )}
+                    </React.Fragment>
+                ))}
+            </CardContent>
+        </Card>
+      </div>
+    );
 };
 
 
@@ -955,7 +887,7 @@ const TerminboardView = () => {
                      <Collapsible>
                         <CollapsibleTrigger asChild>
                             <Button variant="outline" className="w-full">
-                                <History className="mr-2 h-4 w-4" />
+                                <HistoryIcon className="mr-2 h-4 w-4" />
                                 Vergangene Termine anzeigen
                             </Button>
                         </CollapsibleTrigger>
@@ -1810,4 +1742,3 @@ export default function QhubPage() {
     </>
   );
 }
-
