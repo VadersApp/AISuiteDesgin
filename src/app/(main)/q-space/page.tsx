@@ -98,7 +98,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, mockLeaveRequests } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, mockLeaveRequests } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -116,11 +116,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 
 const modules = [
     { name: 'Q-Chat', icon: MessageSquare },
+    { name: 'Übersicht', icon: LayoutDashboard },
+    { name: 'KPI-Dashboard', icon: BarChart3 },
+    { name: 'Workspace', icon: Briefcase },
     { name: 'Business Builder', icon: Building },
     { name: 'Erfolgsplaner', icon: Target },
-    { name: 'Übersicht', icon: LayoutDashboard },
-    { name: 'Workspace', icon: Briefcase },
-    { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Mitarbeiter', icon: Users },
     { name: 'System Admin (Q-Space)', icon: Settings },
 ];
@@ -583,7 +583,7 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
   const thisWeekAbsent = useMemo(() => {
       const start = startOfWeek(new Date(), { weekStartsOn: 1 });
       const end = endOfWeek(new Date(), { weekStartsOn: 1 });
-      return new Set(filteredRequests.filter(r => isWithinInterval(start, {start: r.startDate, end: r.endDate}) || isWithinInterval(end, {start: r.startDate, end: r.endDate}) || (r.startDate < start && r.endDate > end)).map(r => r.userId)).size
+      return new Set(filteredRequests.filter(r => isWithinInterval(start, {start: r.startDate, end: r.endDate}) || isWithinInterval(end, {start: r.startDate, end: r.endDate}) || (isBefore(r.startDate, start) && isFuture(r.endDate, end))).map(r => r.userId)).size
   }, [filteredRequests]);
   const openRequests = useMemo(() => filteredRequests.filter(r => r.status === 'submitted').length, [filteredRequests]);
   const approvedThisMonth = useMemo(() => filteredRequests.filter(r => r.status === 'approved' && isSameMonth(r.startDate, currentDate)).length, [filteredRequests, currentDate]);
@@ -648,7 +648,7 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
                                 <span className={cn("text-xs", isToday(day) && "font-bold text-primary")}>{format(day, 'd')}</span>
                                 <div className="space-y-1 mt-1">
                                     {dayRequests.map(req => {
-                                         const showLabel = isSameDay(req.startDate, day) || day.getDay() === 1 || day.getDate() === 1;
+                                         const showLabel = isSameDay(req.startDate, day) || day.getDay() === 1 || isBefore(req.startDate, calendarStart) && day.getDate() === 1;
                                          return (
                                             <div key={req.id} className={cn("text-[10px] text-white font-bold p-1 rounded-sm truncate", getDeptColor(req.deptId), req.status === 'submitted' && 'opacity-70 ring-2 ring-inset ring-white/50 ring-dashed')}>
                                                 {showLabel && req.userName}
@@ -774,7 +774,7 @@ const KpiDashboard = ({ mitarbeiter } : { mitarbeiter: any[]}) => {
     const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
         switch (trend) {
             case 'up': return <TrendingUp className="w-4 h-4 text-emerald-400" />;
-            case 'down': return <ArrowDown className="w-4 h-4 text-rose-400" />;
+            case 'down': return <ArrowRight className="w-4 h-4 text-rose-400" />;
             case 'stable': return <ArrowRight className="w-4 h-4 text-slate-400" />;
             default: return null;
         }
