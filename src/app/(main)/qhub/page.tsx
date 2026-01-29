@@ -41,6 +41,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BarChart2,
+  BarChart3,
   Bot as BotIcon,
   BrainCircuit,
   Briefcase,
@@ -78,7 +79,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, qSalesReportingData } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -89,8 +90,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ResponsiveContainer, Line, ComposedChart } from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 
 const modules = [
@@ -1529,7 +1532,7 @@ const AnrufeView = () => {
              <Card>
                 <CardHeader><CardTitle>Letzte Kundenanrufe</CardTitle></CardHeader>
                  <CardContent className="space-y-3 p-3">
-                    {recentCalls.length > 0 ? recentCalls.map(call => <CallRow key={call.id} call={call} />) : <p className="p-4 text-sm text-muted-foreground italic text-center">Keine Anrufe in den letzten 7 Tagen.</p>}
+                    {recentCalls.length > 0 ? recentCalls.map(call => <CallRow key={call.id} call={call} />) : <p className="p-4 text-sm text-muted-foreground italic">Keine Anrufe in den letzten 7 Tagen.</p>}
                 </CardContent>
             </Card>
 
