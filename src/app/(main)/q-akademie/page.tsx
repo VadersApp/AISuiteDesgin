@@ -75,6 +75,8 @@ import {
   BookOpenCheck,
   MoreHorizontal,
   Info,
+  Sparkles,
+  MessageSquare,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -1036,6 +1038,7 @@ const FeedbackDialog = ({ open, onOpenChange, itemName }: { open: boolean, onOpe
 const ReportingView = () => {
     const [period, setPeriod] = useState('30d');
     const [deptFilter, setDeptFilter] = useState('all');
+    const [showAiAnalysis, setShowAiAnalysis] = useState(false);
     const departments = ['Alle', ...new Set(kpiMitarbeiter.map(m => m.abteilung))];
 
     const kpiCards = [
@@ -1064,8 +1067,36 @@ const ReportingView = () => {
                         </SelectContent>
                      </Select>
                      <Button variant="outline">Export</Button>
+                     <Button onClick={() => setShowAiAnalysis(s => !s)} disabled={showAiAnalysis}>
+                        <BrainCircuit className="mr-2 h-4 w-4" /> KI-Analyse
+                    </Button>
                  </div>
             </div>
+             {showAiAnalysis && (
+                 <Card className="bg-blue-500/5 border-blue-500/10 animate-in fade-in">
+                    <CardHeader>
+                        <CardTitle className="text-blue-300 flex items-center gap-2"><Sparkles className="w-4 h-4"/> KI-Analyse & Empfehlungen</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-sm">
+                        <div className="p-3 bg-card/50 border rounded-lg">
+                            <p className="font-bold">Problem: Hohe Abbruchquote bei "DSGVO-Basisschulung"</p>
+                            <p className="text-muted-foreground mt-1">
+                                <strong className="text-foreground">Beobachtung:</strong> 75% der Abbrüche erfolgen bei der Abschlussprüfung.
+                                <br />
+                                <strong className="text-foreground">Empfehlung:</strong> Prüfung vereinfachen oder vorbereitende Lektionen hinzufügen.
+                            </p>
+                        </div>
+                         <div className="p-3 bg-card/50 border rounded-lg">
+                            <p className="font-bold">Potenzial: Geringe Nutzung von "Führungskräfte-Training Q1"</p>
+                            <p className="text-muted-foreground mt-1">
+                                <strong className="text-foreground">Beobachtung:</strong> Der Kurs ist noch im Entwurfsstatus.
+                                <br />
+                                <strong className="text-foreground">Empfehlung:</strong> Kurs fertigstellen und als Lernpfad für alle Führungskräfte zuweisen.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {kpiCards.map(kpi => (
                     <Card key={kpi.title}>
@@ -1405,6 +1436,78 @@ const GenericCreateDialog = ({ open, onOpenChange, title, description }: { open:
     </Dialog>
 );
 
+const CourseAiHelperDialog = ({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) => {
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2"><BrainCircuit className="w-5 h-5 text-blue-400" /> KI-Unterstützung für Kursstruktur</DialogTitle>
+                    <DialogDescription>Basierend auf Ihren Angaben schlägt die KI eine mögliche Struktur vor.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-1"><Label>Kursziel</Label><Input defaultValue="Onboarding für Sales-Mitarbeiter" className="bg-input" /></div>
+                        <div className="space-y-1"><Label>Zielgruppe</Label><Input defaultValue="Vertrieb" className="bg-input" /></div>
+                        <div className="space-y-1"><Label>Kursart</Label><Input defaultValue="Onboarding" className="bg-input" /></div>
+                    </div>
+                    <Button className="gap-2"><Sparkles className="w-4 h-4"/> Vorschläge generieren</Button>
+                    <Separator />
+                    <div className="space-y-3">
+                        <h4 className="font-bold">Vorgeschlagene Module & Lektionen</h4>
+                        <div className="p-3 bg-muted/50 border rounded-lg">
+                            <p className="font-semibold">Modul 1: Grundlagen</p>
+                            <ul className="list-disc pl-5 text-sm mt-1 space-y-1 text-muted-foreground">
+                                <li>Lektion: Willkommensvideo (Video)</li>
+                                <li>Lektion: Unsere Vertriebsphilosophie (Dokument)</li>
+                                <li>Lektion: Wissens-Check (Quiz)</li>
+                            </ul>
+                            <div className="text-right mt-2"><Button size="sm" variant="outline">Übernehmen</Button></div>
+                        </div>
+                        <div className="p-3 bg-muted/50 border rounded-lg">
+                            <p className="font-semibold">Modul 2: Praktische Anwendung</p>
+                            <ul className="list-disc pl-5 text-sm mt-1 space-y-1 text-muted-foreground">
+                                <li>Lektion: Aufgabe: Erster Pitch-Entwurf (Aufgabe)</li>
+                                <li>Lektion: Prüfung: Umgang mit Einwänden (Prüfung)</li>
+                            </ul>
+                             <div className="text-right mt-2"><Button size="sm" variant="outline">Übernehmen</Button></div>
+                        </div>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const LearningAssistantSheet = ({ lesson, open, onOpenChange }: { lesson: any | null, open: boolean, onOpenChange: (open: boolean) => void }) => {
+    if (!lesson) return null;
+    return (
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="sm:max-w-md w-full flex flex-col">
+                <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2"><BrainCircuit className="w-5 h-5 text-blue-400" /> Lernhilfe</SheetTitle>
+                    <SheetDescription>Stelle eine Frage zum Inhalt von: "{lesson.title}"</SheetDescription>
+                </SheetHeader>
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    <ScrollArea className="flex-1 -mx-6 px-6">
+                        <div className="py-4 space-y-4 text-sm">
+                             <div className="flex justify-start">
+                                <div className="p-3 rounded-lg bg-muted border max-w-[80%]">Was ist der Hauptpunkt dieser Lektion?</div>
+                            </div>
+                            <div className="flex justify-end">
+                                <div className="p-3 rounded-lg bg-primary text-primary-foreground max-w-[80%]">Der Hauptpunkt ist, die Grundlagen der DSGVO zu verstehen, insbesondere den Schutz personenbezogener Daten.</div>
+                            </div>
+                        </div>
+                    </ScrollArea>
+                    <div className="mt-auto pt-4 border-t">
+                        <Textarea placeholder="Deine Frage..." className="bg-input" />
+                        <Button className="w-full mt-2">Frage senden</Button>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
+    );
+};
+
 
 const lessonIcons: { [key: string]: React.ElementType } = {
   video: Video,
@@ -1505,6 +1608,7 @@ const PruefungLektionView = ({ lesson }: { lesson: any }) => (
 const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChange: (open: boolean) => void }) => {
     const { toast } = useToast();
     const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+    const [isAssistantOpen, setIsAssistantOpen] = useState(false);
     
     const renderContent = () => {
         if (!lesson) return null;
@@ -1545,10 +1649,14 @@ const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChang
                                 <Button variant="outline" size="icon" onClick={() => toast({ title: "Feedback erhalten", description: "Danke!" })}><ThumbsDown className="w-4 h-4" /></Button>
                                 <Button variant="outline" onClick={() => setIsFeedbackDialogOpen(true)}>Detailliertes Feedback</Button>
                             </div>
+                             <Button variant="link" className="mt-4 text-blue-400" onClick={() => setIsAssistantOpen(true)}>
+                                <BrainCircuit className="w-4 h-4 mr-2" /> Frage zum Inhalt stellen
+                            </Button>
                         </div>
                     </div>
                 </SheetContent>
             </Sheet>
+            <LearningAssistantSheet lesson={lesson} open={isAssistantOpen} onOpenChange={setIsAssistantOpen} />
             <FeedbackDialog open={isFeedbackDialogOpen} onOpenChange={setIsFeedbackDialogOpen} itemName={lesson?.title || ''} />
         </>
     )
@@ -1558,6 +1666,7 @@ const LessonSheet = ({ lesson, onOpenChange }: { lesson: any | null, onOpenChang
 const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void }) => {
     const [selectedLesson, setSelectedLesson] = useState<any | null>(null);
     const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+    const [isAiHelperOpen, setIsAiHelperOpen] = useState(false);
 
     return (
         <>
@@ -1571,7 +1680,10 @@ const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void 
                         <h2 className="text-2xl font-bold text-foreground">{course.title}</h2>
                         <p className="text-muted-foreground">{course.description}</p>
                     </div>
-                    <Button variant="outline" className="mt-2" onClick={() => setIsFeedbackDialogOpen(true)}>Feedback geben</Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={() => setIsAiHelperOpen(true)}><BrainCircuit className="w-4 h-4 mr-2" /> KI-Vorschläge</Button>
+                        <Button variant="outline" onClick={() => setIsFeedbackDialogOpen(true)}>Feedback geben</Button>
+                    </div>
                 </header>
                 <div>
                      <Accordion type="single" collapsible className="w-full space-y-3" defaultValue={course.modules[0]?.id}>
@@ -1604,6 +1716,7 @@ const CourseDetailView = ({ course, onBack }: { course: any, onBack: () => void 
                 </div>
                  <LessonSheet lesson={selectedLesson} onOpenChange={(open) => !open && setSelectedLesson(null)} />
             </div>
+            <CourseAiHelperDialog open={isAiHelperOpen} onOpenChange={setIsAiHelperOpen} />
             <FeedbackDialog open={isFeedbackDialogOpen} onOpenChange={setIsFeedbackDialogOpen} itemName={course.title} />
         </>
     )
