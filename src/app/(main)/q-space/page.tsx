@@ -33,13 +33,12 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameDay, isBefore, startOfMonth, addMonths, subMonths, isSameMonth, endOfMonth } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameMonth, isSameDay, isBefore } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { type DateRange } from 'react-day-picker';
 import {
   Activity,
   AlertTriangle,
-  Archive,
   ArrowLeft,
   ArrowRight,
   BarChart3,
@@ -99,7 +98,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, mockLeaveRequests } from '@/lib/data';
+import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, qSalesReportingData, mockLeaveRequests } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -113,6 +112,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Checkbox } from '@/components/ui/checkbox';
 
 
 const modules = [
@@ -540,7 +540,7 @@ const DocumentsView = ({ currentUser, filteredDocs, filteredFolders } : { curren
                             </div>
                         </ScrollArea>
                         <CardFooter className="p-4 border-t">
-                            <Button variant="outline"><Archive className="w-4 h-4 mr-2"/>Archivieren</Button>
+                            <Button variant="outline"><HistoryIcon className="w-4 h-4 mr-2"/>Archivieren</Button>
                         </CardFooter>
                     </div>
                 )}
@@ -1253,7 +1253,7 @@ const SystemAdminView = () => {
 }
 
 export default function QSpacePage() {
-  const [activeModule, setActiveModule] = useState(modules[0].name);
+  const [activeModule, setActiveModule] = useState('Übersicht');
   const pathname = usePathname();
   const router = useRouter();
 
