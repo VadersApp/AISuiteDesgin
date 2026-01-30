@@ -82,7 +82,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs, mockCertificates, kpiMitarbeiter } from '@/lib/data';
+import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs, mockCertificates, kpiMitarbeiter, departmentsConfig } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
@@ -554,7 +554,7 @@ const NewInAcademyCard = ({ onShowMore }: { onShowMore: () => void }) => {
 const DepartmentsDistributionCard = ({ onManage }: { onManage: () => void }) => (
     <Card>
         <CardHeader>
-            <CardTitle>Abteilungen & Rollen</CardTitle>
+            <CardTitle>Abteilungen &amp; Rollen</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
             {[
@@ -599,7 +599,7 @@ const CertificatesCard = ({ onShowAll }: { onShowAll: () => void }) => (
 
 const FeedbackQualityCard = ({ onShowAll }: { onShowAll: () => void }) => (
      <Card>
-        <CardHeader><CardTitle>Feedback & Qualität</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Feedback &amp; Qualität</CardTitle></CardHeader>
         <CardContent className="flex items-center justify-around text-center">
             <div>
                  <p className="text-3xl font-bold text-emerald-500 flex items-center gap-2 justify-center"><ThumbsUp/> 128</p>
@@ -899,33 +899,101 @@ const ParticipantsView = ({ onOpenCreateDialog }: { onOpenCreateDialog: () => vo
 };
 
 const DepartmentsAndRolesView = ({ onOpenCreateDepartmentDialog, onOpenCreateRoleDialog }: { onOpenCreateDepartmentDialog: () => void, onOpenCreateRoleDialog: () => void }) => {
+    const mockRoles = [
+        { id: 'role-1', name: 'Mitarbeiter', type: 'Teilnehmer', userCount: 35, mandatoryCourses: 2, mandatoryPaths: 1 },
+        { id: 'role-2', name: 'Teamleiter', type: 'Trainer', userCount: 5, mandatoryCourses: 3, mandatoryPaths: 2 },
+        { id: 'role-3', name: 'Bereichsleiter', type: 'Admin', userCount: 3, mandatoryCourses: 1, mandatoryPaths: 1 },
+    ];
+
+    const departmentsWithData = departmentsConfig.map(dept => ({
+        ...dept,
+        userCount: kpiMitarbeiter.filter(m => m.abteilung === dept.name).length,
+        mandatoryCourses: dept.id === 'sales' ? 2 : (dept.id === 'it' ? 1 : 0),
+        mandatoryPaths: dept.id === 'sales' ? 1 : 0,
+    }));
+
     return (
         <div className="space-y-6">
-             <h2 className="text-2xl font-bold text-foreground">Abteilungen & Rollen</h2>
+             <h2 className="text-2xl font-bold text-foreground">Abteilungen &amp; Rollen</h2>
+             <p className="text-muted-foreground">Gruppieren Sie Teilnehmer und definieren Sie Lernpflichten und Berechtigungen für die Q-Akademie.</p>
              <Tabs defaultValue="departments">
                  <TabsList>
                      <TabsTrigger value="departments">Abteilungen</TabsTrigger>
                      <TabsTrigger value="roles">Rollen</TabsTrigger>
                  </TabsList>
-                 <TabsContent value="departments">
+                 <TabsContent value="departments" className="mt-4">
                      <Card>
                          <CardHeader className="flex-row items-center justify-between">
-                            <CardTitle>Abteilungen</CardTitle>
+                            <div>
+                                <CardTitle>Abteilungen</CardTitle>
+                                <CardDescription>Gruppen für Kurs- und Lernpfadzuweisungen.</CardDescription>
+                            </div>
                             <Button variant="outline" onClick={onOpenCreateDepartmentDialog}><Plus className="mr-2 h-4 w-4"/> Abteilung erstellen</Button>
                          </CardHeader>
                          <CardContent>
-                            <div className="text-center py-12 text-muted-foreground italic">Hier werden die Abteilungen verwaltet.</div>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead className="text-center">Teilnehmer</TableHead>
+                                        <TableHead className="text-center">Pflichtkurse</TableHead>
+                                        <TableHead className="text-center">Pflichtlernpfade</TableHead>
+                                        <TableHead className="text-right">Aktionen</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {departmentsWithData.map(dept => (
+                                        <TableRow key={dept.id}>
+                                            <TableCell className="font-medium">{dept.name}</TableCell>
+                                            <TableCell className="text-center">{dept.userCount}</TableCell>
+                                            <TableCell className="text-center">{dept.mandatoryCourses}</TableCell>
+                                            <TableCell className="text-center">{dept.mandatoryPaths}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm">Verwalten</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                          </CardContent>
                      </Card>
                  </TabsContent>
-                 <TabsContent value="roles">
+                 <TabsContent value="roles" className="mt-4">
                      <Card>
                         <CardHeader className="flex-row items-center justify-between">
-                            <CardTitle>Rollen</CardTitle>
+                            <div>
+                                <CardTitle>Rollen</CardTitle>
+                                <CardDescription>Lernpflichten und akademiebezogene Berechtigungen.</CardDescription>
+                            </div>
                             <Button variant="outline" onClick={onOpenCreateRoleDialog}><Plus className="mr-2 h-4 w-4"/> Rolle erstellen</Button>
                         </CardHeader>
                         <CardContent>
-                           <div className="text-center py-12 text-muted-foreground italic">Hier werden die Rollen und deren Rechte verwaltet.</div>
+                           <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Name</TableHead>
+                                        <TableHead>Rollentyp</TableHead>
+                                        <TableHead className="text-center">Nutzer</TableHead>
+                                        <TableHead className="text-center">Pflichtkurse</TableHead>
+                                        <TableHead className="text-center">Pflichtlernpfade</TableHead>
+                                        <TableHead className="text-right">Aktionen</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                     {mockRoles.map(role => (
+                                        <TableRow key={role.id}>
+                                            <TableCell className="font-medium">{role.name}</TableCell>
+                                            <TableCell><Badge variant="outline">{role.type}</Badge></TableCell>
+                                            <TableCell className="text-center">{role.userCount}</TableCell>
+                                            <TableCell className="text-center">{role.mandatoryCourses}</TableCell>
+                                            <TableCell className="text-center">{role.mandatoryPaths}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="sm">Verwalten</Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                           </Table>
                         </CardContent>
                      </Card>
                  </TabsContent>
@@ -1075,7 +1143,7 @@ const ReportingView = () => {
              {showAiAnalysis && (
                  <Card className="bg-blue-500/5 border-blue-500/10 animate-in fade-in">
                     <CardHeader>
-                        <CardTitle className="text-blue-300 flex items-center gap-2"><Sparkles className="w-4 h-4"/> KI-Analyse & Empfehlungen</CardTitle>
+                        <CardTitle className="text-blue-300 flex items-center gap-2"><Sparkles className="w-4 h-4"/> KI-Analyse &amp; Empfehlungen</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4 text-sm">
                         <div className="p-3 bg-card/50 border rounded-lg">
@@ -1168,22 +1236,22 @@ const SettingsView = () => {
             <Tabs defaultValue="branding" className="w-full">
                  <ScrollArea>
                     <TabsList className="whitespace-nowrap">
-                        <TabsTrigger value="branding">Branding & Design</TabsTrigger>
+                        <TabsTrigger value="branding">Branding &amp; Design</TabsTrigger>
                         <TabsTrigger value="structure">Akademie-Struktur</TabsTrigger>
-                        <TabsTrigger value="courses">Kurse & Lernpfade</TabsTrigger>
-                        <TabsTrigger value="content">Inhalte & Medien</TabsTrigger>
-                        <TabsTrigger value="exams">Prüfungen & Zertifikate</TabsTrigger>
-                        <TabsTrigger value="users">Nutzer & Rollen</TabsTrigger>
-                        <TabsTrigger value="language">Sprache & Lokalisierung</TabsTrigger>
+                        <TabsTrigger value="courses">Kurse &amp; Lernpfade</TabsTrigger>
+                        <TabsTrigger value="content">Inhalte &amp; Medien</TabsTrigger>
+                        <TabsTrigger value="exams">Prüfungen &amp; Zertifikate</TabsTrigger>
+                        <TabsTrigger value="users">Nutzer &amp; Rollen</TabsTrigger>
+                        <TabsTrigger value="language">Sprache &amp; Lokalisierung</TabsTrigger>
                         <TabsTrigger value="notifications">Benachrichtigungen</TabsTrigger>
-                        <TabsTrigger value="privacy">Datenschutz & Sicherheit</TabsTrigger>
+                        <TabsTrigger value="privacy">Datenschutz &amp; Sicherheit</TabsTrigger>
                     </TabsList>
                 </ScrollArea>
                 
                 <TabsContent value="branding" className="mt-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Branding & Design</CardTitle>
+                            <CardTitle>Branding &amp; Design</CardTitle>
                             <CardDescription>Passen Sie das Erscheinungsbild der Akademie an.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -1247,7 +1315,7 @@ const SettingsView = () => {
                 
                 <TabsContent value="courses" className="mt-6">
                     <Card>
-                        <CardHeader><CardTitle>Kurse & Lernpfade</CardTitle><CardDescription>Legen Sie Regeln für die Erstellung und Verwaltung fest.</CardDescription></CardHeader>
+                        <CardHeader><CardTitle>Kurse &amp; Lernpfade</CardTitle><CardDescription>Legen Sie Regeln für die Erstellung und Verwaltung fest.</CardDescription></CardHeader>
                         <CardContent className="space-y-4">
                              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                                 <div><Label htmlFor="course-draft" className="font-bold text-foreground">Kurse standardmäßig als Entwurf anlegen</Label></div>
@@ -1267,7 +1335,7 @@ const SettingsView = () => {
                 
                 <TabsContent value="content" className="mt-6">
                     <Card>
-                        <CardHeader><CardTitle>Inhalte & Medien</CardTitle><CardDescription>Definieren Sie, welche Inhalte erstellt werden können.</CardDescription></CardHeader>
+                        <CardHeader><CardTitle>Inhalte &amp; Medien</CardTitle><CardDescription>Definieren Sie, welche Inhalte erstellt werden können.</CardDescription></CardHeader>
                         <CardContent className="space-y-4">
                              <div>
                                 <Label className="font-bold text-foreground">Erlaubte Inhaltstypen</Label>
@@ -1293,7 +1361,7 @@ const SettingsView = () => {
 
                 <TabsContent value="exams" className="mt-6">
                     <Card>
-                        <CardHeader><CardTitle>Prüfungen & Zertifikate</CardTitle><CardDescription>Setzen Sie die Standardparameter für Prüfungen.</CardDescription></CardHeader>
+                        <CardHeader><CardTitle>Prüfungen &amp; Zertifikate</CardTitle><CardDescription>Setzen Sie die Standardparameter für Prüfungen.</CardDescription></CardHeader>
                         <CardContent className="space-y-4">
                              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
                                 <div><Label htmlFor="enable-exams" className="font-bold text-foreground">Prüfungen aktivieren</Label></div><Switch id="enable-exams" defaultChecked />
@@ -1318,7 +1386,7 @@ const SettingsView = () => {
 
                  <TabsContent value="users" className="mt-6">
                     <Card>
-                        <CardHeader><CardTitle>Nutzer & Rollen</CardTitle><CardDescription>Definieren Sie Standardrollen und Berechtigungen für Trainer.</CardDescription></CardHeader>
+                        <CardHeader><CardTitle>Nutzer &amp; Rollen</CardTitle><CardDescription>Definieren Sie Standardrollen und Berechtigungen für Trainer.</CardDescription></CardHeader>
                         <CardContent className="space-y-4">
                              <div className="space-y-2">
                                 <Label htmlFor="default-role" className="font-bold text-foreground">Standardrolle für neue Teilnehmer</Label>
@@ -1341,7 +1409,7 @@ const SettingsView = () => {
                  <TabsContent value="language" className="mt-6">
                      <Card>
                         <CardHeader>
-                            <CardTitle>Sprache & Lokalisierung</CardTitle>
+                            <CardTitle>Sprache &amp; Lokalisierung</CardTitle>
                             <CardDescription>Verwalten Sie die Sprachen für Kursinhalte.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -1396,7 +1464,7 @@ const SettingsView = () => {
                  <TabsContent value="privacy" className="mt-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Datenschutz & Sicherheit</CardTitle>
+                            <CardTitle>Datenschutz &amp; Sicherheit</CardTitle>
                             <CardDescription>Konfigurieren Sie sicherheitsrelevante Optionen für Ihre Akademie.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -1453,7 +1521,7 @@ const CourseAiHelperDialog = ({ open, onOpenChange }: { open: boolean, onOpenCha
                     <Button className="gap-2"><Sparkles className="w-4 h-4"/> Vorschläge generieren</Button>
                     <Separator />
                     <div className="space-y-3">
-                        <h4 className="font-bold">Vorgeschlagene Module & Lektionen</h4>
+                        <h4 className="font-bold">Vorgeschlagene Module &amp; Lektionen</h4>
                         <div className="p-3 bg-muted/50 border rounded-lg">
                             <p className="font-semibold">Modul 1: Grundlagen</p>
                             <ul className="list-disc pl-5 text-sm mt-1 space-y-1 text-muted-foreground">
