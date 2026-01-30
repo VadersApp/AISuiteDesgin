@@ -74,6 +74,7 @@ import {
   FileClock,
   BookOpenCheck,
   MoreHorizontal,
+  Info,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -1134,24 +1135,40 @@ const SettingsView = () => {
                 <p className="text-muted-foreground">Verwalten Sie die globalen Einstellungen für die Q-Akademie.</p>
             </div>
             <Tabs defaultValue="branding" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="branding">Branding & Design</TabsTrigger>
-                    <TabsTrigger value="language">Mehrsprachigkeit</TabsTrigger>
-                    <TabsTrigger value="notifications">Benachrichtigungen</TabsTrigger>
-                </TabsList>
+                 <ScrollArea>
+                    <TabsList className="whitespace-nowrap">
+                        <TabsTrigger value="branding">Branding & Design</TabsTrigger>
+                        <TabsTrigger value="structure">Akademie-Struktur</TabsTrigger>
+                        <TabsTrigger value="courses">Kurse & Lernpfade</TabsTrigger>
+                        <TabsTrigger value="content">Inhalte & Medien</TabsTrigger>
+                        <TabsTrigger value="exams">Prüfungen & Zertifikate</TabsTrigger>
+                        <TabsTrigger value="users">Nutzer & Rollen</TabsTrigger>
+                        <TabsTrigger value="language">Sprache & Lokalisierung</TabsTrigger>
+                        <TabsTrigger value="notifications">Benachrichtigungen</TabsTrigger>
+                        <TabsTrigger value="privacy">Datenschutz & Sicherheit</TabsTrigger>
+                    </TabsList>
+                </ScrollArea>
+                
                 <TabsContent value="branding" className="mt-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>Branding & Design</CardTitle>
-                            <CardDescription>Passen Sie das Erscheinungsbild der Akademie an. Änderungen gelten nur für die Q-Akademie.</CardDescription>
+                            <CardDescription>Passen Sie das Erscheinungsbild der Akademie an.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
+                                <Label htmlFor="academy-name">Akademie-Name</Label>
+                                <Input id="academy-name" defaultValue="Q-Akademie" className="bg-input" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="academy-desc">Akademie-Beschreibung</Label>
+                                <Textarea id="academy-desc" defaultValue="Ihre zentrale Lernumgebung." className="bg-input" />
+                            </div>
+                            <Separator/>
+                            <div className="space-y-2">
                                 <Label>Akademie-Logo (optional)</Label>
                                 <div className="flex items-center gap-4">
-                                    <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center border">
-                                        <Upload className="w-6 h-6 text-muted-foreground" />
-                                    </div>
+                                    <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center border"><Upload className="w-6 h-6 text-muted-foreground" /></div>
                                     <Button variant="outline">Logo hochladen</Button>
                                 </div>
                             </div>
@@ -1169,40 +1186,156 @@ const SettingsView = () => {
                                 <Label htmlFor="signature">Signatur (Text)</Label>
                                 <Input id="signature" placeholder="z.B. Dr. Müller, CEO" className="bg-input" />
                             </div>
+                             <Button variant="secondary">Vorschau anzeigen</Button>
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="language" className="mt-6">
+                
+                <TabsContent value="structure" className="mt-6">
+                    <Card>
+                        <CardHeader><CardTitle>Akademie-Struktur</CardTitle><CardDescription>Steuern Sie die grundlegende Nutzererfahrung.</CardDescription></CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="onboarding-required" className="font-bold text-foreground">Q-Onboarding verpflichtend</Label><p className="text-xs text-muted-foreground">Nutzer müssen das Onboarding starten.</p></div>
+                                <Switch id="onboarding-required" defaultChecked />
+                            </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="onboarding-first" className="font-bold text-foreground">Q-Onboarding muss zuerst abgeschlossen werden</Label><p className="text-xs text-muted-foreground">Sperrt andere Inhalte bis zum Abschluss.</p></div>
+                                <Switch id="onboarding-first" />
+                            </div>
+                            <div className="space-y-2 pt-4 border-t border-border">
+                                <Label htmlFor="default-start-page" className="font-bold text-foreground">Standard-Startseite für Nutzer</Label>
+                                <Select defaultValue="uebersicht">
+                                    <SelectTrigger id="default-start-page" className="bg-input"><SelectValue/></SelectTrigger>
+                                    <SelectContent><SelectItem value="uebersicht">Übersicht</SelectItem><SelectItem value="kurse">Kurse</SelectItem><SelectItem value="q-onboarding">Q-Onboarding</SelectItem></SelectContent>
+                                </Select>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                
+                <TabsContent value="courses" className="mt-6">
+                    <Card>
+                        <CardHeader><CardTitle>Kurse & Lernpfade</CardTitle><CardDescription>Legen Sie Regeln für die Erstellung und Verwaltung fest.</CardDescription></CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="course-draft" className="font-bold text-foreground">Kurse standardmäßig als Entwurf anlegen</Label></div>
+                                <Switch id="course-draft" defaultChecked />
+                            </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="course-approval" className="font-bold text-foreground">Kurse vor Veröffentlichung freigeben</Label><p className="text-xs text-muted-foreground">Ein Admin muss die Freigabe erteilen.</p></div>
+                                <Switch id="course-approval" />
+                            </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="path-required" className="font-bold text-foreground">Lernpfade können verpflichtend sein</Label></div>
+                                <Switch id="path-required" defaultChecked />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                
+                <TabsContent value="content" className="mt-6">
+                    <Card>
+                        <CardHeader><CardTitle>Inhalte & Medien</CardTitle><CardDescription>Definieren Sie, welche Inhalte erstellt werden können.</CardDescription></CardHeader>
+                        <CardContent className="space-y-4">
+                             <div>
+                                <Label className="font-bold text-foreground">Erlaubte Inhaltstypen</Label>
+                                <div className="space-y-2 mt-2 p-4 rounded-xl bg-muted/50 border">
+                                    <div className="flex items-center space-x-2"><Checkbox id="type-video" defaultChecked /><Label htmlFor="type-video">Videos</Label></div>
+                                    <div className="flex items-center space-x-2"><Checkbox id="type-doc" defaultChecked /><Label htmlFor="type-doc">Dokumente</Label></div>
+                                    <div className="flex items-center space-x-2"><Checkbox id="type-wissen" defaultChecked /><Label htmlFor="type-wissen">Wissensbausteine</Label></div>
+                                </div>
+                            </div>
+                             <Separator/>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="allow-video-rec" className="font-bold text-foreground">Videoaufnahme erlauben</Label></div><Switch id="allow-video-rec" defaultChecked />
+                             </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="allow-screen-rec" className="font-bold text-foreground">Bildschirmaufnahme erlauben</Label></div><Switch id="allow-screen-rec" defaultChecked />
+                             </div>
+                              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="allow-cam-rec" className="font-bold text-foreground">Kameraaufnahme erlauben</Label></div><Switch id="allow-cam-rec" defaultChecked />
+                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="exams" className="mt-6">
+                    <Card>
+                        <CardHeader><CardTitle>Prüfungen & Zertifikate</CardTitle><CardDescription>Setzen Sie die Standardparameter für Prüfungen.</CardDescription></CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="enable-exams" className="font-bold text-foreground">Prüfungen aktivieren</Label></div><Switch id="enable-exams" defaultChecked />
+                             </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="passing-grade">Mindestbestehensquote (Default)</Label>
+                                <Input id="passing-grade" type="number" defaultValue="80" className="bg-input w-32" />
+                              </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="allow-retries" className="font-bold text-foreground">Mehrere Versuche erlauben</Label></div><Switch id="allow-retries" defaultChecked />
+                             </div>
+                            <Separator/>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="auto-cert" className="font-bold text-foreground">Zertifikate automatisch ausstellen</Label></div><Switch id="auto-cert" defaultChecked />
+                             </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="cert-expiry" className="font-bold text-foreground">Zertifikate zeitlich begrenzen</Label></div><Switch id="cert-expiry" />
+                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                 <TabsContent value="users" className="mt-6">
+                    <Card>
+                        <CardHeader><CardTitle>Nutzer & Rollen</CardTitle><CardDescription>Definieren Sie Standardrollen und Berechtigungen für Trainer.</CardDescription></CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="space-y-2">
+                                <Label htmlFor="default-role" className="font-bold text-foreground">Standardrolle für neue Teilnehmer</Label>
+                                <Select defaultValue="student"><SelectTrigger id="default-role" className="bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="student">Teilnehmer</SelectItem><SelectItem value="trainer">Trainer</SelectItem></SelectContent></Select>
+                            </div>
+                            <Separator/>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="trainer-create" className="font-bold text-foreground">Trainer dürfen eigene Kurse erstellen</Label></div><Switch id="trainer-create" defaultChecked />
+                             </div>
+                              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="trainer-edit" className="font-bold text-foreground">Trainer dürfen Inhalte bearbeiten</Label></div><Switch id="trainer-edit" />
+                             </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="user-feedback" className="font-bold text-foreground">Teilnehmer dürfen Feedback geben</Label></div><Switch id="user-feedback" defaultChecked />
+                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                
+                 <TabsContent value="language" className="mt-6">
                      <Card>
                         <CardHeader>
-                            <CardTitle>Mehrsprachigkeit</CardTitle>
+                            <CardTitle>Sprache & Lokalisierung</CardTitle>
                             <CardDescription>Verwalten Sie die Sprachen für Kursinhalte.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <Alert>
-                                <AlertTitle>Sprachlogik</AlertTitle>
-                                <AlertDescription>
-                                    Kurse und Inhalte sind sprachgebunden. Teilnehmer sehen standardmäßig nur Inhalte in ihrer Profil-Sprache. Es erfolgt keine automatische Übersetzung.
-                                </AlertDescription>
-                            </Alert>
-                             <div>
-                                <h3 className="font-medium mb-2">Aktive Sprachen</h3>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
-                                        <p className="font-mono text-sm">Deutsch (de)</p>
-                                        <Badge variant="default">Standard</Badge>
-                                    </div>
-                                     <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
-                                        <p className="font-mono text-sm">Englisch (en)</p>
-                                         <Button variant="ghost" size="sm">Als Standard festlegen</Button>
-                                    </div>
-                                </div>
+                            <div className="space-y-2">
+                                <Label className="font-bold text-foreground">Standardsprache der Akademie</Label>
+                                <Select defaultValue="de"><SelectTrigger className="bg-input"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="de">Deutsch</SelectItem><SelectItem value="en">Englisch</SelectItem></SelectContent></Select>
                             </div>
-                            <Button variant="outline" className="w-full mt-4"><Plus className="mr-2 h-4 w-4" /> Sprache hinzufügen</Button>
+                            <Separator/>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="lang-from-profile" className="font-bold text-foreground">Sprache automatisch aus Nutzerprofil übernehmen</Label></div><Switch id="lang-from-profile" defaultChecked />
+                             </div>
+                             <div>
+                                <h3 className="font-medium mb-2">Weitere aktive Sprachen</h3>
+                                <div className="flex items-center space-x-2"><Checkbox id="lang-en" defaultChecked /><Label htmlFor="lang-en">Englisch</Label></div>
+                            </div>
+                             <Alert>
+                                <Info className="h-4 w-4" />
+                                <AlertTitle>Hinweis</AlertTitle>
+                                <AlertDescription>Inhalte müssen pro Sprache gepflegt werden. Es erfolgt keine automatische Übersetzung.</AlertDescription>
+                            </Alert>
                         </CardContent>
                     </Card>
                 </TabsContent>
-                <TabsContent value="notifications" className="mt-6">
+                
+                 <TabsContent value="notifications" className="mt-6">
                     <Card>
                         <CardHeader>
                             <CardTitle>Benachrichtigungen</CardTitle>
@@ -1228,11 +1361,32 @@ const SettingsView = () => {
                         </CardContent>
                     </Card>
                 </TabsContent>
+
+                 <TabsContent value="privacy" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Datenschutz & Sicherheit</CardTitle>
+                            <CardDescription>Konfigurieren Sie sicherheitsrelevante Optionen für Ihre Akademie.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Alert variant="default" className="bg-muted/50">
+                                <Info className="h-4 w-4" />
+                                <AlertTitle>Information</AlertTitle>
+                                <AlertDescription>Inhalte der Q-Akademie sind standardmäßig nur für eingeloggte Nutzer Ihres Unternehmens sichtbar.</AlertDescription>
+                            </Alert>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="cert-private" className="font-bold text-foreground">Zertifikate nur intern sichtbar</Label></div><Switch id="cert-private" defaultChecked />
+                             </div>
+                             <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                                <div><Label htmlFor="cert-download" className="font-bold text-foreground">Download von Zertifikaten erlauben</Label></div><Switch id="cert-download" defaultChecked />
+                             </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
             </Tabs>
         </div>
     );
 };
-
 
 const GenericCreateDialog = ({ open, onOpenChange, title, description }: { open: boolean, onOpenChange: (open: boolean) => void, title: string, description: string }) => (
     <Dialog open={open} onOpenChange={onOpenChange}>
