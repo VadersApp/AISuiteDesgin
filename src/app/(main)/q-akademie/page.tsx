@@ -62,12 +62,18 @@ import {
   Radio,
   Upload,
   ChevronLeft,
+  ChevronRight,
+  ChevronDown,
   FileQuestion,
   CheckSquare,
   CheckCircle,
   GitBranch,
   ThumbsUp,
   ThumbsDown,
+  ListTodo,
+  FileClock,
+  BookOpenCheck,
+  MoreHorizontal,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -402,33 +408,274 @@ const VideoRecorderDialog = ({ open, onOpenChange, onVideoSaved }: { open: boole
     );
 };
 
+// --- New Overview Components ---
 
-const OverviewView = () => (
-    <div className="space-y-6">
-        <div>
-            <h2 className="text-2xl font-bold text-foreground">Übersicht</h2>
-            <p className="text-muted-foreground">Die Q-Akademie ist dein zentrales System für Schulungen und internes Wissen.</p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-                <CardHeader><CardTitle>Aktive Kurse</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">2</p></CardContent>
-            </Card>
-            <Card>
-                <CardHeader><CardTitle>Teilnehmer gesamt</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">45</p></CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle>Abgeschlossene Kurse</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">128</p></CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle>Offene Schulungen</CardTitle></CardHeader>
-                <CardContent><p className="text-4xl font-bold">15</p></CardContent>
-            </Card>
-        </div>
-    </div>
+const KpiCard = ({ title, value, icon, onClick }: { title: string, value: string | number, icon: React.ElementType, onClick?: () => void }) => {
+    const Icon = icon;
+    return (
+        <Card className={cn("p-4 cursor-pointer hover:bg-accent/50", onClick && "cursor-pointer")} onClick={onClick}>
+            <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-xs font-bold uppercase text-muted-foreground">{title}</CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="p-0">
+                <div className="text-2xl font-bold">{value}</div>
+            </CardContent>
+        </Card>
+    );
+}
+
+const OnboardingCard = ({ onContinue }: { onContinue: () => void }) => {
+    const onboardingProgress = qOnboardingModules.filter(m => m.progress === 100).length / qOnboardingModules.length * 100;
+    if (onboardingProgress === 100) return null;
+
+    return (
+        <Card className="bg-primary/10 border-primary/20">
+            <CardHeader>
+                <CardTitle>Q-Onboarding abschließen</CardTitle>
+                <CardDescription>Schließen Sie das Onboarding ab, um alle Funktionen freizuschalten.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Progress value={onboardingProgress} className="h-2 mb-2" />
+                <p className="text-sm text-muted-foreground">{Math.round(onboardingProgress)}% abgeschlossen</p>
+            </CardContent>
+            <CardFooter>
+                <Button onClick={onContinue}>Jetzt abschließen</Button>
+            </CardFooter>
+        </Card>
+    )
+}
+
+const ContinueLearningCard = ({ onContinue }: { onContinue: () => void }) => {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Weitermachen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                        <BookCopy className="w-6 h-6 text-muted-foreground"/>
+                    </div>
+                    <div>
+                        <p className="font-bold">Onboarding für Sales-Team</p>
+                        <p className="text-sm text-muted-foreground">Modul 2: Praktische Anwendung</p>
+                    </div>
+                </div>
+                <Progress value={50} className="h-2"/>
+                <Button onClick={onContinue} className="w-full">Fortsetzen</Button>
+            </CardContent>
+        </Card>
+    )
+}
+
+const ActiveCoursesCard = ({ onManage }: { onManage: () => void }) => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Meine aktiven Kurse</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+            {mockCourses.slice(0, 3).map(course => (
+                <div key={course.id}>
+                    <div className="flex justify-between text-sm">
+                        <p className="font-medium text-foreground">{course.title}</p>
+                        <p className="font-bold">50%</p>
+                    </div>
+                    <Progress value={50} className="h-1 mt-1" />
+                </div>
+            ))}
+        </CardContent>
+        <CardFooter>
+            <Button variant="outline" className="w-full" onClick={onManage}>Alle anzeigen</Button>
+        </CardFooter>
+    </Card>
 );
+
+const OpenItemsCard = ({ title, icon, items, onItemClick, onShowAll }: { title: string, icon: React.ElementType, items: any[], onItemClick: (item: any) => void, onShowAll: () => void }) => {
+    const Icon = icon;
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Icon className="w-5 h-5 text-muted-foreground"/> {title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                 {items.slice(0, 3).map(item => (
+                    <div key={item.id} className="flex justify-between items-center bg-muted/50 p-2 rounded-lg">
+                        <div>
+                            <p className="text-sm font-medium">{item.title}</p>
+                            <p className="text-xs text-muted-foreground">{item.context}</p>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => onItemClick(item)}>Ansehen</Button>
+                    </div>
+                ))}
+            </CardContent>
+            <CardFooter>
+                <Button variant="outline" className="w-full" onClick={onShowAll}>Alle anzeigen</Button>
+            </CardFooter>
+        </Card>
+    );
+};
+
+const NewInAcademyCard = ({ onShowMore }: { onShowMore: () => void }) => {
+    const newItems = [
+        { type: 'Kurs', title: 'Grundlagen des Projektmanagements' },
+        { type: 'Video', title: 'Effektives Zeitmanagement' },
+        { type: 'Wissensbaustein', title: 'Umgang mit schwierigen Kunden' },
+    ];
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Neu in der Akademie</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                 <div className="flex gap-2">
+                    <Badge variant="secondary">Kurse</Badge>
+                    <Badge variant="outline">Videos</Badge>
+                    <Badge variant="outline">Wissensbausteine</Badge>
+                </div>
+                 {newItems.map(item => (
+                    <div key={item.title} className="p-2 bg-muted/50 rounded-lg">
+                        <p className="text-sm font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.type}</p>
+                    </div>
+                 ))}
+            </CardContent>
+            <CardFooter>
+                <Button variant="link" onClick={onShowMore}>Mehr anzeigen</Button>
+            </CardFooter>
+        </Card>
+    );
+};
+
+const DepartmentsDistributionCard = ({ onManage }: { onManage: () => void }) => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Abteilungen & Rollen</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+            {[
+                { name: 'Vertrieb', users: 12, courses: 5 },
+                { name: 'IT', users: 8, courses: 3 },
+                { name: 'Marketing', users: 5, courses: 2 },
+            ].map(dept => (
+                <div key={dept.name} className="flex justify-between">
+                    <p className="font-medium">{dept.name}</p>
+                    <p className="text-muted-foreground">{dept.users} Teilnehmer / {dept.courses} Kurse</p>
+                </div>
+            ))}
+        </CardContent>
+        <CardFooter>
+            <Button variant="outline" className="w-full" onClick={onManage}>Verwalten</Button>
+        </CardFooter>
+    </Card>
+);
+
+const CertificatesCard = ({ onShowAll }: { onShowAll: () => void }) => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Zertifikate</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">Zuletzt erhalten:</p>
+            {mockCertificates.filter(c => c.status === 'Erhalten').slice(0, 2).map(cert => (
+                 <div key={cert.id} className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg">
+                    <Award className="w-5 h-5 text-amber-400"/>
+                    <div>
+                        <p className="text-sm font-medium">{cert.title}</p>
+                    </div>
+                 </div>
+            ))}
+             <p className="text-sm text-muted-foreground pt-2">2 weitere Zertifikate in Arbeit.</p>
+        </CardContent>
+        <CardFooter>
+            <Button variant="outline" className="w-full" onClick={onShowAll}>Zertifikate ansehen</Button>
+        </CardFooter>
+    </Card>
+);
+
+const FeedbackQualityCard = ({ onShowAll }: { onShowAll: () => void }) => (
+     <Card>
+        <CardHeader><CardTitle>Feedback & Qualität</CardTitle></CardHeader>
+        <CardContent className="flex items-center justify-around text-center">
+            <div>
+                 <p className="text-3xl font-bold text-emerald-500 flex items-center gap-2 justify-center"><ThumbsUp/> 128</p>
+                 <p className="text-xs text-muted-foreground">Positiv</p>
+            </div>
+            <Separator orientation="vertical" className="h-12"/>
+             <div>
+                 <p className="text-3xl font-bold text-rose-500 flex items-center gap-2 justify-center"><ThumbsDown/> 12</p>
+                 <p className="text-xs text-muted-foreground">Negativ</p>
+            </div>
+        </CardContent>
+        <CardFooter>
+            <Button variant="outline" className="w-full" onClick={onShowAll}>Details ansehen</Button>
+        </CardFooter>
+    </Card>
+);
+
+const ReportsShortcutCard = ({ onShowReport }: { onShowReport: (report: string) => void }) => (
+    <Card>
+        <CardHeader><CardTitle>Reports</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+            <Button variant="outline" className="w-full justify-start" onClick={() => onShowReport('course')}>Kurs-Performance</Button>
+            <Button variant="outline" className="w-full justify-start" onClick={() => onShowReport('path')}>Lernpfad-Performance</Button>
+            <Button variant="outline" className="w-full justify-start" onClick={() => onShowReport('user')}>Teilnehmer-Fortschritt</Button>
+        </CardContent>
+    </Card>
+);
+
+
+const OverviewView = ({ onModuleChange, onCourseSelect, onLessonSelect }: { onModuleChange: (module: string) => void, onCourseSelect: (course: any) => void, onLessonSelect: (lesson: any) => void }) => {
+    // Mock user role, in a real app this would come from a context or hook
+    const userRole = 'admin'; // 'admin' or 'user'
+    const onboardingProgress = qOnboardingModules.filter(m => m.progress === 100).length / qOnboardingModules.length * 100;
+    
+    const mockTasks = [
+        { id: 't1', title: 'Pitch-Entwurf erstellen', context: 'Sales Onboarding' },
+        { id: 't2', title: 'DSGVO-Quiz absolvieren', context: 'DSGVO-Basisschulung' },
+    ];
+    const mockExams = [
+        { id: 'e1', title: 'Abschlussprüfung Sales', context: 'Sales Onboarding' },
+    ];
+
+    return (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <KpiCard title="Aktive Kurse" value={mockCourses.length} icon={BookCopy} onClick={() => onModuleChange('Kurse')} />
+                <KpiCard title="Teilnehmer" value={mockParticipants.length} icon={Users} onClick={() => onModuleChange('Teilnehmer')} />
+                <KpiCard title="Lernpfade" value={mockLearningPaths.length} icon={Network} onClick={() => onModuleChange('Lernpfade')} />
+                <KpiCard title="Zertifikate" value={mockCertificates.length} icon={Award} onClick={() => onModuleChange('Zertifikate')} />
+                <KpiCard title="Offene Aufgaben" value={mockTasks.length} icon={ListTodo} onClick={() => onModuleChange('Aufgaben')} />
+                <KpiCard title="Fällige Prüfungen" value={mockExams.length} icon={FileClock} onClick={() => onModuleChange('Prüfungen')} />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <div className="lg:col-span-2 space-y-6">
+                    <ContinueLearningCard onContinue={() => { onCourseSelect(mockCourses[0]); }} />
+                    {onboardingProgress < 100 && <OnboardingCard onContinue={() => onModuleChange('Q-Onboarding')} />}
+                    <ActiveCoursesCard onManage={() => onModuleChange('Kurse')} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <OpenItemsCard title="Offene Aufgaben" icon={ListTodo} items={mockTasks} onItemClick={(item) => onLessonSelect({ ...item, type: 'task' })} onShowAll={() => onModuleChange('Aufgaben')} />
+                        <OpenItemsCard title="Fällige Prüfungen" icon={FileClock} items={mockExams} onItemClick={(item) => onLessonSelect({ ...item, type: 'prüfung' })} onShowAll={() => onModuleChange('Prüfungen')} />
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <NewInAcademyCard onShowMore={() => onModuleChange('Inhalte')} />
+                    {userRole === 'admin' && (
+                        <>
+                            <DepartmentsDistributionCard onManage={() => onModuleChange('Abteilungen & Rollen')} />
+                            <FeedbackQualityCard onShowAll={() => onModuleChange('Reports')} />
+                            <ReportsShortcutCard onShowReport={(report) => onModuleChange('Fortschritt & Reports')} />
+                        </>
+                    )}
+                    <CertificatesCard onShowAll={() => onModuleChange('Zertifikate')} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 
 const QOnboardingView = () => (
     <div className="space-y-6">
@@ -1247,10 +1494,14 @@ export default function QAkademiePage() {
         resetDialogs();
     }, [pathname]);
 
+    const handleModuleClick = (moduleName: string) => {
+        setActiveCourse(null);
+        setActiveModule(moduleName);
+    };
 
     const renderModule = () => {
         switch (activeModule) {
-            case 'Übersicht': return <OverviewView />;
+            case 'Übersicht': return <OverviewView onModuleChange={handleModuleClick} onCourseSelect={setActiveCourse} onLessonSelect={(lesson) => { setActiveModule('Kurse'); /* Logik um direkt zur Lektion zu springen fehlt */ }} />;
             case 'Q-Onboarding': return <QOnboardingView />;
             case 'Kurse': 
                 if (activeCourse) {
@@ -1264,13 +1515,8 @@ export default function QAkademiePage() {
             case 'Fortschritt & Reports': return <ReportingView />;
             case 'Zertifikate': return <CertificatesView onOpenCreateDialog={() => setDialogOpen('isCreateCertificateOpen', true)} />;
             case 'Einstellungen': return <SettingsView />;
-            default: return <OverviewView />;
+            default: return <OverviewView onModuleChange={handleModuleClick} onCourseSelect={setActiveCourse} onLessonSelect={(lesson) => {setActiveModule('Kurse');}} />;
         }
-    };
-
-    const handleModuleClick = (moduleName: string) => {
-        setActiveCourse(null);
-        setActiveModule(moduleName);
     };
 
     return (
@@ -1299,6 +1545,14 @@ export default function QAkademiePage() {
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <Input type="text" placeholder="Kurse, Videos, Inhalte durchsuchen..." className="pl-9 bg-input" />
                     </div>
+                     {activeModule === 'Übersicht' && (
+                        <div className="flex items-center gap-2">
+                           <Button variant="outline" size="sm" onClick={() => { handleModuleClick('Kurse'); setDialogOpen('isCreateCourseOpen', true); }}><BookCopy className="w-4 h-4 mr-2"/>Kurs erstellen</Button>
+                           <Button variant="outline" size="sm" onClick={() => { handleModuleClick('Lernpfade'); setDialogOpen('isCreateLernpfadOpen', true); }}><Network className="w-4 h-4 mr-2"/>Lernpfad erstellen</Button>
+                           <Button variant="outline" size="icon" onClick={() => { handleModuleClick('Inhalte'); setDialogOpen('isVideoUploadOpen', true); }}><Upload className="w-4 h-4"/></Button>
+                           <Button variant="outline" size="icon" onClick={() => { handleModuleClick('Inhalte'); setDialogOpen('isRecordingDialogOpen', true);}}><Video className="w-4 h-4"/></Button>
+                        </div>
+                    )}
                 </header>
 
                 <div className="animate-in fade-in duration-300">
