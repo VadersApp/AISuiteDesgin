@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 // Helper to format seconds into hh:mm:ss
 const formatTime = (totalSeconds: number) => {
   totalSeconds = Math.floor(totalSeconds);
+   if (isNaN(totalSeconds) || totalSeconds < 0) totalSeconds = 0;
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
@@ -47,9 +48,11 @@ export default function ZeiterfassungTodayPage() {
   const [now, setNow] = useState(new Date());
   const [workState, setWorkState] = useState<'idle' | 'working' | 'paused'>('idle');
   const [workStartTime, setWorkStartTime] = useState<Date | null>(null);
+  const [workEndTime, setWorkEndTime] = useState<Date | null>(null);
   const [pauseStartTime, setPauseStartTime] = useState<Date | null>(null);
   const [accumulatedBreakSeconds, setAccumulatedBreakSeconds] = useState(0);
-  
+  const [finalTimes, setFinalTimes] = useState<{ work: number; pause: number } | null>(null);
+
   const [pauseHintShown, setPauseHintShown] = useState(false);
   const [endHintShown, setEndHintShown] = useState(false);
 
@@ -93,6 +96,9 @@ export default function ZeiterfassungTodayPage() {
 
   // Derived values for display
   const { netWorkSeconds, totalPauseSeconds } = useMemo(() => {
+    if (finalTimes) {
+        return { netWorkSeconds: finalTimes.work, totalPauseSeconds: finalTimes.pause };
+    }
     if (!workStartTime) {
       return { netWorkSeconds: 0, totalPauseSeconds: 0 };
     }
@@ -108,16 +114,9 @@ export default function ZeiterfassungTodayPage() {
       return { netWorkSeconds: workSecondsBeforePause, totalPauseSeconds: accumulatedBreakSeconds + currentPauseSeconds };
     }
     
-    if (workState === 'idle') {
-      // This is a simplified fix. In a real app, you'd want to persist the final time.
-      // For now, we avoid the ReferenceError by not trying to read a value that's being calculated.
-      // The previous logic was flawed. We will reset to 0 as per the "reset" comment.
-      return { netWorkSeconds: 0, totalPauseSeconds: 0 };
-    }
-
     return { netWorkSeconds: 0, totalPauseSeconds: 0 };
 
-  }, [now, workState, workStartTime, pauseStartTime, accumulatedBreakSeconds]);
+  }, [now, workState, workStartTime, pauseStartTime, accumulatedBreakSeconds, finalTimes]);
 
   const dashboardData = useMemo(() => {
     const todayNetWorkMinutes = Math.floor(Math.max(0, netWorkSeconds) / 60);
@@ -158,10 +157,12 @@ export default function ZeiterfassungTodayPage() {
   const handleStartWork = () => {
     setWorkState('working');
     setWorkStartTime(new Date());
+    setWorkEndTime(null);
     setAccumulatedBreakSeconds(0);
     setPauseStartTime(null);
     setPauseHintShown(false);
     setEndHintShown(false);
+    setFinalTimes(null);
   };
 
   const handlePause = () => {
@@ -177,7 +178,18 @@ export default function ZeiterfassungTodayPage() {
   };
 
   const handleEndWork = () => {
-    // In a real app, this would save the final entry to Firestore
+    if (!workStartTime) return;
+    const endTime = new Date();
+
+    let finalPauseSecs = accumulatedBreakSeconds;
+    if (workState === 'paused' && pauseStartTime) {
+        finalPauseSecs += (endTime.getTime() - pauseStartTime.getTime()) / 1000;
+    }
+    
+    const finalWorkSecs = (endTime.getTime() - workStartTime.getTime()) / 1000 - finalPauseSecs;
+
+    setWorkEndTime(endTime);
+    setFinalTimes({ work: finalWorkSecs, pause: finalPauseSecs });
     setWorkState('idle');
   };
   
@@ -233,7 +245,7 @@ export default function ZeiterfassungTodayPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitsende</p>
-              <p className="text-2xl font-bold">{workState === 'idle' && workStartTime ? format(now, 'HH:mm') : '--:--'}</p>
+              <p className="text-2xl font-bold">{workEndTime ? format(workEndTime, 'HH:mm') : '--:--'}</p>
             </div>
              <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitszeit (netto)</p>
