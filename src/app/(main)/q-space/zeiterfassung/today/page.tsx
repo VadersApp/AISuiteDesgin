@@ -2,14 +2,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Play, Square, Coffee, ArrowLeft } from 'lucide-react';
+import { Clock, Play, Square, Coffee, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { format, subDays, isToday, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, eachDayOfInterval, startOfToday, endOfMonth } from 'date-fns';
 import { de } from 'date-fns/locale';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
+// Helper to format seconds into hh:mm:ss
 const formatTime = (totalSeconds: number) => {
+  totalSeconds = Math.floor(totalSeconds);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
@@ -42,119 +44,147 @@ const formatSaldo = (minutes: number) => {
 
 
 export default function ZeiterfassungTodayPage() {
+  const [now, setNow] = useState(new Date());
   const [workState, setWorkState] = useState<'idle' | 'working' | 'paused'>('idle');
   const [workStartTime, setWorkStartTime] = useState<Date | null>(null);
   const [pauseStartTime, setPauseStartTime] = useState<Date | null>(null);
-  const [totalBreakSeconds, setTotalBreakSeconds] = useState(0);
-  const [elapsedWorkTime, setElapsedWorkTime] = useState(0);
-  const [elapsedPauseTime, setElapsedPauseTime] = useState(0);
+  const [accumulatedBreakSeconds, setAccumulatedBreakSeconds] = useState(0);
+  
+  const [pauseHintShown, setPauseHintShown] = useState(false);
+  const [endHintShown, setEndHintShown] = useState(false);
 
+  // Live timer effect
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (workState === 'working') {
-      timer = setInterval(() => {
-        setElapsedWorkTime(workStartTime ? Math.floor((Date.now() - workStartTime.getTime()) / 1000) : 0);
-      }, 1000);
-    } else if (workState === 'paused') {
-      timer = setInterval(() => {
-        setElapsedPauseTime(pauseStartTime ? Math.floor((Date.now() - pauseStartTime.getTime()) / 1000) : 0);
-      }, 1000);
-    }
+    const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
-  }, [workState, workStartTime, pauseStartTime]);
+  }, []);
+
+  // Reminder and Tab Close Warning effects
+  useEffect(() => {
+    // --- Tab Close Warning ---
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (workState === 'working' || workState === 'paused') {
+        e.preventDefault();
+        e.returnValue = 'Die Arbeitszeiterfassung läuft noch. Möchten Sie die Seite wirklich verlassen?';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // --- Reminder Logic ---
+    if (workState === 'working' && workStartTime) {
+        const netWorkSeconds = (now.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+        const totalElapsedSeconds = (now.getTime() - workStartTime.getTime()) / 1000;
+
+        // Pause reminder
+        if (netWorkSeconds >= 6 * 3600 && accumulatedBreakSeconds === 0 && !pauseHintShown) {
+            setPauseHintShown(true);
+        }
+
+        // End of work reminder
+        if (totalElapsedSeconds >= 10 * 3600 && !endHintShown) {
+            setEndHintShown(true);
+        }
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [now, workState, workStartTime, accumulatedBreakSeconds, pauseHintShown, endHintShown]);
+
+  // Derived values for display
+  const { netWorkSeconds, totalPauseSeconds } = useMemo(() => {
+      if (!workStartTime) {
+          return { netWorkSeconds: 0, totalPauseSeconds: 0 };
+      }
+
+      if (workState === 'working') {
+          const currentNetWorkSeconds = (now.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+          return { netWorkSeconds: currentNetWorkSeconds, totalPauseSeconds: accumulatedBreakSeconds };
+      }
+
+      if (workState === 'paused' && pauseStartTime) {
+          const workSecondsBeforePause = (pauseStartTime.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+          const currentPauseSeconds = (now.getTime() - pauseStartTime.getTime()) / 1000;
+          return { netWorkSeconds: workSecondsBeforePause, totalPauseSeconds: accumulatedBreakSeconds + currentPauseSeconds };
+      }
+
+      // 'idle' but after finishing work for the day
+      // This state needs to be handled based on saved end time. For this live component, we assume reset.
+      const lastWorkSeconds = workState === 'idle' ? (Math.max(0, netWorkSeconds)) : 0;
+      return { netWorkSeconds: lastWorkSeconds, totalPauseSeconds: accumulatedBreakSeconds };
+
+  }, [now, workState, workStartTime, pauseStartTime, accumulatedBreakSeconds]);
 
   const dashboardData = useMemo(() => {
+    const todayNetWorkMinutes = Math.floor(Math.max(0, netWorkSeconds) / 60);
+
     const today = new Date();
     const targetWorkMinPerDay = 480; // 8 hours
     const workdays = [1, 2, 3, 4, 5]; // Mon-Fri
 
-    // Mocking previous entries for calculation. In a real app, this would come from Firestore.
     const mockPreviousEntries = [
-        { date: subDays(today, 1), totalWorkMin: 495 }, // Yesterday: 8h 15m
-        { date: subDays(today, 2), totalWorkMin: 470 }, // Day before: 7h 50m
-        { date: subDays(today, 3), totalWorkMin: 510 },
-        { date: subDays(today, 4), totalWorkMin: 480 },
+        { date: subDays(today, 1), totalWorkMin: 495 },
+        { date: subDays(today, 2), totalWorkMin: 470 },
     ];
-
-    const todayNetWorkMinutes = elapsedWorkTime > 0 ? Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60)) : 0;
     
     const todayEntry = { date: today, totalWorkMin: todayNetWorkMinutes };
-
     const allEntriesForCalc = [...mockPreviousEntries.filter(e => e.date < startOfToday()), todayEntry];
     
-    // Today
-    const todayWorkMin = todayNetWorkMinutes;
-    
-    // Week
     const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
     const endOfThisWeek = endOfWeek(today, { weekStartsOn: 1 });
-    const weekWorkMin = allEntriesForCalc
-        .filter(e => isWithinInterval(e.date, { start: startOfThisWeek, end: endOfThisWeek }))
-        .reduce((sum, e) => sum + e.totalWorkMin, 0);
+    const weekWorkMin = allEntriesForCalc.filter(e => isWithinInterval(e.date, { start: startOfThisWeek, end: endOfThisWeek })).reduce((sum, e) => sum + e.totalWorkMin, 0);
 
-    // Month
     const startOfThisMonth = startOfMonth(today);
-    const monthWorkMin = allEntriesForCalc
-        .filter(e => isWithinInterval(e.date, { start: startOfThisMonth, end: today }))
-        .reduce((sum, e) => sum + e.totalWorkMin, 0);
+    const monthWorkMin = allEntriesForCalc.filter(e => isWithinInterval(e.date, { start: startOfThisMonth, end: today })).reduce((sum, e) => sum + e.totalWorkMin, 0);
     
-    // Saldo
     const daysInMonthSoFar = eachDayOfInterval({ start: startOfThisMonth, end: today });
     const workdaysSoFar = daysInMonthSoFar.filter(day => workdays.includes(day.getDay())).length;
     const monthTargetMin = workdaysSoFar * targetWorkMinPerDay;
     const saldoMin = monthWorkMin - monthTargetMin;
 
     return {
-        today: formatMinutesToHHMM(todayWorkMin),
+        today: formatMinutesToHHMM(todayNetWorkMinutes),
         week: formatMinutesToHHMM(weekWorkMin),
         month: formatMinutesToHHMM(monthWorkMin),
         saldo: formatSaldo(saldoMin),
-        todayPause: formatHoursAndMinutes(Math.floor((totalBreakSeconds + elapsedPauseTime) / 60)),
+        prognose: "N/A"
     };
-  }, [elapsedWorkTime, totalBreakSeconds, elapsedPauseTime]);
+  }, [netWorkSeconds]);
 
   const handleStartWork = () => {
     setWorkState('working');
     setWorkStartTime(new Date());
+    setAccumulatedBreakSeconds(0);
+    setPauseStartTime(null);
+    setPauseHintShown(false);
+    setEndHintShown(false);
   };
 
   const handlePause = () => {
-    if (workState === 'working') {
+    if (workState === 'working' && workStartTime) {
       setWorkState('paused');
       setPauseStartTime(new Date());
     } else if (workState === 'paused' && pauseStartTime) {
-      setTotalBreakSeconds(prev => prev + Math.floor((Date.now() - pauseStartTime.getTime()) / 1000));
+      const pauseDuration = (new Date().getTime() - pauseStartTime.getTime()) / 1000;
+      setAccumulatedBreakSeconds(prev => prev + pauseDuration);
       setWorkState('working');
       setPauseStartTime(null);
-      setElapsedPauseTime(0);
     }
   };
 
   const handleEndWork = () => {
-    if (workStartTime) {
-        // Here you would save the final entry to Firestore
-        console.log('Work ended. Total work time, total break time etc. would be saved.');
-    }
+    // In a real app, this would save the final entry to Firestore
     setWorkState('idle');
-    setWorkStartTime(null);
-    setPauseStartTime(null);
-    setTotalBreakSeconds(0);
-    setElapsedWorkTime(0);
-    setElapsedPauseTime(0);
   };
   
-  const netWorkTime = formatMinutesToHHMM(Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60)));
-
-
   const weeklyData = [
       { day: 'Mo', hours: '08:15' },
       { day: 'Di', hours: '07:50' },
-      { day: 'Mi', hours: netWorkTime },
+      { day: 'Mi', hours: dashboardData.today },
       { day: 'Do', hours: '--:--' },
       { day: 'Fr', hours: '--:--' },
   ];
-  const weeklyTotalMinutes = 495 + 470 + Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60));
-  const weeklyTotal = formatHoursAndMinutes(weeklyTotalMinutes);
+  const weeklyTotal = formatHoursAndMinutes(495 + 470 + Math.floor(Math.max(0, netWorkSeconds)/60));
 
   const StatItem = ({ label, value }: { label: string, value: string }) => (
     <div className="text-center px-6 py-2 min-w-[100px] flex-1">
@@ -173,9 +203,8 @@ export default function ZeiterfassungTodayPage() {
         <p className="text-muted-foreground">Einfache, gesetzeskonforme Erfassung Ihrer Arbeitszeit.</p>
       </header>
 
-      {/* Dashboard */}
       <Card className="p-0">
-        <div className="flex items-center justify-around divide-x divide-border overflow-x-auto no-scrollbar">
+        <div className="flex items-center justify-around divide-x divide-border overflow-x-auto no-scrollbar h-14">
             <StatItem label="Heute" value={dashboardData.today} />
             <StatItem label="Woche" value={dashboardData.week} />
             <StatItem label="Monat" value={dashboardData.month} />
@@ -196,15 +225,15 @@ export default function ZeiterfassungTodayPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Pausenzeit</p>
-              <p className="text-2xl font-bold">{formatTime(totalBreakSeconds + elapsedPauseTime)}</p>
+              <p className="text-2xl font-bold">{formatTime(totalPauseSeconds)}</p>
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitsende</p>
-              <p className="text-2xl font-bold">{workState === 'idle' && workStartTime ? format(new Date(), 'HH:mm') : '--:--'}</p>
+              <p className="text-2xl font-bold">{workState === 'idle' && workStartTime ? format(now, 'HH:mm') : '--:--'}</p>
             </div>
              <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitszeit (netto)</p>
-              <p className="text-2xl font-bold text-emerald-400">{netWorkTime}</p>
+              <p className="text-2xl font-bold text-emerald-400">{formatTime(netWorkSeconds)}</p>
             </div>
           </div>
           
@@ -220,8 +249,17 @@ export default function ZeiterfassungTodayPage() {
             </Button>
           </div>
           
-           {workState === 'working' && elapsedWorkTime > 6 * 3600 && totalBreakSeconds < 30 * 60 && (
-                <p className="text-center text-amber-400 text-xs italic">Hinweis: Bei mehr als 6 Stunden Arbeit sind 30 Minuten Pause gesetzlich vorgeschrieben.</p>
+           {pauseHintShown && (
+                <div className="text-center text-amber-400 text-xs italic p-2 bg-amber-500/10 rounded-lg border border-amber-500/20 flex items-center justify-center gap-2">
+                    <AlertTriangle className="w-4 h-4"/>
+                    Hinweis: Bei mehr als 6 Stunden Arbeit sind 30 Minuten Pause gesetzlich vorgeschrieben.
+                </div>
+           )}
+           {endHintShown && (
+                 <div className="text-center text-amber-400 text-xs italic p-2 bg-amber-500/10 rounded-lg border border-amber-500/20 flex items-center justify-center gap-2">
+                    <AlertTriangle className="w-4 h-4"/>
+                    Arbeitszeit läuft noch – bitte prüfen, ob du dich ausstempeln musst.
+                </div>
            )}
         </CardContent>
       </Card>
