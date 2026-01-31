@@ -1799,3 +1799,33 @@ export const mockQuickTasks = [
 ];
 
 export const mockWorkspaceTasks = mockTasks.filter(t => t.owner === 'Dr. Müller');
+
+// Mock Time Entries
+export const mockTimeEntries = [
+    {
+        id: 'te-1',
+        userId: 'ben-weber',
+        deptId: 'IT',
+        contextType: 'task',
+        contextId: 'task-mock-1',
+        titleSnapshot: 'Deployment-Verzug (+3 Tage)',
+        note: 'Debugging der CI/CD-Pipeline.',
+        startAt: new Date(new Date().setHours(9, 0, 0, 0)).toISOString(),
+        endAt: new Date(new Date().setHours(11, 30, 0, 0)).toISOString(),
+        durationMin: 150,
+        status: 'draft',
+    },
+    {
+        id: 'te-2',
+        userId: 'ben-weber',
+        deptId: 'IT',
+        contextType: 'general',
+        contextId: null,
+        titleSnapshot: 'Team Meeting',
+        note: 'Weekly Sync',
+        startAt: new Date(new Date().setHours(11, 30, 0, 0)).toISOString(),
+        endAt: new Date(new Date().setHours(12, 0, 0, 0)).toISOString(),
+        durationMin: 30,
+        status: 'submitted',
+    },
+];

@@ -93,14 +93,12 @@ service cloud.firestore {
     match /organizations/{orgId}/leaveRequests/{requestId} {
       // Users can create and read their own requests.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      
-      // Dept heads and execs can read requests in their scope.
       allow read: if request.auth != null && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec' ||
+        resource.data.userId == request.auth.uid ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec') ||
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == resource.data.deptId)
       );
-
+      
       // Approvers (exec, dept_head) can update status. Users can cancel their own if submitted.
       allow update: if request.auth != null && (
           (
@@ -129,6 +127,52 @@ service cloud.firestore {
     match /organizations/{orgId}/dayPlans/{planId}/blocks/{blockId} {
         // Only the owner of the plan can manage its blocks
         allow read, write: if request.auth != null && get(/databases/$(database)/documents/organizations/$(orgId)/dayPlans/$(planId)).data.userId == request.auth.uid;
+    }
+
+    // Time Tracking Rules
+    match /organizations/{orgId}/timeEntries/{entryId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec') ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == resource.data.deptId)
+      );
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (
+        // User can update their own drafts
+        (resource.data.userId == request.auth.uid && resource.data.status == 'draft') ||
+        // User can submit their own drafts
+        (resource.data.userId == request.auth.uid && request.resource.data.status == 'submitted') ||
+        // Approver can approve/reject
+        (
+            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec' ||
+            (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == resource.data.deptId)
+        )
+      );
+      // No deletes in MVP
+      allow delete: if false;
+    }
+
+    match /organizations/{orgId}/runningTimers/{userId} {
+      // User can only manage their own timer
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /organizations/{orgId}/timeBatches/{batchId} {
+        allow read: if request.auth != null && (
+            resource.data.userId == request.auth.uid ||
+            (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec') ||
+            (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == get(/databases/$(database)/documents/users/$(resource.data.userId)).data.deptId)
+        );
+        allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+        allow update: if request.auth != null && (
+            (resource.data.userId == request.auth.uid && resource.data.status == 'draft') ||
+            // Approver can approve/reject
+             (
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec' ||
+                (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == get(/databases/$(database)/documents/users/$(resource.data.userId)).data.deptId)
+            )
+        );
+         allow delete: if false;
     }
   }
 }

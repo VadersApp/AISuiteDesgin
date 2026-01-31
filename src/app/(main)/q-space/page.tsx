@@ -119,6 +119,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 const modules = [
     { name: 'Q-Chat', icon: MessageSquare },
     { name: 'Day Planer', icon: CalendarRange },
+    { name: 'Zeiterfassung', icon: Clock },
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Workspace', icon: Briefcase },
@@ -1286,6 +1287,10 @@ export default function QSpacePage() {
        if (activeModule !== 'Day Planer') {
           setActiveModule('Day Planer');
       }
+    } else if (pathname.startsWith('/q-space/zeiterfassung')) {
+       if (activeModule !== 'Zeiterfassung') {
+          setActiveModule('Zeiterfassung');
+      }
     }
   }, [pathname, activeModule]);
 
@@ -1364,6 +1369,7 @@ export default function QSpacePage() {
           case 'Business Builder': return null; // Should redirect
           case 'Erfolgsplaner': return null; // Should redirect
           case 'Day Planer': return null; // Should redirect
+          case 'Zeiterfassung': return null; // Should redirect
           default: return <OverviewView currentUser={currentUser} filteredKpiMitarbeiter={filteredKpiMitarbeiter} filteredChatThreads={filteredChatThreads} filteredTasks={filteredTasks} />;
       }
   };
@@ -1378,11 +1384,15 @@ export default function QSpacePage() {
     } else if (moduleName === 'Day Planer') {
         router.push('/q-space/day-planer');
     }
+     else if (moduleName === 'Zeiterfassung') {
+        router.push('/q-space/zeiterfassung');
+    }
      else {
         const isExternal = pathname.startsWith('/q-space/chat') || 
                            pathname.startsWith('/q-space/business-builder') ||
                            pathname.startsWith('/q-space/erfolgsplaner') ||
-                           pathname.startsWith('/q-space/day-planer');
+                           pathname.startsWith('/q-space/day-planer') ||
+                           pathname.startsWith('/q-space/zeiterfassung');
         if (isExternal) {
             router.push('/q-space');
         }
@@ -1402,6 +1412,7 @@ export default function QSpacePage() {
                 const isBusinessBuilderLink = mod.name === 'Business Builder';
                 const isErfolgsplanerLink = mod.name === 'Erfolgsplaner';
                 const isDayPlanerLink = mod.name === 'Day Planer';
+                const isZeiterfassungLink = mod.name === 'Zeiterfassung';
 
                 let isActive = false;
 
@@ -1414,12 +1425,16 @@ export default function QSpacePage() {
                 } else if (isDayPlanerLink) {
                     isActive = pathname.startsWith('/q-space/day-planer');
                 }
+                 else if (isZeiterfassungLink) {
+                    isActive = pathname.startsWith('/q-space/zeiterfassung');
+                }
                  else {
                     isActive = activeModule === mod.name && 
                                !pathname.startsWith('/q-space/chat') && 
                                !pathname.startsWith('/q-space/business-builder') &&
                                !pathname.startsWith('/q-space/erfolgsplaner') &&
-                               !pathname.startsWith('/q-space/day-planer');
+                               !pathname.startsWith('/q-space/day-planer') &&
+                               !pathname.startsWith('/q-space/zeiterfassung');
                 }
 
 

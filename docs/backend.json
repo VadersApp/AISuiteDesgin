@@ -479,6 +479,67 @@
             "status": { "type": "string", "enum": ["planned", "in_progress", "done", "skipped"] }
         },
         "required": ["sourceType", "sourceId", "titleSnapshot", "startAt", "endAt"]
+    },
+    "TimeEntry": {
+      "title": "Time Entry",
+      "description": "A single time entry record for a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "deptId": { "type": "string" },
+        "contextType": { "type": "string", "enum": ["task", "project", "workInstruction", "general"] },
+        "contextId": { "type": "string" },
+        "titleSnapshot": { "type": "string" },
+        "note": { "type": "string" },
+        "startAt": { "type": "string", "format": "date-time" },
+        "endAt": { "type": "string", "format": "date-time" },
+        "durationMin": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "submitted", "approved", "rejected"] },
+        "approverUserId": { "type": "string" },
+        "approverNote": { "type": "string" },
+        "ai": {
+          "type": "object",
+          "properties": {
+            "suggestedContextType": { "type": "string" },
+            "suggestedContextId": { "type": "string" },
+            "plausibilityFlag": { "type": "string", "enum": ["ok", "watch", "critical"] },
+            "reason": { "type": "string" },
+            "confidence": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "deptId", "contextType", "startAt", "status", "createdAt", "updatedAt"]
+    },
+    "RunningTimer": {
+      "title": "Running Timer",
+      "description": "Represents a user's currently running timer.",
+      "type": "object",
+      "properties": {
+        "entryId": { "type": "string" },
+        "startAt": { "type": "string", "format": "date-time" },
+        "contextType": { "type": "string", "enum": ["task", "project", "workInstruction", "general"] },
+        "contextId": { "type": "string" },
+        "isRunning": { "type": "boolean" }
+      },
+      "required": ["entryId", "startAt", "isRunning"]
+    },
+    "WeeklyBatch": {
+      "title": "Weekly Time Batch",
+      "description": "A batch of time entries for a user for one week, used for approvals.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "weekStart": { "type": "string", "format": "date" },
+        "weekEnd": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["draft", "submitted", "approved", "rejected"] },
+        "totalMin": { "type": "number" },
+        "approverUserId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "weekStart", "weekEnd", "status", "totalMin", "createdAt", "updatedAt"]
     }
   },
   "auth": {
@@ -564,6 +625,18 @@
     "/organizations/{orgId}/dayPlans/{planId}/blocks/{blockId}": {
       "schema": { "$ref": "#/backend/entities/DayPlanBlock" },
       "description": "Stores individual scheduled blocks within a day plan."
+    },
+    "/organizations/{orgId}/timeEntries/{entryId}": {
+      "schema": { "$ref": "#/backend/entities/TimeEntry" },
+      "description": "Stores individual time entries for users."
+    },
+    "/organizations/{orgId}/runningTimers/{userId}": {
+      "schema": { "$ref": "#/backend/entities/RunningTimer" },
+      "description": "Stores the currently running timer for a user."
+    },
+    "/organizations/{orgId}/timeBatches/{batchId}": {
+      "schema": { "$ref": "#/backend/entities/WeeklyBatch" },
+      "description": "Stores weekly batches of time entries for approval."
     }
   }
 }
