@@ -7,6 +7,7 @@ import { format, subDays, isToday, isWithinInterval, startOfWeek, endOfWeek, sta
 import { de } from 'date-fns/locale';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 const formatTime = (totalSeconds: number) => {
   const hours = Math.floor(totalSeconds / 3600);
@@ -104,9 +105,9 @@ export default function ZeiterfassungTodayPage() {
     const saldoMin = monthWorkMin - monthTargetMin;
 
     return {
-        today: formatHoursAndMinutes(todayWorkMin),
-        week: formatHoursAndMinutes(weekWorkMin),
-        month: formatHoursAndMinutes(monthWorkMin),
+        today: formatMinutesToHHMM(todayWorkMin),
+        week: formatMinutesToHHMM(weekWorkMin),
+        month: formatMinutesToHHMM(monthWorkMin),
         saldo: formatSaldo(saldoMin),
         todayPause: formatHoursAndMinutes(Math.floor((totalBreakSeconds + elapsedPauseTime) / 60)),
     };
@@ -142,12 +143,12 @@ export default function ZeiterfassungTodayPage() {
     setElapsedPauseTime(0);
   };
   
-  const netWorkTime = formatHoursAndMinutes(Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60)));
+  const netWorkTime = formatMinutesToHHMM(Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60)));
 
 
   const weeklyData = [
-      { day: 'Mo', hours: '8:15' },
-      { day: 'Di', hours: '7:50' },
+      { day: 'Mo', hours: '08:15' },
+      { day: 'Di', hours: '07:50' },
       { day: 'Mi', hours: netWorkTime },
       { day: 'Do', hours: '--:--' },
       { day: 'Fr', hours: '--:--' },
@@ -155,6 +156,12 @@ export default function ZeiterfassungTodayPage() {
   const weeklyTotalMinutes = 495 + 470 + Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60));
   const weeklyTotal = formatHoursAndMinutes(weeklyTotalMinutes);
 
+  const StatItem = ({ label, value }: { label: string, value: string }) => (
+    <div className="text-center px-6 py-2 min-w-[100px] flex-1">
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{label}</p>
+        <p className="text-lg font-semibold text-foreground">{value}</p>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -167,31 +174,15 @@ export default function ZeiterfassungTodayPage() {
       </header>
 
       {/* Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Heute</CardTitle></CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{dashboardData.today}</p>
-            <p className="text-xs text-muted-foreground">Pause: {dashboardData.todayPause}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Woche</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{dashboardData.week}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Monat</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{dashboardData.month}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Gesamt Monat</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{dashboardData.month}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Saldo</CardTitle></CardHeader>
-          <CardContent><p className="text-3xl font-bold">{dashboardData.saldo}</p></CardContent>
-        </Card>
-      </div>
+      <Card className="p-0">
+        <div className="flex items-center justify-around divide-x divide-border overflow-x-auto no-scrollbar">
+            <StatItem label="Heute" value={dashboardData.today} />
+            <StatItem label="Woche" value={dashboardData.week} />
+            <StatItem label="Monat" value={dashboardData.month} />
+            <StatItem label="Gesamt Monat" value={dashboardData.month} />
+            <StatItem label="Saldo" value={dashboardData.saldo} />
+        </div>
+      </Card>
 
       <Card>
         <CardHeader>
