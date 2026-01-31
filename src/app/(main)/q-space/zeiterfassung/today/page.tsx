@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, Square, Coffee, ArrowLeft, AlertTriangle } from 'lucide-react';
-import { format, subDays, isToday, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, eachDayOfInterval, startOfToday, endOfMonth } from 'date-fns';
+import { format as formatDateFns, subDays, isToday, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, eachDayOfInterval, startOfToday, endOfMonth } from 'date-fns';
 import { de } from 'date-fns/locale';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -95,28 +95,31 @@ export default function ZeiterfassungTodayPage() {
   }, [now, workState, workStartTime, accumulatedBreakSeconds, pauseHintShown, endHintShown]);
 
   // Derived values for display
-  const { netWorkSeconds, totalPauseSeconds } = useMemo(() => {
+ const { netWorkSeconds, totalPauseSeconds } = useMemo(() => {
     if (finalTimes) {
-        return { netWorkSeconds: finalTimes.work, totalPauseSeconds: finalTimes.pause };
+      return { netWorkSeconds: finalTimes.work, totalPauseSeconds: finalTimes.pause };
     }
     if (!workStartTime) {
       return { netWorkSeconds: 0, totalPauseSeconds: 0 };
     }
 
-    if (workState === 'working') {
-      const currentNetWorkSeconds = (now.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
-      return { netWorkSeconds: currentNetWorkSeconds, totalPauseSeconds: accumulatedBreakSeconds };
-    }
+    let currentNetWorkSeconds = 0;
+    let currentTotalPauseSeconds = accumulatedBreakSeconds;
 
-    if (workState === 'paused' && pauseStartTime) {
-      const workSecondsBeforePause = (pauseStartTime.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
-      const currentPauseSeconds = (now.getTime() - pauseStartTime.getTime()) / 1000;
-      return { netWorkSeconds: workSecondsBeforePause, totalPauseSeconds: accumulatedBreakSeconds + currentPauseSeconds };
+    if (workState === 'working') {
+      currentNetWorkSeconds = (now.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+    } else if (workState === 'paused' && pauseStartTime) {
+      currentNetWorkSeconds = (pauseStartTime.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+      currentTotalPauseSeconds += (now.getTime() - pauseStartTime.getTime()) / 1000;
+    } else if (workState === 'idle' && workEndTime && workStartTime) {
+      // This state is after work has ended for the day
+      currentNetWorkSeconds = (workEndTime.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+      currentTotalPauseSeconds = accumulatedBreakSeconds;
     }
     
-    return { netWorkSeconds: 0, totalPauseSeconds: 0 };
+    return { netWorkSeconds: Math.max(0, currentNetWorkSeconds), totalPauseSeconds: Math.max(0, currentTotalPauseSeconds) };
 
-  }, [now, workState, workStartTime, pauseStartTime, accumulatedBreakSeconds, finalTimes]);
+  }, [now, workState, workStartTime, pauseStartTime, accumulatedBreakSeconds, finalTimes, workEndTime]);
 
   const dashboardData = useMemo(() => {
     const todayNetWorkMinutes = Math.floor(Math.max(0, netWorkSeconds) / 60);
@@ -216,10 +219,9 @@ export default function ZeiterfassungTodayPage() {
           <Link href="/q-space"><ArrowLeft className="w-4 h-4 mr-1" /> Zur Übersicht</Link>
         </Button>
         <h1 className="text-2xl font-bold text-foreground">Zeiterfassung</h1>
-        <p className="text-muted-foreground">Einfache, gesetzeskonforme Erfassung Ihrer Arbeitszeit.</p>
       </header>
 
-      <Card className="p-0">
+      <Card className="p-0 overflow-hidden">
         <div className="flex items-center justify-around divide-x divide-border overflow-x-auto no-scrollbar h-14">
             <StatItem label="Heute" value={dashboardData.today} />
             <StatItem label="Woche" value={dashboardData.week} />
@@ -231,13 +233,13 @@ export default function ZeiterfassungTodayPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Heutiger Arbeitstag: {format(new Date(), 'eeee, dd. MMMM yyyy', {locale: de})}</CardTitle>
+          <CardTitle>Heutiger Arbeitstag: {formatDateFns(new Date(), 'eeee, dd. MMMM yyyy', {locale: de})}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center p-4 bg-muted/50 rounded-xl border">
             <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitsbeginn</p>
-              <p className="text-2xl font-bold">{workStartTime ? format(workStartTime, 'HH:mm') : '--:--'}</p>
+              <p className="text-2xl font-bold">{workStartTime ? formatDateFns(workStartTime, 'HH:mm') : '--:--'}</p>
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Pausenzeit</p>
@@ -245,7 +247,7 @@ export default function ZeiterfassungTodayPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitsende</p>
-              <p className="text-2xl font-bold">{workEndTime ? format(workEndTime, 'HH:mm') : '--:--'}</p>
+              <p className="text-2xl font-bold">{workEndTime ? formatDateFns(workEndTime, 'HH:mm') : '--:--'}</p>
             </div>
              <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitszeit (netto)</p>
