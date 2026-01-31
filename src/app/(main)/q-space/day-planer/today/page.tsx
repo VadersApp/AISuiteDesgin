@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { mockQuickTasks, mockWorkspaceTasks } from '@/lib/data';
-import { BrainCircuit, Plus } from 'lucide-react';
+import { BrainCircuit, Plus, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 const TaskPool = () => {
     return (
@@ -107,6 +108,9 @@ export default function DayPlanerTodayPage() {
     return (
         <div className="h-full">
             <header className="mb-6">
+                <Button variant="ghost" asChild className="mb-2 h-auto p-0 text-sm text-muted-foreground hover:text-foreground">
+                    <Link href="/q-space"><ArrowLeft className="w-4 h-4 mr-1" /> Zur Übersicht</Link>
+                </Button>
                 <h1 className="text-2xl font-bold">Day Planer</h1>
                 <p className="text-muted-foreground">Dein KI-gestützter Tagesplan</p>
             </header>
