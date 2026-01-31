@@ -93,25 +93,29 @@ export default function ZeiterfassungTodayPage() {
 
   // Derived values for display
   const { netWorkSeconds, totalPauseSeconds } = useMemo(() => {
-      if (!workStartTime) {
-          return { netWorkSeconds: 0, totalPauseSeconds: 0 };
-      }
+    if (!workStartTime) {
+      return { netWorkSeconds: 0, totalPauseSeconds: 0 };
+    }
 
-      if (workState === 'working') {
-          const currentNetWorkSeconds = (now.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
-          return { netWorkSeconds: currentNetWorkSeconds, totalPauseSeconds: accumulatedBreakSeconds };
-      }
+    if (workState === 'working') {
+      const currentNetWorkSeconds = (now.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+      return { netWorkSeconds: currentNetWorkSeconds, totalPauseSeconds: accumulatedBreakSeconds };
+    }
 
-      if (workState === 'paused' && pauseStartTime) {
-          const workSecondsBeforePause = (pauseStartTime.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
-          const currentPauseSeconds = (now.getTime() - pauseStartTime.getTime()) / 1000;
-          return { netWorkSeconds: workSecondsBeforePause, totalPauseSeconds: accumulatedBreakSeconds + currentPauseSeconds };
-      }
+    if (workState === 'paused' && pauseStartTime) {
+      const workSecondsBeforePause = (pauseStartTime.getTime() - workStartTime.getTime()) / 1000 - accumulatedBreakSeconds;
+      const currentPauseSeconds = (now.getTime() - pauseStartTime.getTime()) / 1000;
+      return { netWorkSeconds: workSecondsBeforePause, totalPauseSeconds: accumulatedBreakSeconds + currentPauseSeconds };
+    }
+    
+    if (workState === 'idle') {
+      // This is a simplified fix. In a real app, you'd want to persist the final time.
+      // For now, we avoid the ReferenceError by not trying to read a value that's being calculated.
+      // The previous logic was flawed. We will reset to 0 as per the "reset" comment.
+      return { netWorkSeconds: 0, totalPauseSeconds: 0 };
+    }
 
-      // 'idle' but after finishing work for the day
-      // This state needs to be handled based on saved end time. For this live component, we assume reset.
-      const lastWorkSeconds = workState === 'idle' ? (Math.max(0, netWorkSeconds)) : 0;
-      return { netWorkSeconds: lastWorkSeconds, totalPauseSeconds: accumulatedBreakSeconds };
+    return { netWorkSeconds: 0, totalPauseSeconds: 0 };
 
   }, [now, workState, workStartTime, pauseStartTime, accumulatedBreakSeconds]);
 
