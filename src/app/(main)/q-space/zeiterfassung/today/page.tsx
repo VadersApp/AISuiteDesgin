@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, Square, Coffee, ArrowLeft } from 'lucide-react';
-import { format, subDays, isToday, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
+import { format, subDays, isToday, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, eachDayOfInterval, startOfToday, endOfMonth } from 'date-fns';
 import { de } from 'date-fns/locale';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -16,6 +16,7 @@ const formatTime = (totalSeconds: number) => {
 };
 
 const formatHoursAndMinutes = (totalMinutes: number) => {
+    if (isNaN(totalMinutes) || totalMinutes < 0) totalMinutes = 0;
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     if (hours > 0) {
@@ -23,6 +24,21 @@ const formatHoursAndMinutes = (totalMinutes: number) => {
     }
     return `${minutes}m`;
 }
+
+const formatMinutesToHHMM = (totalMinutes: number) => {
+    if (isNaN(totalMinutes) || totalMinutes < 0) totalMinutes = 0;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
+const formatSaldo = (minutes: number) => {
+    if (isNaN(minutes)) minutes = 0;
+    const sign = minutes >= 0 ? '+' : '-';
+    const absMinutes = Math.abs(minutes);
+    return `${sign}${formatMinutesToHHMM(absMinutes)}`;
+};
+
 
 export default function ZeiterfassungTodayPage() {
   const [workState, setWorkState] = useState<'idle' | 'working' | 'paused'>('idle');
@@ -46,36 +62,54 @@ export default function ZeiterfassungTodayPage() {
     return () => clearInterval(timer);
   }, [workState, workStartTime, pauseStartTime]);
 
-  const { dailyOvertime, weeklyOvertime, monthlyOvertime } = useMemo(() => {
+  const dashboardData = useMemo(() => {
     const today = new Date();
-    const targetWorkMinPerDay = 480; // 8 hours, mock value
+    const targetWorkMinPerDay = 480; // 8 hours
+    const workdays = [1, 2, 3, 4, 5]; // Mon-Fri
 
-    // Mocking entries for calculation. In a real app, this would come from Firestore.
+    // Mocking previous entries for calculation. In a real app, this would come from Firestore.
     const mockPreviousEntries = [
-      { date: subDays(today, 1), totalWorkMin: 495 }, // Yesterday: 8h 15m -> 15m overtime
-      { date: subDays(today, 2), totalWorkMin: 470 }, // Day before: 7h 50m -> 10m undertime
+        { date: subDays(today, 1), totalWorkMin: 495 }, // Yesterday: 8h 15m
+        { date: subDays(today, 2), totalWorkMin: 470 }, // Day before: 7h 50m
+        { date: subDays(today, 3), totalWorkMin: 510 },
+        { date: subDays(today, 4), totalWorkMin: 480 },
     ];
 
-    const todayNetWorkMinutes = elapsedWorkTime > 0 ? Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60) : 0;
+    const todayNetWorkMinutes = elapsedWorkTime > 0 ? Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60)) : 0;
     
     const todayEntry = { date: today, totalWorkMin: todayNetWorkMinutes };
 
-    const allEntriesForCalc = [...mockPreviousEntries, todayEntry];
+    const allEntriesForCalc = [...mockPreviousEntries.filter(e => e.date < startOfToday()), todayEntry];
+    
+    // Today
+    const todayWorkMin = todayNetWorkMinutes;
+    
+    // Week
+    const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 });
+    const endOfThisWeek = endOfWeek(today, { weekStartsOn: 1 });
+    const weekWorkMin = allEntriesForCalc
+        .filter(e => isWithinInterval(e.date, { start: startOfThisWeek, end: endOfThisWeek }))
+        .reduce((sum, e) => sum + e.totalWorkMin, 0);
 
-    const dailyOvertime = Math.max(0, todayEntry.totalWorkMin - targetWorkMinPerDay);
+    // Month
+    const startOfThisMonth = startOfMonth(today);
+    const monthWorkMin = allEntriesForCalc
+        .filter(e => isWithinInterval(e.date, { start: startOfThisMonth, end: today }))
+        .reduce((sum, e) => sum + e.totalWorkMin, 0);
+    
+    // Saldo
+    const daysInMonthSoFar = eachDayOfInterval({ start: startOfThisMonth, end: today });
+    const workdaysSoFar = daysInMonthSoFar.filter(day => workdays.includes(day.getDay())).length;
+    const monthTargetMin = workdaysSoFar * targetWorkMinPerDay;
+    const saldoMin = monthWorkMin - monthTargetMin;
 
-    const currentWeekEntries = allEntriesForCalc.filter(entry => 
-        isWithinInterval(entry.date, { start: startOfWeek(today, { weekStartsOn: 1 }), end: endOfWeek(today, { weekStartsOn: 1 }) })
-    );
-
-    const weeklyOvertime = currentWeekEntries.reduce((total, entry) => {
-        return total + Math.max(0, entry.totalWorkMin - targetWorkMinPerDay);
-    }, 0);
-
-    // Mocking monthly calculation for simplicity
-    const monthlyOvertime = weeklyOvertime + 60;
-
-    return { dailyOvertime, weeklyOvertime, monthlyOvertime };
+    return {
+        today: formatHoursAndMinutes(todayWorkMin),
+        week: formatHoursAndMinutes(weekWorkMin),
+        month: formatHoursAndMinutes(monthWorkMin),
+        saldo: formatSaldo(saldoMin),
+        todayPause: formatHoursAndMinutes(Math.floor((totalBreakSeconds + elapsedPauseTime) / 60)),
+    };
   }, [elapsedWorkTime, totalBreakSeconds, elapsedPauseTime]);
 
   const handleStartWork = () => {
@@ -108,9 +142,7 @@ export default function ZeiterfassungTodayPage() {
     setElapsedPauseTime(0);
   };
   
-  const totalWorkDuration = workStartTime ? formatTime(elapsedWorkTime) : '--:--:--';
-  const totalBreakDuration = formatTime(totalBreakSeconds + elapsedPauseTime);
-  const netWorkTime = formatHoursAndMinutes(Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60));
+  const netWorkTime = formatHoursAndMinutes(Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60)));
 
 
   const weeklyData = [
@@ -120,7 +152,7 @@ export default function ZeiterfassungTodayPage() {
       { day: 'Do', hours: '--:--' },
       { day: 'Fr', hours: '--:--' },
   ];
-  const weeklyTotalMinutes = 495 + 470 + Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60);
+  const weeklyTotalMinutes = 495 + 470 + Math.max(0, Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60));
   const weeklyTotal = formatHoursAndMinutes(weeklyTotalMinutes);
 
 
@@ -134,6 +166,33 @@ export default function ZeiterfassungTodayPage() {
         <p className="text-muted-foreground">Einfache, gesetzeskonforme Erfassung Ihrer Arbeitszeit.</p>
       </header>
 
+      {/* Dashboard */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Heute</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{dashboardData.today}</p>
+            <p className="text-xs text-muted-foreground">Pause: {dashboardData.todayPause}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Woche</CardTitle></CardHeader>
+          <CardContent><p className="text-3xl font-bold">{dashboardData.week}</p></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Monat</CardTitle></CardHeader>
+          <CardContent><p className="text-3xl font-bold">{dashboardData.month}</p></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Gesamt Monat</CardTitle></CardHeader>
+          <CardContent><p className="text-3xl font-bold">{dashboardData.month}</p></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Saldo</CardTitle></CardHeader>
+          <CardContent><p className="text-3xl font-bold">{dashboardData.saldo}</p></CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Heutiger Arbeitstag: {format(new Date(), 'eeee, dd. MMMM yyyy', {locale: de})}</CardTitle>
@@ -146,7 +205,7 @@ export default function ZeiterfassungTodayPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Pausenzeit</p>
-              <p className="text-2xl font-bold">{totalBreakDuration}</p>
+              <p className="text-2xl font-bold">{formatTime(totalBreakSeconds + elapsedPauseTime)}</p>
             </div>
             <div>
               <p className="text-xs font-bold text-muted-foreground">Arbeitsende</p>
@@ -176,26 +235,6 @@ export default function ZeiterfassungTodayPage() {
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader>
-            <CardTitle>Überstunden-Saldo</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-4 text-center">
-            <div>
-                <p className="text-xs font-bold text-muted-foreground">Heute</p>
-                <p className="text-2xl font-bold">{formatHoursAndMinutes(dailyOvertime)}</p>
-            </div>
-            <div>
-                <p className="text-xs font-bold text-muted-foreground">Diese Woche</p>
-                <p className="text-2xl font-bold">{formatHoursAndMinutes(weeklyOvertime)}</p>
-            </div>
-            <div>
-                <p className="text-xs font-bold text-muted-foreground">Dieser Monat</p>
-                <p className="text-2xl font-bold">{formatHoursAndMinutes(monthlyOvertime)}</p>
-            </div>
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
             <div className="flex justify-between items-center">
