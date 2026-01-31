@@ -1,9 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Play, Square, Coffee, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, subDays, isToday, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { de } from 'date-fns/locale';
 import Link from 'next/link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,7 +18,10 @@ const formatTime = (totalSeconds: number) => {
 const formatHoursAndMinutes = (totalMinutes: number) => {
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    return `${hours}h ${minutes}m`;
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
 }
 
 export default function ZeiterfassungTodayPage() {
@@ -42,6 +45,38 @@ export default function ZeiterfassungTodayPage() {
     }
     return () => clearInterval(timer);
   }, [workState, workStartTime, pauseStartTime]);
+
+  const { dailyOvertime, weeklyOvertime, monthlyOvertime } = useMemo(() => {
+    const today = new Date();
+    const targetWorkMinPerDay = 480; // 8 hours, mock value
+
+    // Mocking entries for calculation. In a real app, this would come from Firestore.
+    const mockPreviousEntries = [
+      { date: subDays(today, 1), totalWorkMin: 495 }, // Yesterday: 8h 15m -> 15m overtime
+      { date: subDays(today, 2), totalWorkMin: 470 }, // Day before: 7h 50m -> 10m undertime
+    ];
+
+    const todayNetWorkMinutes = elapsedWorkTime > 0 ? Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60) : 0;
+    
+    const todayEntry = { date: today, totalWorkMin: todayNetWorkMinutes };
+
+    const allEntriesForCalc = [...mockPreviousEntries, todayEntry];
+
+    const dailyOvertime = Math.max(0, todayEntry.totalWorkMin - targetWorkMinPerDay);
+
+    const currentWeekEntries = allEntriesForCalc.filter(entry => 
+        isWithinInterval(entry.date, { start: startOfWeek(today, { weekStartsOn: 1 }), end: endOfWeek(today, { weekStartsOn: 1 }) })
+    );
+
+    const weeklyOvertime = currentWeekEntries.reduce((total, entry) => {
+        return total + Math.max(0, entry.totalWorkMin - targetWorkMinPerDay);
+    }, 0);
+
+    // Mocking monthly calculation for simplicity
+    const monthlyOvertime = weeklyOvertime + 60;
+
+    return { dailyOvertime, weeklyOvertime, monthlyOvertime };
+  }, [elapsedWorkTime, totalBreakSeconds, elapsedPauseTime]);
 
   const handleStartWork = () => {
     setWorkState('working');
@@ -79,13 +114,14 @@ export default function ZeiterfassungTodayPage() {
 
 
   const weeklyData = [
-      { day: 'Mo', hours: '8:05' },
-      { day: 'Di', hours: '7:45' },
-      { day: 'Mi', hours: '8:15' },
+      { day: 'Mo', hours: '8:15' },
+      { day: 'Di', hours: '7:50' },
+      { day: 'Mi', hours: netWorkTime },
       { day: 'Do', hours: '--:--' },
       { day: 'Fr', hours: '--:--' },
   ];
-  const weeklyTotal = "24:05";
+  const weeklyTotalMinutes = 495 + 470 + Math.floor((elapsedWorkTime - totalBreakSeconds - elapsedPauseTime) / 60);
+  const weeklyTotal = formatHoursAndMinutes(weeklyTotalMinutes);
 
 
   return (
@@ -140,6 +176,26 @@ export default function ZeiterfassungTodayPage() {
         </CardContent>
       </Card>
       
+      <Card>
+        <CardHeader>
+            <CardTitle>Überstunden-Saldo</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-3 gap-4 text-center">
+            <div>
+                <p className="text-xs font-bold text-muted-foreground">Heute</p>
+                <p className="text-2xl font-bold">{formatHoursAndMinutes(dailyOvertime)}</p>
+            </div>
+            <div>
+                <p className="text-xs font-bold text-muted-foreground">Diese Woche</p>
+                <p className="text-2xl font-bold">{formatHoursAndMinutes(weeklyOvertime)}</p>
+            </div>
+            <div>
+                <p className="text-xs font-bold text-muted-foreground">Dieser Monat</p>
+                <p className="text-2xl font-bold">{formatHoursAndMinutes(monthlyOvertime)}</p>
+            </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
             <div className="flex justify-between items-center">
