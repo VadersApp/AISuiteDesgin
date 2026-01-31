@@ -482,7 +482,7 @@
     },
     "TimeEntry": {
       "title": "Time Entry",
-      "description": "A single time entry record for a user.",
+      "description": "A single time entry record for a user, compliant with legal work time tracking requirements.",
       "type": "object",
       "properties": {
         "userId": { "type": "string" },
@@ -491,12 +491,23 @@
         "contextId": { "type": "string" },
         "titleSnapshot": { "type": "string" },
         "note": { "type": "string" },
-        "startAt": { "type": "string", "format": "date-time" },
-        "endAt": { "type": "string", "format": "date-time" },
-        "durationMin": { "type": "number" },
+        "workStartAt": { "type": "string", "format": "date-time", "description": "Start of the work day for this entry." },
+        "workEndAt": { "type": "string", "format": "date-time", "description": "End of the work day for this entry." },
+        "breakMin": { "type": "number", "description": "Total break time in minutes for the work day." },
+        "totalWorkMin": { "type": "number", "description": "Total net work time in minutes for the day, calculated automatically." },
+        "startAt": { "type": "string", "format": "date-time", "description": "Start of this specific time entry/task." },
+        "endAt": { "type": "string", "format": "date-time", "description": "End of this specific time entry/task." },
+        "durationMin": { "type": "number", "description": "Duration of this specific time entry in minutes." },
         "status": { "type": "string", "enum": ["draft", "submitted", "approved", "rejected"] },
         "approverUserId": { "type": "string" },
         "approverNote": { "type": "string" },
+        "modified": { "type": "boolean", "description": "Flag indicating if the entry was modified after its initial creation." },
+        "modificationReason": { "type": "string", "description": "Reason for the modification, required if modified is true." },
+        "modifiedBy": { "type": "string", "description": "User ID of the person who last modified the entry." },
+        "modifiedAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last modification." },
+        "originalStartAt": { "type": "string", "format": "date-time", "description": "Original start time of the entry, preserved for audit." },
+        "originalEndAt": { "type": "string", "format": "date-time", "description": "Original end time of the entry, preserved for audit." },
+        "originalBreakMin": { "type": "number", "description": "Original break time in minutes, preserved for audit." },
         "ai": {
           "type": "object",
           "properties": {
@@ -510,7 +521,20 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId", "deptId", "contextType", "startAt", "status", "createdAt", "updatedAt"]
+      "required": [
+        "userId", 
+        "deptId", 
+        "contextType", 
+        "startAt", 
+        "status", 
+        "createdAt", 
+        "updatedAt",
+        "workStartAt",
+        "workEndAt",
+        "breakMin",
+        "totalWorkMin",
+        "modified"
+      ]
     },
     "RunningTimer": {
       "title": "Running Timer",
