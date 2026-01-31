@@ -409,6 +409,76 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "deptId", "startDate", "endDate", "leaveType", "status", "createdAt", "updatedAt"]
+    },
+    "DayPlannerSettings": {
+      "title": "Day Planner Settings",
+      "description": "User-specific settings for the Day Planner.",
+      "type": "object",
+      "properties": {
+        "workdayStart": { "type": "string" },
+        "workdayEnd": { "type": "string" },
+        "breakBlocks": { "type": "array", "items": { "type": "object", "properties": { "start": { "type": "string" }, "end": { "type": "string" } } } },
+        "planningHorizonDays": { "type": "number" },
+        "autoPlanOnOpen": { "type": "boolean" },
+        "allowOvertime": { "type": "boolean" }
+      }
+    },
+    "DayPlannerQuickTask": {
+      "title": "Day Planner Quick Task",
+      "description": "A user-created task within the Day Planner.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "deptId": { "type": "string" },
+        "title": { "type": "string" },
+        "note": { "type": "string" },
+        "dueAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["open", "done", "archived"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "ai": {
+            "type": "object",
+            "properties": {
+                "estimateMin": { "type": "number" },
+                "confidence": { "type": "number" },
+                "priorityScore": { "type": "number" },
+                "reason": { "type": "string" }
+            }
+        }
+      },
+      "required": ["userId", "title", "status", "createdAt", "updatedAt"]
+    },
+    "DayPlan": {
+        "title": "Day Plan",
+        "description": "Represents a single day's plan in the Day Planner.",
+        "type": "object",
+        "properties": {
+            "userId": { "type": "string" },
+            "date": { "type": "string", "format": "date" },
+            "status": { "type": "string", "enum": ["draft", "active", "final"] },
+            "generatedBy": { "type": "string", "enum": ["ai", "user", "mixed"] },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "date", "status", "createdAt", "updatedAt"]
+    },
+    "DayPlanBlock": {
+        "title": "Day Plan Block",
+        "description": "A single scheduled block within a Day Plan.",
+        "type": "object",
+        "properties": {
+            "sourceType": { "type": "string", "enum": ["workspaceTask", "quickTask"] },
+            "sourceId": { "type": "string" },
+            "titleSnapshot": { "type": "string" },
+            "startAt": { "type": "string", "format": "date-time" },
+            "endAt": { "type": "string", "format": "date-time" },
+            "priorityScore": { "type": "number" },
+            "estimateMin": { "type": "number" },
+            "aiReason": { "type": "string" },
+            "locked": { "type": "boolean" },
+            "status": { "type": "string", "enum": ["planned", "in_progress", "done", "skipped"] }
+        },
+        "required": ["sourceType", "sourceId", "titleSnapshot", "startAt", "endAt"]
     }
   },
   "auth": {
@@ -478,6 +548,22 @@
     "/organizations/{orgId}/leaveRequests/{requestId}": {
       "schema": { "$ref": "#/backend/entities/LeaveRequest" },
       "description": "Stores employee leave requests."
+    },
+    "/organizations/{orgId}/dayPlannerSettings/{userId}": {
+      "schema": { "$ref": "#/backend/entities/DayPlannerSettings" },
+      "description": "Stores user-specific settings for the Day Planner."
+    },
+    "/organizations/{orgId}/dayPlannerQuickTasks/{taskId}": {
+      "schema": { "$ref": "#/backend/entities/DayPlannerQuickTask" },
+      "description": "Stores user-created quick tasks for the Day Planner."
+    },
+    "/organizations/{orgId}/dayPlans/{planId}": {
+      "schema": { "$ref": "#/backend/entities/DayPlan" },
+      "description": "Stores the plan for a specific day for a user."
+    },
+    "/organizations/{orgId}/dayPlans/{planId}/blocks/{blockId}": {
+      "schema": { "$ref": "#/backend/entities/DayPlanBlock" },
+      "description": "Stores individual scheduled blocks within a day plan."
     }
   }
 }

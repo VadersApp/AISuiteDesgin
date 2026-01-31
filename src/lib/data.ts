@@ -1791,4 +1791,11 @@ export const mockLeaveRequests = [
     updatedAt: new Date(),
   },
 ];
-    
+
+export const mockQuickTasks = [
+  { id: 'qt-1', userId: 'dr-mueller', title: 'Review Q1 presentation slides', note: 'Check for typos and clarity.', dueAt: new Date(), status: 'open', ai: { estimateMin: 45, priorityScore: 85, reason: 'High importance, nearing deadline.' } },
+  { id: 'qt-2', userId: 'dr-mueller', title: 'Prepare for board meeting', note: 'Gather all necessary reports.', dueAt: addDays(new Date(), 2), status: 'open', ai: { estimateMin: 120, priorityScore: 95, reason: 'Critical meeting.' } },
+  { id: 'qt-3', userId: 'dr-mueller', title: 'Book flight to Berlin', note: '', dueAt: addDays(new Date(), 5), status: 'done', ai: { estimateMin: 15, priorityScore: 50, reason: 'Standard administrative task.' } }
+];
+
+export const mockWorkspaceTasks = mockTasks.filter(t => t.owner === 'Dr. Müller');

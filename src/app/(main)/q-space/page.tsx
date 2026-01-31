@@ -49,6 +49,7 @@ import {
   Building2,
   Calendar as CalendarIcon,
   CalendarDays,
+  CalendarRange,
   Check,
   CheckCircle,
   CheckCircle2,
@@ -89,7 +90,7 @@ import {
   TrendingUp,
   Upload,
   User as UserIcon,
-  UserCheck,
+  UserCheck as UserCheckIcon,
   Users,
   Workflow,
   X,
@@ -117,6 +118,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const modules = [
     { name: 'Q-Chat', icon: MessageSquare },
+    { name: 'Day Planer', icon: CalendarRange },
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Workspace', icon: Briefcase },
@@ -757,7 +759,7 @@ const KpiDashboard = ({ mitarbeiter } : { mitarbeiter: any[]}) => {
 
     const filteredTopKennzahlen = [
         { title: 'Ø Zufriedenheit gesamt', value: `${gesamtZufriedenheit}%`, icon: 'HeartPulse', color: 'blue', href: '/q-space/kpi-dashboard/zufriedenheit' },
-        { title: 'Mitarbeiter im grünen Bereich', value: gruenerBereichCount, icon: 'UserCheck', color: 'emerald', href: '/q-space/kpi-dashboard/gruen' },
+        { title: 'Mitarbeiter im grünen Bereich', value: gruenerBereichCount, icon: 'UserCheckIcon', color: 'emerald', href: '/q-space/kpi-dashboard/gruen' },
         { title: 'Aktive Warnungen', value: aktiveWarnungenCount + beobachtungCount, icon: 'AlertTriangle', color: 'amber', href: '/q-space/kpi-dashboard/warnungen' },
         { title: 'Aktive Eskalationen', value: aktiveEskalationenCount, icon: 'Flame', color: 'rose', href: '/q-space/kpi-dashboard/eskalationen' }
     ];
@@ -782,7 +784,7 @@ const KpiDashboard = ({ mitarbeiter } : { mitarbeiter: any[]}) => {
     };
     
     const iconMap: { [key: string]: React.ElementType } = {
-        HeartPulse, UserCheck, AlertTriangle, Flame
+        HeartPulse, UserCheckIcon, AlertTriangle, Flame
     }
 
     return (
@@ -1280,6 +1282,10 @@ export default function QSpacePage() {
        if (activeModule !== 'Erfolgsplaner') {
           setActiveModule('Erfolgsplaner');
       }
+    } else if (pathname.startsWith('/q-space/day-planer')) {
+       if (activeModule !== 'Day Planer') {
+          setActiveModule('Day Planer');
+      }
     }
   }, [pathname, activeModule]);
 
@@ -1357,6 +1363,7 @@ export default function QSpacePage() {
           case 'Q-Chat': return null; // Should redirect
           case 'Business Builder': return null; // Should redirect
           case 'Erfolgsplaner': return null; // Should redirect
+          case 'Day Planer': return null; // Should redirect
           default: return <OverviewView currentUser={currentUser} filteredKpiMitarbeiter={filteredKpiMitarbeiter} filteredChatThreads={filteredChatThreads} filteredTasks={filteredTasks} />;
       }
   };
@@ -1368,10 +1375,14 @@ export default function QSpacePage() {
         router.push('/q-space/business-builder');
     } else if (moduleName === 'Erfolgsplaner') {
         router.push('/q-space/erfolgsplaner');
-    } else {
+    } else if (moduleName === 'Day Planer') {
+        router.push('/q-space/day-planer');
+    }
+     else {
         const isExternal = pathname.startsWith('/q-space/chat') || 
                            pathname.startsWith('/q-space/business-builder') ||
-                           pathname.startsWith('/q-space/erfolgsplaner');
+                           pathname.startsWith('/q-space/erfolgsplaner') ||
+                           pathname.startsWith('/q-space/day-planer');
         if (isExternal) {
             router.push('/q-space');
         }
@@ -1390,6 +1401,8 @@ export default function QSpacePage() {
                 const isChatLink = mod.name === 'Q-Chat';
                 const isBusinessBuilderLink = mod.name === 'Business Builder';
                 const isErfolgsplanerLink = mod.name === 'Erfolgsplaner';
+                const isDayPlanerLink = mod.name === 'Day Planer';
+
                 let isActive = false;
 
                 if (isChatLink) {
@@ -1398,11 +1411,15 @@ export default function QSpacePage() {
                     isActive = pathname.startsWith('/q-space/business-builder');
                 } else if (isErfolgsplanerLink) {
                     isActive = pathname.startsWith('/q-space/erfolgsplaner');
-                } else {
+                } else if (isDayPlanerLink) {
+                    isActive = pathname.startsWith('/q-space/day-planer');
+                }
+                 else {
                     isActive = activeModule === mod.name && 
                                !pathname.startsWith('/q-space/chat') && 
                                !pathname.startsWith('/q-space/business-builder') &&
-                               !pathname.startsWith('/q-space/erfolgsplaner');
+                               !pathname.startsWith('/q-space/erfolgsplaner') &&
+                               !pathname.startsWith('/q-space/day-planer');
                 }
 
 
@@ -1469,3 +1486,4 @@ export default function QSpacePage() {
     </>
   );
 }
+
