@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameMonth, isSameDay, isBefore } from 'date-fns';
+import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow, eachDayOfInterval, isSameMonth, isSameDay, isBefore, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { type DateRange } from 'react-day-picker';
 import {
@@ -1148,6 +1148,7 @@ const SystemAdminView = () => {
         { value: 'teams-depts', label: 'Teams & Bereiche' },
         { value: 'roles-rights', label: 'Rollen & Rechte' },
         { value: 'kpi-policies', label: 'KPI-Richtlinien' },
+        { value: 'time-tracking', label: 'Zeiterfassung' },
         { value: 'security', label: 'Sicherheit' },
         { value: 'system-health', label: 'Systemzustand' },
     ];
@@ -1158,11 +1159,13 @@ const SystemAdminView = () => {
                 <p className="text-sm text-muted-foreground">Administrative Steuerung von Q-Space.</p>
             </header>
             <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="mb-4">
-                    {adminTabs.map(tab => (
-                        <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
-                    ))}
-                </TabsList>
+                <ScrollArea>
+                    <TabsList className="mb-4 whitespace-nowrap">
+                        {adminTabs.map(tab => (
+                            <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
+                        ))}
+                    </TabsList>
+                </ScrollArea>
 
                 <TabsContent value="overview">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1191,6 +1194,41 @@ const SystemAdminView = () => {
                                 </TableBody>
                             </Table>
                         </CardContent>
+                    </Card>
+                </TabsContent>
+                
+                <TabsContent value="time-tracking">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Zeiterfassung – Admin-Korrekturen</CardTitle>
+                            <CardDescription>Konfigurieren Sie, wer Zeiterfassungen korrigieren darf.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
+                                <div>
+                                    <Label htmlFor="time-correction-enabled" className="font-bold">Admin-Korrekturen aktivieren</Label>
+                                    <p className="text-xs text-muted-foreground">Erlaubt berechtigten Rollen die nachträgliche Bearbeitung von Zeiteinträgen.</p>
+                                </div>
+                                <Switch id="time-correction-enabled" defaultChecked={true} />
+                            </div>
+                            <div className="space-y-3">
+                                <Label className="font-bold">Erlaubte Rollen</Label>
+                                <div className="grid grid-cols-2 gap-2 p-4 rounded-lg bg-muted/50 border">
+                                    <div className="flex items-center gap-2"><Checkbox id="role-exec" defaultChecked /> <Label htmlFor="role-exec">Exec</Label></div>
+                                    <div className="flex items-center gap-2"><Checkbox id="role-dept-head" /> <Label htmlFor="role-dept-head">Dept Head</Label></div>
+                                    <div className="flex items-center gap-2"><Checkbox id="role-team-lead" /> <Label htmlFor="role-team-lead">Team Lead</Label></div>
+                                    <div className="flex items-center gap-2"><Checkbox id="role-space-admin" /> <Label htmlFor="role-space-admin">Space Admin</Label></div>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="correction-window">Max. Korrekturfenster (Tage)</Label>
+                                <Input id="correction-window" type="number" defaultValue="30" className="bg-input w-48" />
+                                <p className="text-xs text-muted-foreground">Zeitraum, in dem Korrekturen rückwirkend möglich sind.</p>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="border-t pt-6">
+                            <Button>Einstellungen speichern</Button>
+                        </CardFooter>
                     </Card>
                 </TabsContent>
 
@@ -1501,4 +1539,3 @@ export default function QSpacePage() {
     </>
   );
 }
-

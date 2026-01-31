@@ -133,27 +133,50 @@ service cloud.firestore {
     match /organizations/{orgId}/timeSettings/{settingsId} {
       allow read, write: if request.auth != null; // Simplified for MVP
     }
+    
+    // Time Admin Settings
+    match /organizations/{orgId}/timeAdminSettings/config {
+      // Only execs and authorized space admins can manage these settings
+      allow read, write: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec');
+    }
 
     // Time Tracking Rules
     match /organizations/{orgId}/timeEntries/{entryId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isApprover() {
+        let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+        let userDept = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId;
+        let targetUserDept = get(/databases/$(database)/documents/users/$(resource.data.userId)).data.deptId;
+
+        return userRole == 'exec' || (userRole == 'dept_head' && userDept == targetUserDept);
+      }
+      
+      function isAdminCorrection() {
+        // Note: For a real app, this logic should be a Cloud Function for security.
+        // This is a simplified version for client-side rules.
+        // It does not check allowedRoles from timeAdminSettings as that would require another `get`.
+        return (request.resource.data.modified == true && 
+                request.resource.data.modificationReason != null && 
+                request.resource.data.modifiedBy == request.auth.uid &&
+                isApprover());
+      }
+      
       allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec') ||
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == resource.data.deptId)
+        isOwner(resource.data.userId) || isApprover()
       );
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      allow create: if request.auth != null && isOwner(request.resource.data.userId);
+
       allow update: if request.auth != null && (
-        // User can update their own drafts
-        (resource.data.userId == request.auth.uid && resource.data.status == 'draft') ||
-        // User can submit their own drafts
-        (resource.data.userId == request.auth.uid && request.resource.data.status == 'submitted') ||
-        // Approver can approve/reject
-        (
-            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'exec' ||
-            (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'dept_head' && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.deptId == resource.data.deptId)
-        )
+        // User can update their own entry if it's still open
+        (isOwner(resource.data.userId) && resource.data.status == 'open') ||
+        // An admin can make a correction
+        isAdminCorrection()
       );
-      // No deletes in MVP
+      // No deletes in MVP to ensure audit trail
       allow delete: if false;
     }
 

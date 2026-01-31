@@ -578,6 +578,17 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "weekStart", "weekEnd", "status", "totalMin", "createdAt", "updatedAt"]
+    },
+    "TimeAdminSettings": {
+      "title": "Time Admin Settings",
+      "description": "Configuration for administrative corrections of time entries.",
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "allowedRoles": { "type": "array", "items": { "type": "string" }, "default": ["exec"] },
+        "maxBackdateDays": { "type": "number", "default": 30 },
+        "allowSpaceAdmin": { "type": "boolean", "default": false }
+      }
     }
   },
   "auth": {
@@ -681,6 +692,10 @@
     "/organizations/{orgId}/timeBatches/{batchId}": {
       "schema": { "$ref": "#/backend/entities/WeeklyBatch" },
       "description": "Stores weekly batches of time entries for approval."
+    },
+    "/organizations/{orgId}/timeAdminSettings/config": {
+      "schema": { "$ref": "#/backend/entities/TimeAdminSettings" },
+      "description": "Stores admin settings for time tracking corrections."
     }
   }
 }
