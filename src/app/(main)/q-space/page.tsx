@@ -117,14 +117,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 
 const modules = [
-    { name: 'Q-Chat', icon: MessageSquare },
-    { name: 'Day Planer', icon: CalendarRange },
-    { name: 'Zeiterfassung', icon: Clock },
     { name: 'Übersicht', icon: LayoutDashboard },
-    { name: 'KPI-Dashboard', icon: BarChart3 },
+    { name: 'Zeiterfassung', icon: Clock },
     { name: 'Workspace', icon: Briefcase },
-    { name: 'Business Builder', icon: Building },
+    { name: 'Day Planer', icon: CalendarRange },
+    { name: 'KPI-Dashboard', icon: BarChart3 },
     { name: 'Erfolgsplaner', icon: Target },
+    { name: 'Business Builder', icon: Building },
     { name: 'Mitarbeiter', icon: Users },
     { name: 'System Admin (Q-Space)', icon: Settings },
 ];
