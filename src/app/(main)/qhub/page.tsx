@@ -776,21 +776,23 @@ const UebersichtTab = () => {
                 <CardTitle>Sales Flow</CardTitle>
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-around flex-wrap gap-4">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-start md:justify-around gap-4 p-6 overflow-x-auto no-scrollbar">
                 {uebersicht.salesFlow.map((step, index) => (
                     <React.Fragment key={step.stage}>
-                        <div className="text-center">
+                        <div className="text-center flex-shrink-0">
                             <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
                             <p className="text-3xl font-bold">{step.value}</p>
                         </div>
                         {index < uebersicht.salesFlow.length - 1 && (
-                            <div className="text-center">
+                            <div className="text-center flex-shrink-0">
                                 <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
                                 <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
                             </div>
                         )}
                     </React.Fragment>
                 ))}
+              </div>
             </CardContent>
         </Card>
       </div>
@@ -1023,6 +1025,7 @@ const LearningsTab = () => {
         </div>
     );
 };
+
 
 const ReportingView = () => {
     return (
@@ -1768,7 +1771,7 @@ const AnrufeView = () => {
                                     <h4 className="font-bold text-base mt-4">Rückrufleitfaden</h4>
                                     <ul className="list-disc pl-5 space-y-1">
                                        {(call.aiHelpContent.leitfaden || []).map((l:string, i:number) => <li key={i}>{l}</li>)}
-                                    </ul>
+                                   </ul>
                                     <h4 className="font-bold text-base mt-4">Nachbearbeitungsvorschlag</h4>
                                     <p>{call.aiHelpContent.nachbearbeitung}</p>
                                 </div>
@@ -2024,4 +2027,3 @@ export default function QhubPage() {
     </>
   );
 }
-
