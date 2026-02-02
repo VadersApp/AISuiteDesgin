@@ -1829,3 +1829,78 @@ export const mockTimeEntries = [
         status: 'submitted',
     },
 ];
+
+export const qtrace_settings = {
+  enabled: false,
+  allowInternalCalls: true,
+  allowInboundCalls: true,
+  allowOutboundCalls: true,
+  audioTTLMinutes: 60,
+  audioHardcapHours: 24,
+  draftReviewRequired: true,
+  qspaceIntegration: true,
+};
+
+export const qtrace_providers = [
+    {
+        providerId: 'pbx-main',
+        enabled: true,
+        secret: 'your-super-secret-hmac-key',
+        signatureHeaderName: 'X-QTRACE-Signature',
+        timestampHeaderName: 'X-QTRACE-Timestamp',
+        idHeaderName: 'X-QTRACE-Event-Id',
+        maxSkewSeconds: 300
+    }
+];
+
+export const qtrace_calls = [
+    {
+        qtraceCallId: 'qcall-1',
+        tenantId: 'qore-tenant-1',
+        providerId: 'pbx-main',
+        providerCallId: 'prov-call-abc',
+        direction: 'inbound',
+        participants: [{ userId: 'anna-schmidt', role: 'agent' }, { userId: 'guest-1', role: 'lead' }],
+        startedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+        endedAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+        durationSec: 600,
+        recording: { status: 'deleted' },
+        transcript: { status: 'ready', language: 'de' },
+        qtrace: { status: 'draft_ready', draftCount: 2 }
+    },
+    {
+        qtraceCallId: 'qcall-2',
+        tenantId: 'qore-tenant-1',
+        providerId: 'pbx-main',
+        providerCallId: 'prov-call-def',
+        direction: 'outbound',
+        participants: [{ userId: 'leo-sales', role: 'agent' }, { userId: 'guest-2', role: 'lead' }],
+        startedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        endedAt: null,
+        durationSec: null,
+        recording: { status: 'recording' },
+        transcript: { status: 'pending', language: 'de' },
+        qtrace: { status: 'pending', draftCount: 0 }
+    }
+];
+
+export const qtrace_drafts = [
+    {
+        draftId: 'draft-1',
+        qtraceCallId: 'qcall-1',
+        title: 'Angebot für Innovate GmbH senden',
+        description: 'Der Kunde hat im Call Interesse an Produkt B bekundet und um ein Angebot gebeten.',
+        suggestedOwnerUserId: 'anna-schmidt',
+        priority: 'high',
+        status: 'draft'
+    },
+    {
+        draftId: 'draft-2',
+        qtraceCallId: 'qcall-1',
+        title: 'Follow-up Termin vereinbaren',
+        description: 'Einen Termin für nächste Woche zur Besprechung des Angebots finden.',
+        suggestedOwnerUserId: 'anna-schmidt',
+        priority: 'medium',
+        status: 'draft'
+    }
+];

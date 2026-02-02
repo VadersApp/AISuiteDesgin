@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PhoneIncoming, PhoneForwarded, Settings, BarChart2, Plus, Headset, Shield, TrendingUp, FileText } from "lucide-react";
+import { PhoneIncoming, PhoneForwarded, Settings, BarChart2, Plus, Headset, Shield, TrendingUp, FileText, Bot } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { qtrace_settings as mockQTraceSettings } from '@/lib/data';
 
 const serviceKpis = [
   { title: "Anrufe heute", value: "72", icon: PhoneIncoming },
@@ -16,6 +19,12 @@ const serviceKpis = [
 
 export default function QcallPage() {
   const [isServiceActive, setIsServiceActive] = useState(false);
+  const [isQTraceEnabled, setIsQTraceEnabled] = useState(false);
+
+  useEffect(() => {
+    // In a real app, you'd fetch this from your settings
+    setIsQTraceEnabled(mockQTraceSettings.enabled);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -160,6 +169,22 @@ export default function QcallPage() {
             </div>
         </Card>
       </div>
+
+       <Link href="/q-call/q-trace">
+            <Card className="p-6 hover:border-primary cursor-pointer group transition-all">
+                <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 group-hover:scale-110 transition-transform">
+                            <Bot className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">Q-Trace</h2>
+                            <p className="text-sm text-muted-foreground">Telefonate transkribieren & Aufgaben extrahieren.</p>
+                        </div>
+                    </div>
+                </div>
+            </Card>
+        </Link>
     </div>
   );
 }
