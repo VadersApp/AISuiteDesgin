@@ -90,7 +90,7 @@ import {
   TrendingUp,
   Upload,
   User as UserIcon,
-  UserCheck as UserCheckIcon,
+  UserCheck,
   UserX,
   Users,
   Workflow,
@@ -1260,3 +1260,4 @@ export default function QhubPage() {
     </>
   );
 }
+
