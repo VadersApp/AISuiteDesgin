@@ -31,11 +31,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format, isToday, isTomorrow, isFuture, isPast, isWithinInterval, startOfWeek, endOfWeek, addDays, subDays, startOfToday, formatDistanceToNow } from 'date-fns';
-import { de } from 'date-fns/locale';
-import { type DateRange } from 'react-day-picker';
 import {
   Activity,
   AlertTriangle,
@@ -48,7 +43,7 @@ import {
   Briefcase,
   Building,
   Building2,
-  Calendar as CalendarIcon,
+  Calendar,
   CalendarDays,
   CalendarRange,
   Check,
@@ -776,15 +771,15 @@ const UebersichtTab = () => {
                 <CardTitle>Sales Flow</CardTitle>
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-around flex-wrap gap-4">
+            <CardContent className="flex items-center justify-around overflow-x-auto p-4 gap-4 no-scrollbar">
                 {uebersicht.salesFlow.map((step, index) => (
                     <React.Fragment key={step.stage}>
-                        <div className="text-center">
+                        <div className="text-center flex-shrink-0">
                             <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
                             <p className="text-3xl font-bold">{step.value}</p>
                         </div>
                         {index < uebersicht.salesFlow.length - 1 && (
-                            <div className="text-center">
+                            <div className="text-center flex-shrink-0">
                                 <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
                                 <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
                             </div>
