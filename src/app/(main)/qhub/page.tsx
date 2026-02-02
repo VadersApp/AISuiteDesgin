@@ -777,7 +777,7 @@ const UebersichtTab = () => {
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="flex items-center justify-start md:justify-around gap-4 p-6 overflow-x-auto no-scrollbar">
+              <div className="flex flex-nowrap items-center justify-start gap-4 p-6 overflow-x-auto no-scrollbar">
                 {uebersicht.salesFlow.map((step, index) => (
                     <React.Fragment key={step.stage}>
                         <div className="text-center flex-shrink-0">
@@ -785,7 +785,7 @@ const UebersichtTab = () => {
                             <p className="text-3xl font-bold">{step.value}</p>
                         </div>
                         {index < uebersicht.salesFlow.length - 1 && (
-                            <div className="text-center flex-shrink-0">
+                            <div className="text-center flex-shrink-0 px-4">
                                 <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
                                 <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
                             </div>
@@ -803,7 +803,7 @@ const AktivitaetTab = () => {
     const { aktivitaet } = qSalesReportingData;
     const kpiData = [
         { title: 'Anrufe', value: aktivitaet.calls, target: 80, icon: Phone, color: 'blue' },
-        { title: 'Erreichte Leads', value: aktivitaet.reachedLeads, target: 60, icon: UserCheckIcon, color: 'emerald' },
+        { title: 'Erreichte Leads', value: aktivitaet.reachedLeads, target: 60, icon: UserCheck, color: 'emerald' },
         { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: Calendar, color: 'purple' },
         { title: 'Überfällige Follow-ups', value: aktivitaet.overdueFollowups, target: 5, icon: AlertTriangle, color: 'amber', invertColor: true },
     ];
