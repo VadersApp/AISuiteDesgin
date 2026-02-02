@@ -589,6 +589,166 @@
         "maxBackdateDays": { "type": "number", "default": 30 },
         "allowSpaceAdmin": { "type": "boolean", "default": false }
       }
+    },
+    "QTraceSettings": {
+      "title": "Q-Trace Settings",
+      "description": "Tenant-wide feature toggle and retention configuration for Q-Trace.",
+      "type": "object",
+      "properties": {
+        "tenantId": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "allowInternalCalls": { "type": "boolean" },
+        "allowInboundCalls": { "type": "boolean" },
+        "allowOutboundCalls": { "type": "boolean" },
+        "audioTTLMinutes": { "type": "number" },
+        "audioHardcapHours": { "type": "number" },
+        "draftReviewRequired": { "type": "boolean" },
+        "qspaceIntegration": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "QTraceProvider": {
+      "title": "Q-Trace Provider",
+      "description": "Configuration for a webhook provider for Q-Trace.",
+      "type": "object",
+      "properties": {
+        "tenantId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "secret": { "type": "string" },
+        "signatureHeaderName": { "type": "string" },
+        "timestampHeaderName": { "type": "string" },
+        "idHeaderName": { "type": "string" },
+        "maxSkewSeconds": { "type": "number" }
+      }
+    },
+    "QTraceCall": {
+      "title": "Q-Trace Call",
+      "description": "Represents a single call processed by the Q-Trace feature.",
+      "type": "object",
+      "properties": {
+        "qtraceCallId": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "linkedQCallId": { "type": ["string", "null"] },
+        "providerId": { "type": "string" },
+        "providerCallId": { "type": "string" },
+        "direction": { "type": "string", "enum": ["internal", "inbound", "outbound"] },
+        "teamId": { "type": ["string", "null"] },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userId": { "type": "string" },
+              "role": { "type": "string", "enum": ["agent", "participant", "lead"] }
+            }
+          }
+        },
+        "startedAt": { "type": ["string", "null"], "format": "date-time" },
+        "endedAt": { "type": ["string", "null"], "format": "date-time" },
+        "durationSec": { "type": ["number", "null"] },
+        "recording": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["skipped", "recording", "uploaded", "deleted", "error"] },
+            "tempStoragePath": { "type": ["string", "null"] },
+            "ttlDeleteAt": { "type": ["string", "null"], "format": "date-time" },
+            "hardcapDeleteAt": { "type": ["string", "null"], "format": "date-time" }
+          }
+        },
+        "transcript": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["pending", "processing", "ready", "error"] },
+            "language": { "type": "string" },
+            "text": { "type": ["string", "null"] },
+            "readyAt": { "type": ["string", "null"], "format": "date-time" }
+          }
+        },
+        "qtrace": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["inactive", "pending", "draft_ready", "finalized", "error"] },
+            "summary": { "type": "array", "items": { "type": "string" } },
+            "decisions": { "type": "array", "items": { "type": "string" } },
+            "draftCount": { "type": "number" },
+            "finalTaskIds": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "permissions": {
+          "type": "object",
+          "properties": {
+            "visibleToUserIds": { "type": "array", "items": { "type": "string" } },
+            "teamId": { "type": ["string", "null"] }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "QTraceDraft": {
+      "title": "Q-Trace Draft",
+      "description": "An AI-generated task draft from a call transcript.",
+      "type": "object",
+      "properties": {
+        "draftId": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "qtraceCallId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "suggestedOwnerUserId": { "type": ["string", "null"] },
+        "ownerUserId": { "type": ["string", "null"] },
+        "dueAt": { "type": ["string", "null"], "format": "date-time" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "confidence": { "type": "number" },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "quote": { "type": "string" },
+              "startSec": { "type": ["number", "null"] },
+              "endSec": { "type": ["number", "null"] }
+            }
+          }
+        },
+        "status": { "type": "string", "enum": ["draft", "approved", "rejected", "edited"] },
+        "finalTaskId": { "type": ["string", "null"] },
+        "approvedByUserId": { "type": ["string", "null"] },
+        "approvedAt": { "type": ["string", "null"], "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "QTraceWebhookEvent": {
+      "title": "Q-Trace Webhook Event",
+      "description": "Logs an incoming webhook event for Q-Trace.",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "providerId": { "type": "string" },
+        "type": { "type": "string", "enum": ["call.started", "call.ended", "recording.ready", "recording.failed"] },
+        "providerCallId": { "type": "string" },
+        "status": { "type": "string", "enum": ["received", "processed", "ignored", "error"] },
+        "error": { "type": ["string", "null"] },
+        "receivedAt": { "type": "string", "format": "date-time" },
+        "processedAt": { "type": ["string", "null"], "format": "date-time" },
+        "payload": { "type": "object" }
+      }
+    },
+    "QTraceEvent": {
+      "title": "Q-Trace Event",
+      "description": "Logs an internal pipeline event for Q-Trace.",
+      "type": "object",
+      "properties": {
+        "tenantId": { "type": "string" },
+        "qtraceCallId": { "type": "string" },
+        "type": { "type": "string", "enum": ["stt_started", "stt_ready", "drafts_created", "draft_approved", "draft_rejected", "tasks_created", "recording_deleted", "error"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "payload": { "type": "object" }
+      }
     }
   },
   "auth": {
@@ -696,6 +856,30 @@
     "/organizations/{orgId}/timeAdminSettings/config": {
       "schema": { "$ref": "#/backend/entities/TimeAdminSettings" },
       "description": "Stores admin settings for time tracking corrections."
+    },
+    "/organizations/{orgId}/qtrace_settings/{tenantId}": {
+      "schema": { "$ref": "#/backend/entities/QTraceSettings" },
+      "description": "Stores tenant-wide settings for the Q-Trace feature."
+    },
+    "/organizations/{orgId}/qtrace_providers/{providerId}": {
+      "schema": { "$ref": "#/backend/entities/QTraceProvider" },
+      "description": "Stores configuration for Q-Trace webhook providers."
+    },
+    "/organizations/{orgId}/qtrace_calls/{qtraceCallId}": {
+      "schema": { "$ref": "#/backend/entities/QTraceCall" },
+      "description": "Stores individual call records processed by Q-Trace."
+    },
+    "/organizations/{orgId}/qtrace_drafts/{draftId}": {
+      "schema": { "$ref": "#/backend/entities/QTraceDraft" },
+      "description": "Stores AI-generated task drafts from call transcripts."
+    },
+    "/organizations/{orgId}/qtrace_webhook_events/{eventId}": {
+      "schema": { "$ref": "#/backend/entities/QTraceWebhookEvent" },
+      "description": "Logs incoming webhook events for idempotency and debugging."
+    },
+    "/organizations/{orgId}/qtrace_events/{eventId}": {
+      "schema": { "$ref": "#/backend/entities/QTraceEvent" },
+      "description": "Logs internal pipeline events for Q-Trace for auditing."
     }
   }
 }
