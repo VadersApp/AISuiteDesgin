@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, useEffect, type FormEvent } from 'react';
@@ -43,9 +41,7 @@ import {
   Briefcase,
   Building,
   Building2,
-  Calendar,
   CalendarDays,
-  CalendarRange,
   Check,
   CheckCircle,
   CheckCircle2,
@@ -104,12 +100,37 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
+// --- Formatting Utils (Scoped to Reports) ---
+const formatZahl = (val: number | string) => {
+  const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]+/g, "")) : val;
+  if (isNaN(num)) return val;
+  return new Intl.NumberFormat('de-DE').format(num);
+};
+
+const formatProzent = (val: number | string) => {
+  const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]+/g, "")) : val;
+  if (isNaN(num)) return val;
+  // Intl format for percent usually adds a non-breaking space
+  return new Intl.NumberFormat('de-DE', { style: 'percent', minimumFractionDigits: 0 }).format(num / 100);
+};
+
+const formatWaehrung = (val: number | string) => {
+  const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]+/g, "")) : val;
+  if (isNaN(num)) return val;
+  return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(num);
+};
+
+const parseValue = (val: any) => {
+  if (typeof val === 'string' && val.includes('%')) return formatProzent(val);
+  if (typeof val === 'string' && val.includes('€')) return formatWaehrung(val);
+  if (typeof val === 'string' && !isNaN(Number(val))) return formatZahl(val);
+  return val;
+};
 
 const modules = [
     { name: 'Dashboard', icon: LayoutDashboard },
@@ -538,7 +559,6 @@ const CompaniesView = () => {
 
 const DealsView = () => {
     const [filter, setFilter] = useState('Alle');
-    const [selectedDealId, setSelectedDealId] = useState<number | null>(null);
 
     const filteredDeals = useMemo(() => {
         let deals = mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren');
@@ -666,7 +686,7 @@ const PipelineView = () => {
     };
 
     return (
-        <div>
+        <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start min-h-[60vh]">
                 {pipelineStages.map(phase => {
                     const dealsInPhase = mockDeals.filter(d => d.stage === phase);
@@ -674,14 +694,14 @@ const PipelineView = () => {
                     const phaseDealCount = dealsInPhase.length;
 
                     return (
-                        <div key={phase} className="bg-muted/50 rounded-xl flex flex-col h-full">
+                        <div key={phase} className="bg-muted/50 rounded-xl flex flex-col h-full overflow-hidden">
                             <div className="text-left p-4 border-b border-border">
                                 <h3 className="text-base font-bold text-foreground">{phase}</h3>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    {phaseDealCount} Verkaufschance{phaseDealCount !== 1 ? 'n' : ''} <span className="mx-1">•</span> {formatCurrency(phaseTotalValue.toString())}
+                                    {phaseDealCount} {phaseDealCount !== 1 ? 'Deals' : 'Deal'} <span className="mx-1">•</span> {formatCurrency(phaseTotalValue.toString())}
                                 </p>
                             </div>
-                            <div className="space-y-3 p-3 flex-1">
+                            <div className="space-y-3 p-3 flex-1 overflow-y-auto custom-scrollbar">
                                 {dealsInPhase.map(deal => {
                                     const isCritical = deal.slaDue === 'überschritten';
                                     const isAttention = deal.slaDue === 'heute' || deal.slaDue === 'morgen';
@@ -700,21 +720,21 @@ const PipelineView = () => {
                                                 <p className="text-sm text-muted-foreground">{formatCurrency(deal.value)}</p>
                                             </div>
                                             
-                                            <div className="my-2 py-2 border-t border-b border-border/50 text-xs">
+                                            <div className="my-2 py-2 border-t border-border/50 text-xs">
                                                 {deal.inactiveDays > 0 && (
                                                     <p className="text-muted-foreground/80 mb-1">{deal.inactiveDays} Tage ohne Aktivität</p>
                                                 )}
                                                 {deal.slaDue && (
                                                     <div className={cn("flex items-center gap-1.5 font-medium", isCritical ? "text-rose-500" : isAttention ? "text-amber-500" : "text-muted-foreground")}>
                                                         <AlertTriangle className="w-3.5 h-3.5" />
-                                                        <span>{formatFristStatus(deal.slaDue)}</span>
+                                                        <span className="truncate">{formatFristStatus(deal.slaDue)}</span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             <div className="bg-primary/10 p-2 rounded-md text-center mt-2">
                                                 <p className="text-[9px] font-bold text-primary/80 uppercase">Nächster Schritt:</p>
-                                                <p className="text-sm font-bold text-primary">{deal.nextStep}</p>
+                                                <p className="text-sm font-bold text-primary truncate">{deal.nextStep}</p>
                                             </div>
                                             
                                             {deal.aiNextStepSuggestion && (
@@ -745,43 +765,51 @@ const PipelineView = () => {
 
 const UebersichtTab = () => {
     const { uebersicht } = qSalesReportingData;
-    const IconMap: { [key: string]: React.ElementType } = { Phone, Calendar, Handshake, Percent, DollarSign, AlertTriangle };
+    const IconMap: { [key: string]: React.ElementType } = { 
+      Phone, Calendar: CalendarDays, Handshake, Percent, DollarSign, AlertTriangle 
+    };
   
     return (
-      <div className="space-y-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="space-y-8" id="qhub-reports">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {uebersicht.kpis.map(kpi => {
             const Icon = IconMap[kpi.icon as string] || Activity;
             return (
-              <Card key={kpi.title}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-                    {kpi.title} <Icon className="w-4 h-4" />
+              <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full">
+                <CardHeader className="pb-2 p-4 flex flex-row items-center justify-between space-y-0 gap-2">
+                  <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate flex-1">
+                    {kpi.title}
                   </CardTitle>
+                  <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">{kpi.value}</p>
+                <CardContent className="p-4 pt-0">
+                  <p className="text-[clamp(1.25rem,2.5vw,1.75rem)] font-bold text-foreground leading-none truncate font-mono">
+                    {parseValue(kpi.value)}
+                  </p>
                 </CardContent>
               </Card>
             )
           })}
         </div>
-        <Card>
+        
+        <Card className="overflow-hidden">
             <CardHeader>
                 <CardTitle>Sales Flow</CardTitle>
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-around overflow-x-auto p-4 gap-4 no-scrollbar">
+            <CardContent className="flex items-center justify-around overflow-x-auto p-6 gap-6 no-scrollbar min-w-0">
                 {uebersicht.salesFlow.map((step, index) => (
                     <React.Fragment key={step.stage}>
-                        <div className="text-center flex-shrink-0">
-                            <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
-                            <p className="text-3xl font-bold">{step.value}</p>
+                        <div className="text-center shrink-0 min-w-[80px]">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{step.stage}</p>
+                            <p className="text-2xl font-bold font-mono">{formatZahl(step.value)}</p>
                         </div>
                         {index < uebersicht.salesFlow.length - 1 && (
-                            <div className="text-center flex-shrink-0">
-                                <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
-                                <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
+                            <div className="text-center shrink-0">
+                                <ChevronsRight className="w-6 h-6 text-muted-foreground/30 hidden sm:block mx-auto"/>
+                                <p className="text-emerald-400 font-bold mt-1 text-xs whitespace-nowrap">
+                                  {formatProzent(parseFloat(uebersicht.salesFlow[index+1].conversion || '0'))}
+                                </p>
                             </div>
                         )}
                     </React.Fragment>
@@ -797,7 +825,7 @@ const AktivitaetTab = () => {
     const kpiData = [
         { title: 'Anrufe', value: aktivitaet.calls, target: 80, icon: Phone, color: 'blue' },
         { title: 'Erreichte Leads', value: aktivitaet.reachedLeads, target: 60, icon: UserCheck, color: 'emerald' },
-        { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: Calendar, color: 'purple' },
+        { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: CalendarDays, color: 'purple' },
         { title: 'Überfällige Follow-ups', value: aktivitaet.overdueFollowups, target: 5, icon: AlertTriangle, color: 'amber', invertColor: true },
     ];
 
@@ -814,22 +842,22 @@ const AktivitaetTab = () => {
     }
 
     return (
-         <div className="space-y-8">
+         <div className="space-y-8" id="qhub-reports">
             <CardHeader className="p-0">
                 <CardTitle>Aktivität</CardTitle>
                 <CardDescription>So aktiv war dein Team im ausgewählten Zeitraum.</CardDescription>
             </CardHeader>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {kpiData.map(kpi => {
                     const Icon = kpi.icon;
                     return(
-                    <Card key={kpi.title}>
-                        <CardHeader className="pb-2 flex-row items-center justify-between">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                            <Icon className={cn('w-4 h-4', getKpiColor(kpi.value, kpi.target, kpi.invertColor))} />
+                    <Card key={kpi.title} className="overflow-hidden">
+                        <CardHeader className="p-4 pb-2 flex-row items-center justify-between gap-2 space-y-0">
+                            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate">{kpi.title}</CardTitle>
+                            <Icon className={cn('w-3.5 h-3.5 shrink-0', getKpiColor(kpi.value, kpi.target, kpi.invertColor))} />
                         </CardHeader>
-                        <CardContent>
-                            <p className="text-3xl font-bold">{kpi.value}</p>
+                        <CardContent className="p-4 pt-0">
+                            <p className="text-3xl font-bold font-mono">{formatZahl(kpi.value)}</p>
                         </CardContent>
                     </Card>
                 )})}
@@ -837,92 +865,105 @@ const AktivitaetTab = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader><CardTitle className="text-base">Anrufe über Zeit</CardTitle></CardHeader>
-                    <CardContent><p className="text-muted-foreground italic text-center p-8">Chart für Anrufe über Zeit</p></CardContent>
+                    <CardContent className="h-64 flex items-center justify-center"><p className="text-muted-foreground italic text-sm">Visualisierung lädt...</p></CardContent>
                 </Card>
                  <Card>
                     <CardHeader><CardTitle className="text-base">Termine über Zeit</CardTitle></CardHeader>
-                    <CardContent><p className="text-muted-foreground italic text-center p-8">Chart für Termine über Zeit</p></CardContent>
+                    <CardContent className="h-64 flex items-center justify-center"><p className="text-muted-foreground italic text-sm">Visualisierung lädt...</p></CardContent>
                 </Card>
             </div>
-             <Card>
+             <Card className="overflow-hidden">
                 <CardHeader><CardTitle className="text-base">Wer macht was?</CardTitle></CardHeader>
-                <CardContent>
+                <CardContent className="overflow-x-auto p-0">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead>Anrufe</TableHead><TableHead>Termine</TableHead><TableHead>Follow-ups (erledigt)</TableHead><TableHead>Follow-ups (überfällig)</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead className="text-right">Anrufe</TableHead><TableHead className="text-right">Termine</TableHead><TableHead className="text-right">Follow-ups (erl.)</TableHead><TableHead className="text-right">Follow-ups (offen)</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {aktivitaet.ranking.map(r => (
                                 <TableRow key={r.assignee}>
-                                    <TableCell className="font-medium">{r.assignee}</TableCell>
-                                    <TableCell>{r.calls}</TableCell>
-                                    <TableCell>{r.meetings}</TableCell>
-                                    <TableCell>{r.followupsDone}</TableCell>
-                                    <TableCell className={r.followupsOverdue > 0 ? 'text-rose-400 font-bold' : ''}>{r.followupsOverdue}</TableCell>
+                                    <TableCell className="font-bold">{r.assignee}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatZahl(r.calls)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatZahl(r.meetings)}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatZahl(r.followupsDone)}</TableCell>
+                                    <TableCell className={cn("text-right font-mono font-bold", r.followupsOverdue > 0 ? 'text-rose-400' : 'text-emerald-400')}>{formatZahl(r.followupsOverdue)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </CardContent>
-                 <CardFooter className="gap-2">
-                     <Button variant="outline" size="sm">Call-Queue starten (Überfällige)</Button>
-                     <Button variant="outline" size="sm">Überfällige Follow-ups verteilen</Button>
-                     <Button variant="outline" size="sm">KI: Tagesplan erstellen</Button>
+                 <CardFooter className="p-4 border-t gap-2 flex-wrap">
+                     <Button variant="outline" size="sm">Call-Queue starten</Button>
+                     <Button variant="outline" size="sm">Follow-ups verteilen</Button>
+                     <Button variant="outline" size="sm">KI: Tagesplan</Button>
                  </CardFooter>
             </Card>
          </div>
     )
 };
+
 const AbschluesseTab = () => {
     const { abschluesse } = qSalesReportingData;
     const kpiData = [
-        { title: 'Gewonnene Deals', value: abschluesse.wonDeals.count, icon: CheckCircle2, color: 'emerald' },
-        { title: 'Verlorene Deals', value: abschluesse.lostDeals.count, icon: XCircle, color: 'rose' },
-        { title: 'Win-Rate', value: `${abschluesse.winRate}%`, icon: Percent, color: 'blue' },
-        { title: 'Ø Deal-Wert', value: `€${(abschluesse.avgDealValue/1000).toFixed(1)}k`, icon: DollarSign, color: 'emerald' },
-        { title: 'Ø Abschlussdauer', value: `${abschluesse.avgCycleTime} Tage`, icon: Clock, color: 'purple' },
+        { title: 'Gewonnen', value: abschluesse.wonDeals.count, icon: CheckCircle2, color: 'emerald' },
+        { title: 'Verloren', value: abschluesse.lostDeals.count, icon: XCircle, color: 'rose' },
+        { title: 'Win-Rate', value: abschluesse.winRate, icon: Percent, color: 'blue', isPercent: true },
+        { title: 'Ø Deal-Wert', value: abschluesse.avgDealValue, icon: DollarSign, color: 'emerald', isCurrency: true },
+        { title: 'Ø Dauer', value: abschluesse.avgCycleTime, icon: Clock, color: 'purple', suffix: ' Tage' },
     ];
     return (
-        <div className="space-y-8">
+        <div className="space-y-8" id="qhub-reports">
             <CardHeader className="p-0">
                 <CardTitle>Abschlüsse</CardTitle>
-                <CardDescription>Gewonnene und verlorene Deals im Zeitraum – inkl. Deal-Wert und Dauer.</CardDescription>
+                <CardDescription>Analyse der gewonnenen und verlorenen Verkaufschancen.</CardDescription>
             </CardHeader>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {kpiData.map(kpi => {
                     const Icon = kpi.icon;
                     return(
-                    <Card key={kpi.title}>
-                        <CardHeader className="pb-2 flex-row items-center justify-between">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                            <Icon className={cn('w-4 h-4', `text-${kpi.color}-400`)} />
+                    <Card key={kpi.title} className="overflow-hidden">
+                        <CardHeader className="p-4 pb-2 flex-row items-center justify-between space-y-0 gap-2">
+                            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate">{kpi.title}</CardTitle>
+                            <Icon className={cn('w-3.5 h-3.5 shrink-0', `text-${kpi.color}-400`)} />
                         </CardHeader>
-                        <CardContent><p className="text-3xl font-bold">{kpi.value}</p></CardContent>
+                        <CardContent className="p-4 pt-0">
+                          <p className="text-2xl font-bold font-mono truncate">
+                            {kpi.isCurrency ? formatWaehrung(kpi.value) : kpi.isPercent ? formatProzent(kpi.value) : formatZahl(kpi.value)}
+                            {kpi.suffix}
+                          </p>
+                        </CardContent>
                     </Card>
                 )})}
             </div>
-             <Card>
-                <CardHeader><CardTitle>Deals im Zeitraum</CardTitle></CardHeader>
-                <CardContent>
+             <Card className="overflow-hidden">
+                <CardHeader><CardTitle>Detailübersicht</CardTitle></CardHeader>
+                <CardContent className="p-0 overflow-x-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead>Wert</TableHead><TableHead>Zuständig</TableHead><TableHead>Status</TableHead><TableHead>Dauer</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead className="text-right">Wert</TableHead><TableHead>Zuständig</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Dauer</TableHead></TableRow></TableHeader>
                          <TableBody>
                             {abschluesse.deals.map(d => (
                                 <TableRow key={d.id}>
-                                    <TableCell className="font-medium">{d.name}</TableCell>
-                                    <TableCell>€{d.value.toLocaleString('de-DE')}</TableCell>
+                                    <TableCell className="font-bold">{d.name}</TableCell>
+                                    <TableCell className="text-right font-mono">{formatWaehrung(d.value)}</TableCell>
                                     <TableCell>{d.assignee}</TableCell>
-                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'} className={d.status === 'Won' ? 'bg-emerald-500/20 text-emerald-400' : ''}>{d.status}</Badge></TableCell>
-                                    <TableCell>{d.durationDays} Tage</TableCell>
+                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'} className={cn('text-[10px] font-bold', d.status === 'Won' ? 'bg-emerald-500/20 text-emerald-400' : '')}>{d.status}</Badge></TableCell>
+                                    <TableCell className="text-right font-mono">{d.durationDays} T.</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </CardContent>
             </Card>
-            <Card className="bg-blue-500/10 border-blue-500/20 p-4">
-                <h4 className="text-sm font-bold text-blue-300">KI: Top Gründe für Gewinne</h4>
-                <p className="text-xs text-blue-200 mt-1">Schnelle Reaktionszeit und klare Bedarfsanalyse im Erstgespräch.</p>
-                <h4 className="text-sm font-bold text-blue-300 mt-3">KI: Top Gründe für Verluste</h4>
-                <p className="text-xs text-blue-200 mt-1">Preis wurde zu spät im Prozess thematisiert.</p>
+            <Card className="bg-blue-500/5 border-blue-500/10 p-4">
+                <h4 className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2 flex items-center gap-2"><BrainCircuit className="w-4 h-4"/> KI-Abschluss-Analyse</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold text-emerald-400 uppercase">Top Gründe für Gewinne</p>
+                    <p className="text-xs text-blue-200/80 mt-1">Schnelle Reaktionszeit und klare Bedarfsanalyse im Erstgespräch.</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-rose-400 uppercase">Top Gründe für Verluste</p>
+                    <p className="text-xs text-blue-200/80 mt-1">Preis wurde zu spät im Prozess thematisiert.</p>
+                  </div>
+                </div>
             </Card>
         </div>
     )
@@ -934,85 +975,88 @@ const RisikoTab = () => {
         { title: 'At-Risk Deals', value: risiko.atRiskDeals.length, icon: Flame, color: 'rose' },
         { title: 'Warning Deals', value: risiko.warningDeals.length, icon: AlertTriangle, color: 'amber' },
         { title: 'Überfällige Aktionen', value: risiko.overdueActions, icon: Clock, color: 'amber' },
-        { title: 'Keine Reaktion (>7 T.)', value: risiko.noResponse, icon: UserX, color: 'rose' },
+        { title: 'Keine Reaktion', value: risiko.noResponse, icon: UserX, color: 'rose' },
     ];
     return (
-         <div className="space-y-8">
+         <div className="space-y-8" id="qhub-reports">
             <CardHeader className="p-0">
-                <CardTitle>Risiko</CardTitle>
-                <CardDescription>Deals, die gerade drohen zu kippen – inklusive klarer Gründe und Sofort-Aktionen.</CardDescription>
+                <CardTitle>Risiko-Analyse</CardTitle>
+                <CardDescription>Deals mit gefährdeter Abschlusswahrscheinlichkeit.</CardDescription>
             </CardHeader>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {kpiData.map(kpi => {
                      const Icon = kpi.icon;
                     return (
-                        <Card key={kpi.title}>
-                            <CardHeader className="pb-2 flex-row items-center justify-between">
-                                <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                                <Icon className={cn('w-4 h-4', `text-${kpi.color}-400`)} />
+                        <Card key={kpi.title} className="overflow-hidden">
+                            <CardHeader className="p-4 pb-2 flex-row items-center justify-between space-y-0 gap-2">
+                                <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate">{kpi.title}</CardTitle>
+                                <Icon className={cn('w-3.5 h-3.5 shrink-0', `text-${kpi.color}-400`)} />
                             </CardHeader>
-                            <CardContent><p className="text-3xl font-bold">{kpi.value}</p></CardContent>
+                            <CardContent className="p-4 pt-0">
+                              <p className="text-3xl font-bold font-mono">{formatZahl(kpi.value)}</p>
+                            </CardContent>
                         </Card>
                     )
                 })}
             </div>
              <Card>
-                <CardHeader><CardTitle>Risiko-Liste</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+                <CardHeader><CardTitle>Dringender Handlungsbedarf</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
                     {risiko.atRiskDeals.map(d => (
-                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="font-bold text-foreground">{d.name}</p>
-                                    <p className="text-sm text-muted-foreground">€{d.dealValue.toLocaleString('de-DE')}</p>
+                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5 hover:bg-rose-500/10 transition-colors">
+                            <div className="flex justify-between items-start gap-4">
+                                <div className="min-w-0">
+                                    <p className="font-bold text-foreground truncate">{d.name}</p>
+                                    <p className="text-sm font-mono text-muted-foreground">{formatWaehrung(d.dealValue)}</p>
                                 </div>
-                                <div className="text-right">
-                                     <Badge variant="destructive">At Risk</Badge>
-                                     <p className="text-xs text-rose-400 mt-1">{d.health.reasons.join(', ')}</p>
+                                <div className="text-right shrink-0">
+                                     <Badge variant="destructive" className="text-[10px] font-bold uppercase">At Risk</Badge>
+                                     <p className="text-[10px] text-rose-400 mt-1 font-medium">{d.health.reasons.join(', ')}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-rose-500/20">
-                                <p className="text-sm"><strong className="text-muted-foreground">Nächste Aktion:</strong> {d.nextAction}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-rose-500/10 gap-3">
+                                <p className="text-xs"><strong className="text-muted-foreground uppercase text-[10px]">Nächster Schritt:</strong> {d.nextAction}</p>
                                 <div className="flex gap-2">
-                                    <Button size="sm" variant="outline">Task: Jetzt anrufen</Button>
-                                    <Button size="sm" variant="outline">Follow-up Draft</Button>
+                                    <Button size="sm" variant="outline" className="h-8 text-[10px] font-bold uppercase">Jetzt anrufen</Button>
+                                    <Button size="sm" variant="outline" className="h-8 text-[10px] font-bold uppercase">Follow-up Draft</Button>
                                 </div>
                             </div>
                          </Card>
                     ))}
                 </CardContent>
-                 <CardFooter>
-                     <Button><BrainCircuit className="w-4 h-4 mr-2"/>KI: Rettungsplan für Top 10 erstellen</Button>
+                 <CardFooter className="p-4 border-t">
+                     <Button className="w-full sm:w-auto"><BrainCircuit className="w-4 h-4 mr-2"/>KI: Rettungsplan für Top 10 erstellen</Button>
                  </CardFooter>
             </Card>
         </div>
     )
 };
+
 const LearningsTab = () => {
     const { learnings } = qSalesReportingData;
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" id="qhub-reports">
             <Card>
                 <CardHeader>
                     <CardTitle>Top Verlustgründe</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <ChartContainer config={{}} className="h-64">
+                     <ChartContainer config={{}} className="h-64 w-full">
                          <BarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
                              <XAxis type="number" hide />
-                             <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
-                             <Tooltip content={<ChartTooltipContent />} />
-                             <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
+                             <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }} width={120}/>
+                             <RechartsTooltip content={<ChartTooltipContent />} />
+                             <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} barSize={24} />
                          </BarChart>
                      </ChartContainer>
                 </CardContent>
             </Card>
-             <Card className="bg-blue-500/10 border-blue-500/20">
+             <Card className="bg-blue-500/5 border-blue-500/10">
                 <CardHeader>
-                    <CardTitle className="text-blue-300 text-base flex items-center gap-2"><BrainCircuit/> KI-Zusammenfassung</CardTitle>
+                    <CardTitle className="text-blue-300 text-sm font-bold uppercase flex items-center gap-2"><BrainCircuit className="w-4 h-4"/> KI-Zusammenfassung</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-blue-200">{learnings.aiSummary}</p>
+                    <p className="text-blue-200/90 text-sm leading-relaxed">{learnings.aiSummary}</p>
                 </CardContent>
             </Card>
         </div>
@@ -1022,9 +1066,9 @@ const LearningsTab = () => {
 
 const ReportingView = () => {
     return (
-        <Tabs defaultValue="uebersicht">
-            <div className="flex justify-between items-center mb-6">
-                <TabsList>
+        <Tabs defaultValue="uebersicht" className="w-full">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+                <TabsList className="bg-muted/50 p-1">
                     <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
                     <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
                     <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
@@ -1033,7 +1077,7 @@ const ReportingView = () => {
                 </TabsList>
                 <div className="flex items-center gap-2">
                     <Select defaultValue="30d">
-                        <SelectTrigger className="w-[180px] bg-input">
+                        <SelectTrigger className="w-full md:w-[180px] bg-input">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1081,85 +1125,17 @@ export default function QhubPage() {
     }
   }, [pathname, activeModule]);
 
-  // DERIVED DATA BASED ON USER ROLE
-  const filteredKpiMitarbeiter = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'exec') return kpiMitarbeiter;
-    if (currentUser.role === 'dept_head') return kpiMitarbeiter.filter(m => m.abteilung === currentUser.abteilung);
-    if (currentUser.role === 'team_lead') return kpiMitarbeiter.filter(m => m.team === currentUser.team);
-    return kpiMitarbeiter.filter(m => m.id === currentUser.id);
-  }, [currentUser]);
-
-  const filteredChatThreads = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'exec') return chatThreads;
-    return chatThreads.filter(t => t.participants.includes(currentUser.id));
-  }, [currentUser]);
-
-  const tasksWithDept = useMemo(() => mockTasks.map(t => {
-      const owner = kpiMitarbeiter.find(m => m.name === t.owner);
-      return {...t, deptId: owner?.abteilung, ownerId: owner?.id };
-  }), []);
-
-  const filteredTasks = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'exec') return tasksWithDept;
-    return tasksWithDept.filter(t => t.deptId === currentUser.abteilung || t.ownerId === currentUser.id);
-  }, [currentUser, tasksWithDept]);
-
-  const projectsWithDept = useMemo(() => mockProjects.map(p => {
-    const owner = kpiMitarbeiter.find(m => m.name === p.owner);
-    return {...p, deptId: owner?.abteilung, ownerId: owner?.id };
-  }), []);
-
-  const filteredProjects = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'exec') return projectsWithDept;
-    return projectsWithDept.filter(p => p.deptId === currentUser.abteilung || p.ownerId === currentUser.id);
-  }, [currentUser, projectsWithDept]);
-
-  const filteredSops = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'exec') return mockSops;
-    return mockSops.filter(s => s.deptId === currentUser.abteilung);
-  }, [currentUser]);
-
-  const filteredDocs = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'exec') return allMockDocs;
-    return allMockDocs.filter(doc => doc.deptId === currentUser.abteilung || doc.ownerUserId === currentUser.id);
-  }, [currentUser]);
-  
-  const filteredFolders = useMemo(() => {
-    if (!currentUser) return [];
-    if (currentUser.role === 'exec') return docFolders;
-    return docFolders.filter(folder => folder.deptId === currentUser.abteilung || folder.deptId === 'Geschäftsführung');
-  }, [currentUser]);
-
-  const totalUnread = chatThreads.reduce(
-      (sum, t) => sum + (t.unreadCount || 0),
-      0
-    );
-
-  if (!currentUser) {
-    return <div className="p-8">Benutzer wird geladen oder konnte nicht gefunden werden...</div>;
+  if (!currentUser || !isClient) {
+    return <div className="p-8">Wird geladen...</div>;
   }
 
   const renderModule = () => {
       switch (activeModule) {
           case 'Dashboard': return <DashboardView currentUser={currentUser} filteredKpiMitarbeiter={kpiMitarbeiter} filteredChatThreads={chatThreads} filteredTasks={mockTasks} />;
-          // The components for these views are not fully defined in the provided file, so using a generic one.
-          // In a real scenario, each would have its own component.
-          case 'Termine': return <GenericView title="Termine" />;
-          case 'Aufgaben': return <GenericView title="Aufgaben" />;
           case 'Kontakte': return <ContactsView />;
           case 'Firmen': return <CompaniesView />;
           case 'Deals': return <DealsView />;
           case 'Pipeline': return <PipelineView />;
-          case 'Aktivitäten': return <GenericView title="Aktivitäten" />;
-          case 'Notizen': return <GenericView title="Notizen" />;
-          case 'E-Mails': return <GenericView title="E-Mails" />;
-          case 'Anrufe': return <GenericView title="Anrufe" />;
           case 'Reports': return <ReportingView />;
           default: return <GenericView title={activeModule} />;
       }
@@ -1190,45 +1166,43 @@ export default function QhubPage() {
   );
 
   return (
-    <>
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
         {/* Left Sidebar for Modules */}
         <aside className="w-56 border-r border-border pr-4 space-y-1">
-            <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">Q-Hub</p>
+            <p className="px-3 pb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Q-Hub</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
                 const isActive = activeModule === mod.name;
 
                  return (
-                    <div key={mod.name} className="relative">
-                        <Button
-                            variant={isActive ? 'secondary' : 'ghost'}
-                            onClick={() => handleModuleClick(mod.name)}
-                            className="w-full justify-start text-sm"
-                        >
-                            <Icon className="mr-2 h-4 w-4" />
-                            {mod.name}
-                        </Button>
-                    </div>
+                    <Button
+                        key={mod.name}
+                        variant={isActive ? 'secondary' : 'ghost'}
+                        onClick={() => handleModuleClick(mod.name)}
+                        className="w-full justify-start text-sm"
+                    >
+                        <Icon className="mr-2 h-4 w-4" />
+                        {mod.name}
+                    </Button>
                 )
             })}
         </aside>
 
         {/* Main Area */}
-        <main className="flex-1 pl-6 space-y-6">
-             <header className="flex justify-between items-center">
+        <main className="flex-1 pl-6 space-y-6 overflow-hidden">
+             <header className="flex justify-between items-center gap-4">
                  <div>
                     <h1 className="text-3xl font-bold text-foreground tracking-tight">
                         Q-Hub
                     </h1>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                         Zentrale für Kunden, Vertrieb & Service
                     </p>
                 </div>
-                 {isClient && <div className="flex items-center gap-3">
-                    <div className="relative w-96">
+                 <div className="flex items-center gap-3">
+                    <div className="relative hidden lg:block w-72">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                        <Input type="text" placeholder="Kontakte, Firmen, Deals durchsuchen..." className="pl-9 bg-input" />
+                        <Input type="text" placeholder="Suchen..." className="pl-9 bg-input" />
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -1245,13 +1219,12 @@ export default function QhubPage() {
                             <DropdownMenuItem>Neue Notiz</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                </div>}
+                </div>
             </header>
             <div className="animate-in fade-in duration-300">
                 {renderModule()}
             </div>
         </main>
     </div>
-    </>
   );
 }
