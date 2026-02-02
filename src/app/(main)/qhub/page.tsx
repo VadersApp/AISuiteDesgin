@@ -104,6 +104,8 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { format, formatDistanceToNow } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 // --- Formatting Utils (Scoped to Reports) ---
 const formatZahl = (val: number | string) => {
@@ -115,7 +117,6 @@ const formatZahl = (val: number | string) => {
 const formatProzent = (val: number | string) => {
   const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]+/g, "")) : val;
   if (isNaN(num)) return val;
-  // Intl format for percent usually adds a non-breaking space
   return new Intl.NumberFormat('de-DE', { style: 'percent', minimumFractionDigits: 0 }).format(num / 100);
 };
 
@@ -146,22 +147,6 @@ const modules = [
     { name: 'Anrufe', icon: Phone },
     { name: 'Reports', icon: BarChart3 },
 ];
-
-const mockUploadJob = {
-    uploadJobId: 'upload-xyz-123',
-    status: 'needs_review',
-    fileName: 'Onboarding_Process_New_Sales_Team.pdf',
-    mimeType: 'application/pdf',
-    sizeBytes: 780 * 1024,
-    aiSuggestion: {
-        suggestedTitle: 'Onboarding Prozess für neue Sales-Mitarbeiter',
-        deptId: 'Personalwesen (HR)',
-        folderId: 'folder-hr-2',
-        tags: ['onboarding', 'sales', 'prozess', 'hr'],
-        confidence: 85,
-        reason: 'Dokument enthält Begriffe wie "Sales", "Onboarding", "Neuer Mitarbeiter" und "Vertriebsprozess".'
-    }
-};
 
 const KiTagesfokus = () => (
     <Card className="bg-blue-950/50 border-blue-500/20">
@@ -763,6 +748,199 @@ const PipelineView = () => {
     );
 };
 
+const TermineView = () => {
+    const bookings = getDynamicQalenderBookings();
+    return (
+        <Card>
+            <CardHeader><CardTitle>Termine</CardTitle></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Termin</TableHead>
+                            <TableHead>Gast</TableHead>
+                            <TableHead>Datum</TableHead>
+                            <TableHead>Status</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {bookings.map(b => (
+                            <TableRow key={b.bookingId}>
+                                <TableCell className="font-medium">{b.eventTypeName}</TableCell>
+                                <TableCell>{b.guestName}</TableCell>
+                                <TableCell>{format(new Date(b.startAt), "dd.MM.yyyy HH:mm")}</TableCell>
+                                <TableCell><Badge variant="outline" className="capitalize">{b.status}</Badge></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+};
+
+const TasksListView = () => {
+    return (
+        <Card>
+            <CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Titel</TableHead>
+                            <TableHead>Zuständig</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Priorität</TableHead>
+                            <TableHead>Fällig</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {mockTasks.map(t => (
+                            <TableRow key={t.id}>
+                                <TableCell className="font-medium">{t.title}</TableCell>
+                                <TableCell>{t.owner}</TableCell>
+                                <TableCell><Badge variant="outline">{t.status}</Badge></TableCell>
+                                <TableCell>{t.prio}</TableCell>
+                                <TableCell>{t.due}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+};
+
+const ActivitiesListView = () => {
+    return (
+        <Card>
+            <CardHeader><CardTitle>Aktivitäten</CardTitle></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Typ</TableHead>
+                            <TableHead>Beschreibung</TableHead>
+                            <TableHead>Bezug</TableHead>
+                            <TableHead>Datum</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {allActivities.map(a => (
+                            <TableRow key={a.id}>
+                                <TableCell><Badge variant="secondary">{a.type}</Badge></TableCell>
+                                <TableCell className="font-medium">{a.description}</TableCell>
+                                <TableCell>{a.context}</TableCell>
+                                <TableCell>{format(new Date(a.dueDate), "dd.MM.yyyy")}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+};
+
+const NotesListView = () => {
+    return (
+        <div className="space-y-4">
+            <h2 className="text-xl font-bold px-1">Notizen</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {mockNotes.map(note => (
+                    <Card key={note.id}>
+                        <CardHeader className="pb-2">
+                            <div className="flex justify-between items-start">
+                                <CardTitle className="text-base">{note.title}</CardTitle>
+                                <Badge variant="outline" className="text-[10px] uppercase font-bold">{note.contextType}</Badge>
+                            </div>
+                            <CardDescription>{note.contextName || 'Allgemein'}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground line-clamp-3">{note.content}</p>
+                        </CardContent>
+                        <CardFooter className="pt-0 text-[10px] text-muted-foreground flex justify-between">
+                            <span className="font-bold">{note.createdBy}</span>
+                            <span className="font-mono">{format(new Date(note.createdAt), "dd.MM.yyyy")}</span>
+                        </CardFooter>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const EmailsListView = () => {
+    return (
+        <Card>
+            <CardHeader><CardTitle>E-Mails</CardTitle></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Betreff</TableHead>
+                            <TableHead>Kontakt</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Datum</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {mockEmails.map(e => (
+                            <TableRow key={e.id}>
+                                <TableCell className="font-medium">
+                                    <div className="flex items-center gap-2 truncate max-w-md">
+                                        {e.direction === 'Eingehend' ? <Mail className="w-3 h-3 text-blue-400 shrink-0"/> : <ArrowRight className="w-3 h-3 text-emerald-400 shrink-0"/>}
+                                        {e.subject}
+                                    </div>
+                                </TableCell>
+                                <TableCell>{e.contactName}</TableCell>
+                                <TableCell><Badge variant="outline">{e.status}</Badge></TableCell>
+                                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatDistanceToNow(new Date(e.createdAt), { addSuffix: true, locale: de })}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+};
+
+const CallsListView = () => {
+    return (
+        <Card>
+            <CardHeader><CardTitle>Anrufe</CardTitle></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Typ</TableHead>
+                            <TableHead>Kontakt</TableHead>
+                            <TableHead>Dauer</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Datum</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {mockCalls.map(c => (
+                            <TableRow key={c.id}>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        {c.type === 'Verpasst' ? <PhoneMissed className="w-3 h-3 text-rose-400"/> : c.type === 'Eingehend' ? <PhoneIncoming className="w-3 h-3 text-blue-400"/> : <PhoneOutgoing className="w-3 h-3 text-emerald-400"/>}
+                                        {c.type}
+                                    </div>
+                                </TableCell>
+                                <TableCell>{c.contactName}</TableCell>
+                                <TableCell className="font-mono text-xs">{c.duration || '-'}</TableCell>
+                                <TableCell><Badge variant="outline">{c.status}</Badge></TableCell>
+                                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: de })}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+};
+
 const UebersichtTab = () => {
     const { uebersicht } = qSalesReportingData;
     const IconMap: { [key: string]: React.ElementType } = { 
@@ -1132,10 +1310,16 @@ export default function QhubPage() {
   const renderModule = () => {
       switch (activeModule) {
           case 'Dashboard': return <DashboardView currentUser={currentUser} filteredKpiMitarbeiter={kpiMitarbeiter} filteredChatThreads={chatThreads} filteredTasks={mockTasks} />;
+          case 'Termine': return <TermineView />;
+          case 'Aufgaben': return <TasksListView />;
           case 'Kontakte': return <ContactsView />;
           case 'Firmen': return <CompaniesView />;
           case 'Deals': return <DealsView />;
           case 'Pipeline': return <PipelineView />;
+          case 'Aktivitäten': return <ActivitiesListView />;
+          case 'Notizen': return <NotesListView />;
+          case 'E-Mails': return <EmailsListView />;
+          case 'Anrufe': return <CallsListView />;
           case 'Reports': return <ReportingView />;
           default: return <GenericView title={activeModule} />;
       }
@@ -1221,7 +1405,7 @@ export default function QhubPage() {
                     </DropdownMenu>
                 </div>
             </header>
-            <div className="animate-in fade-in duration-300">
+            <div className="animate-in fade-in duration-300" id="qhub-reports">
                 {renderModule()}
             </div>
         </main>
