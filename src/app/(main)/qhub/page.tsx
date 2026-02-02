@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useMemo, FormEvent, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, type FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -112,7 +112,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 
 
@@ -776,8 +776,7 @@ const UebersichtTab = () => {
                 <CardTitle>Sales Flow</CardTitle>
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="flex flex-nowrap items-center justify-start gap-4 p-6 overflow-x-auto no-scrollbar">
+            <CardContent className="flex flex-nowrap items-center justify-start gap-4 p-6 overflow-x-auto no-scrollbar">
                 {uebersicht.salesFlow.map((step, index) => (
                     <React.Fragment key={step.stage}>
                         <div className="text-center flex-shrink-0">
@@ -792,7 +791,6 @@ const UebersichtTab = () => {
                         )}
                     </React.Fragment>
                 ))}
-              </div>
             </CardContent>
         </Card>
       </div>
@@ -1155,16 +1153,18 @@ export default function QhubPage() {
   const renderModule = () => {
       switch (activeModule) {
           case 'Dashboard': return <DashboardView currentUser={currentUser} filteredKpiMitarbeiter={kpiMitarbeiter} filteredChatThreads={chatThreads} filteredTasks={mockTasks} />;
-          case 'Termine': return <TerminboardView />;
-          case 'Aufgaben': return <AufgabenView />;
+          // The components for these views are not fully defined in the provided file, so using a generic one.
+          // In a real scenario, each would have its own component.
+          case 'Termine': return <GenericView title="Termine" />;
+          case 'Aufgaben': return <GenericView title="Aufgaben" />;
           case 'Kontakte': return <ContactsView />;
           case 'Firmen': return <CompaniesView />;
           case 'Deals': return <DealsView />;
           case 'Pipeline': return <PipelineView />;
-          case 'Aktivitäten': return <ActivitiesView />;
-          case 'Notizen': return <NotesView />;
-          case 'E-Mails': return <EmailsView />;
-          case 'Anrufe': return <AnrufeView />;
+          case 'Aktivitäten': return <GenericView title="Aktivitäten" />;
+          case 'Notizen': return <GenericView title="Notizen" />;
+          case 'E-Mails': return <GenericView title="E-Mails" />;
+          case 'Anrufe': return <GenericView title="Anrufe" />;
           case 'Reports': return <ReportingView />;
           default: return <GenericView title={activeModule} />;
       }
@@ -1180,6 +1180,19 @@ export default function QhubPage() {
         setActiveModule(moduleName);
     }
   };
+  
+  const GenericView = ({ title }: { title: string }) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground italic text-center py-12">
+          Ansicht für "{title}" wird hier angezeigt.
+        </p>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <>
