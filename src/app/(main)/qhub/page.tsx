@@ -776,21 +776,25 @@ const UebersichtTab = () => {
                 <CardTitle>Sales Flow</CardTitle>
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-nowrap items-center justify-start gap-4 p-6 overflow-x-auto no-scrollbar">
-                {uebersicht.salesFlow.map((step, index) => (
-                    <React.Fragment key={step.stage}>
-                        <div className="text-center flex-shrink-0">
-                            <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
-                            <p className="text-3xl font-bold">{step.value}</p>
-                        </div>
-                        {index < uebersicht.salesFlow.length - 1 && (
-                            <div className="text-center flex-shrink-0 px-4">
-                                <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
-                                <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
-                            </div>
-                        )}
-                    </React.Fragment>
-                ))}
+            <CardContent>
+              <div className="overflow-x-auto no-scrollbar -mx-6 px-6">
+                <div className="flex items-center justify-start gap-4 whitespace-nowrap">
+                  {uebersicht.salesFlow.map((step, index) => (
+                      <React.Fragment key={step.stage}>
+                          <div className="text-center flex-shrink-0 p-2">
+                              <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
+                              <p className="text-3xl font-bold">{step.value}</p>
+                          </div>
+                          {index < uebersicht.salesFlow.length - 1 && (
+                              <div className="text-center flex-shrink-0 px-4">
+                                  <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
+                                  <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
+                              </div>
+                          )}
+                      </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </CardContent>
         </Card>
       </div>
@@ -1260,4 +1264,3 @@ export default function QhubPage() {
     </>
   );
 }
-
