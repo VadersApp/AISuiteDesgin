@@ -1006,7 +1006,7 @@ const LearningsTab = () => {
                          <BarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
                              <XAxis type="number" hide />
                              <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
-                             <RechartsTooltip content={<ChartTooltipContent />} />
+                             <Tooltip content={<ChartTooltipContent />} />
                              <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
                          </BarChart>
                      </ChartContainer>
