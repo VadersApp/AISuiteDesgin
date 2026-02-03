@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, FormEvent, useEffect } from 'react';
@@ -90,6 +91,7 @@ import {
   X,
   ChevronsLeft,
   ChevronsRight,
+  FilePen,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -872,6 +874,75 @@ const ProjectCard = ({ project }: { project: any }) => {
     );
 };
 
+const SopCard = ({ sop }: { sop: any }) => {
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Aktiv': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            case 'In Überarbeitung': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            case 'Archiviert': return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+            default: return 'bg-muted';
+        }
+    };
+
+    return (
+        <Card className="flex flex-col h-full hover:border-primary/40 transition-all overflow-hidden relative group">
+            <CardHeader className="p-4 pb-2 border-b border-border/50 flex flex-row items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                    <CardTitle className="text-sm font-bold line-clamp-2" title={sop.title}>{sop.title}</CardTitle>
+                </div>
+                <Badge variant="outline" className={cn("text-[9px] font-black uppercase shrink-0 h-5 px-1.5", getStatusColor(sop.status))}>
+                    {sop.status}
+                </Badge>
+            </CardHeader>
+            <CardContent className="p-4 flex-1 space-y-3">
+                <div className="space-y-1.5">
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                        {sop.desc || 'Diese Arbeitsanweisung beschreibt den standardisierten Prozess für diesen Bereich.'}
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                        <Badge variant="secondary" className="text-[9px] font-bold bg-muted/50 text-muted-foreground border-transparent uppercase">
+                            <Building className="w-2.5 h-2.5 mr-1" /> {sop.deptId}
+                        </Badge>
+                        <Badge variant="secondary" className="text-[9px] font-bold bg-muted/50 text-muted-foreground border-transparent uppercase">
+                            <UserCheckIcon className="w-2.5 h-2.5 mr-1" /> {sop.workplace || 'Alle Rollen'}
+                        </Badge>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-[11px] pt-2 border-t border-border/30">
+                    <div>
+                        <p className="text-muted-foreground font-bold uppercase text-[9px] mb-0.5 tracking-wider">Version</p>
+                        <p className="font-bold flex items-center gap-1">
+                            <HistoryIcon className="w-3 h-3 text-primary/60"/> v{sop.version || '1.0'}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground font-bold uppercase text-[9px] mb-0.5 tracking-wider">Aktualisiert</p>
+                        <p className="font-medium flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-muted-foreground/60"/> 14.01.24
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter className="p-3 bg-muted/10 border-t border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <p className="text-[10px] text-muted-foreground truncate font-medium">Verantwortlich: <span className="text-foreground">{sop.owner || 'Bereichsleitung'}</span></p>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7"><FilePen className="w-3.5 h-3.5"/></Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Version bearbeiten</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-black uppercase px-4">Öffnen</Button>
+                </div>
+            </CardFooter>
+        </Card>
+    );
+};
+
 const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredSops, filteredDocs, filteredFolders } : { currentUser: any, filteredTasks: any[], filteredProjects: any[], filteredSops: any[], filteredDocs: any[], filteredFolders: any[]}) => {
     // Tasks Filter
     const [taskTimeFilter, setTaskTimeFilter] = useState('all');
@@ -882,6 +953,11 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
     const [projectStatusFilter, setProjectStatusFilter] = useState('all');
     const [projectTimeFilter, setProjectTimeFilter] = useState('all');
     const [projectAssigneeFilter, setProjectAssigneeFilter] = useState('me');
+
+    // SOPs Filter
+    const [sopDeptFilter, setSopDeptFilter] = useState('all');
+    const [sopStatusFilter, setSopStatusFilter] = useState('all');
+    const [sopWorkplaceFilter, setSopWorkplaceFilter] = useState('all');
 
     const finalFilteredTasks = useMemo(() => {
         return filteredTasks.filter(t => {
@@ -903,6 +979,17 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
             return true;
         });
     }, [filteredProjects, projectStatusFilter, projectTimeFilter, projectAssigneeFilter, currentUser]);
+
+    const finalFilteredSops = useMemo(() => {
+        return filteredSops.filter(s => {
+            if (sopDeptFilter !== 'all' && s.deptId !== sopDeptFilter) return false;
+            if (sopStatusFilter !== 'all' && s.status !== sopStatusFilter) return false;
+            // Workplace filter is mock logic here
+            return true;
+        });
+    }, [filteredSops, sopDeptFilter, sopStatusFilter, sopWorkplaceFilter]);
+
+    const departments = useMemo(() => [...new Set(kpiMitarbeiter.map(m => m.abteilung))], []);
 
     return (
         <div className="space-y-6">
@@ -1033,12 +1120,58 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
                 <TabsContent value="dokumente" className="mt-4">
                     <DocumentsView currentUser={currentUser} filteredDocs={filteredDocs} filteredFolders={filteredFolders} />
                 </TabsContent>
-                <TabsContent value="sops" className="mt-4">
-                    <Card><CardHeader><CardTitle>Arbeitsanweisungen</CardTitle></CardHeader><CardContent>
-                        <Table><TableHeader><TableRow><TableHead>Titel der Arbeitsanweisung</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                            <TableBody>{filteredSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
-                        </Table>
-                    </CardContent></Card>
+                <TabsContent value="sops" className="mt-6 space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Select value={sopDeptFilter} onValueChange={setSopDeptFilter}>
+                                <SelectTrigger className="h-9 w-48 bg-input text-[10px] font-black uppercase">
+                                    <SelectValue placeholder="Abteilung" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle Abteilungen</SelectItem>
+                                    {departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Select value={sopWorkplaceFilter} onValueChange={setSopWorkplaceFilter}>
+                                <SelectTrigger className="h-9 w-40 bg-input text-[10px] font-black uppercase">
+                                    <SelectValue placeholder="Arbeitsplatz" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle Arbeitsplätze</SelectItem>
+                                    <SelectItem value="office">Büro</SelectItem>
+                                    <SelectItem value="remote">Remote</SelectItem>
+                                    <SelectItem value="field">Außendienst</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={sopStatusFilter} onValueChange={setSopStatusFilter}>
+                                <SelectTrigger className="h-9 w-40 bg-input text-[10px] font-black uppercase">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle Status</SelectItem>
+                                    <SelectItem value="Aktiv">Aktiv</SelectItem>
+                                    <SelectItem value="In Überarbeitung">In Überarbeitung</SelectItem>
+                                    <SelectItem value="Archiviert">Archiviert</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button className="h-9 font-black uppercase text-[10px] tracking-wider"><FileText className="w-4 h-4 mr-2" /> Neue Arbeitsanweisung</Button>
+                    </div>
+
+                    {finalFilteredSops.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-500">
+                            {finalFilteredSops.map(s => (
+                                <SopCard key={s.id} sop={s} />
+                            ))}
+                        </div>
+                    ) : (
+                        <Card className="p-12 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/10">
+                            <FileQuestion className="w-12 h-12 mb-4 opacity-20" />
+                            <h3 className="text-lg font-bold">Noch keine Arbeitsanweisungen vorhanden.</h3>
+                            <p className="text-sm mt-1 max-w-xs">Definieren Sie neue Standards für Ihr Team oder passen Sie die Filter an.</p>
+                            <Button variant="outline" className="mt-6" onClick={() => { setSopDeptFilter('all'); setSopStatusFilter('all'); }}>Filter zurücksetzen</Button>
+                        </Card>
+                    )}
                 </TabsContent>
                 <TabsContent value="urlaubsplaner" className="mt-4">
                     <UrlaubsplanerView currentUser={currentUser} />
@@ -1739,7 +1872,7 @@ export default function QSpacePage() {
   return (
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
         {/* Left Sidebar for Modules */}
-        <aside className="w-64 border-r border-border pr-4 space-y-1">
+        <aside className="w-64 border-r border-border pr-4 space-y-1 shrink-0">
             <p className="px-3 pb-2 text-xs font-bold uppercase text-muted-foreground">Q-Space</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
