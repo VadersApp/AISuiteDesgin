@@ -93,7 +93,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, chatThreads, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, qSalesReportingData, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus } from '@/lib/data';
+import { kpiMitarbeiter, chatThreads, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, qSalesReportingData, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, mockLeaveRequests } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -105,7 +105,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { format, formatDistanceToNow, isToday, isTomorrow, isFuture } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isTomorrow, isFuture, isYesterday, isThisWeek, isBefore, startOfWeek, endOfWeek, subDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 // --- Formatting Utils ---
@@ -826,31 +826,192 @@ const PipelineView = () => {
     );
 };
 
-const ActivitiesListView = () => (
-    <Card id="qhub-reports">
-        <CardHeader><CardTitle>Aktivitäten</CardTitle></CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Typ</TableHead>
-                        <TableHead>Beschreibung</TableHead>
-                        <TableHead>Datum</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {allActivities.map(a => (
-                        <TableRow key={a.id}>
-                            <TableCell><Badge variant="secondary">{a.type}</Badge></TableCell>
-                            <TableCell className="font-medium">{a.description}</TableCell>
-                            <TableCell className="text-xs">{format(new Date(a.dueDate), "dd.MM.yyyy")}</TableCell>
-                        </TableRow>
+const ActivitiesListView = () => {
+    const [selectedFilter, setSelectedFilter] = useState('all');
+    const now = new Date();
+
+    const filteredActivities = useMemo(() => {
+        return allActivities.filter(a => {
+            if (selectedFilter === 'all') return true;
+            if (selectedFilter === 'kontakt') return a.type === 'Termin' || a.type === 'Anruf';
+            if (selectedFilter === 'vertrieb') return a.type === 'Verkaufschance';
+            if (selectedFilter === 'intern') return a.type === 'Aufgabe';
+            return true;
+        }).sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+    }, [selectedFilter]);
+
+    const groupedActivities = useMemo(() => {
+        const groups: { [key: string]: any[] } = {
+            'Heute': [],
+            'Gestern': [],
+            'Diese Woche': [],
+            'Älter': []
+        };
+
+        filteredActivities.forEach(a => {
+            const date = new Date(a.dueDate);
+            if (isToday(date)) groups['Heute'].push(a);
+            else if (isYesterday(date)) groups['Gestern'].push(a);
+            else if (isThisWeek(date, { weekStartsOn: 1 })) groups['Diese Woche'].push(a);
+            else groups['Älter'].push(a);
+        });
+
+        return groups;
+    }, [filteredActivities]);
+
+    // KPI Calculation
+    const stats = useMemo(() => {
+        const heute = allActivities.filter(a => isToday(new Date(a.dueDate)));
+        return {
+            today: heute.length,
+            contacts: heute.filter(a => a.type === 'Termin' || a.type === 'Anruf').length,
+            done: heute.filter(a => a.status === 'Erledigt').length,
+            open: heute.filter(a => a.status === 'Offen').length
+        }
+    }, []);
+
+    const typeIcons: { [key: string]: React.ElementType } = {
+        'Aufgabe': CheckSquare,
+        'Verkaufschance': Handshake,
+        'Termin': CalendarDays,
+        'Anruf': Phone,
+        'E-Mail': Mail,
+        'Notiz': FileText,
+        'Statusänderung': Workflow
+    };
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
+            {/* Sektion 1: Tagesüberblick */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aktivitäten heute</p>
+                    <p className="text-4xl font-bold mt-2">{stats.today || 'Keine'}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kundenkontakte</p>
+                    <p className="text-4xl font-bold mt-2 text-blue-400">{stats.contacts || 'Keine'}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Abgeschlossene Aktionen</p>
+                    <p className="text-4xl font-bold mt-2 text-emerald-400">{stats.done || 'Keine'}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Offene Folgeaktionen</p>
+                    <p className="text-4xl font-bold mt-2 text-amber-400">{stats.open || 'Keine'}</p>
+                </Card>
+            </div>
+
+            {/* Sektion 2: KI-Zusammenfassung */}
+            <Card className="bg-blue-500/5 border-blue-500/20">
+                <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Zusammenfassung
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold text-foreground">Kurzüberblick</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                Heute {stats.today} Aktivitäten, davon {stats.contacts} Kundenkontakte. Ein Deal-Fortschritt in Phase 'Angebot'.
+                            </p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold text-foreground">Wichtig</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                Nach dem Gespräch mit Innovate GmbH wurde noch keine Follow-up Aufgabe angelegt.
+                            </p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold text-foreground">Empfohlene Aktion</p>
+                            <Button size="sm" variant="outline" className="h-7 text-[10px] w-full">Folgeaktion prüfen</Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Sektion 3: Filter & Liste */}
+            <div className="space-y-6">
+                <div className="flex items-center gap-2 px-1">
+                    {[
+                        { id: 'all', label: 'Alle' },
+                        { id: 'kontakt', label: 'Kundenkontakt' },
+                        { id: 'vertrieb', label: 'Vertrieb' },
+                        { id: 'intern', label: 'Intern' }
+                    ].map(f => (
+                        <button
+                            key={f.id}
+                            onClick={() => setSelectedFilter(f.id)}
+                            className={cn(
+                                "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border",
+                                selectedFilter === f.id 
+                                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                    : "bg-muted border-transparent text-muted-foreground hover:border-border"
+                            )}
+                        >
+                            {f.label}
+                        </button>
                     ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+                </div>
+
+                <div className="space-y-8">
+                    {Object.entries(groupedActivities).map(([group, acts]) => (
+                        acts.length > 0 && (
+                            <div key={group} className="space-y-3">
+                                <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">{group}</h4>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {acts.map(a => {
+                                        const Icon = typeIcons[a.type] || Activity;
+                                        return (
+                                            <Card key={a.id} className="p-4 hover:border-primary/40 transition-all overflow-hidden group">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors shrink-0 border border-transparent group-hover:border-primary/20">
+                                                            <Icon className="w-5 h-5"/>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2 mb-0.5">
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase">{a.type}</span>
+                                                                <span className="text-[10px] text-muted-foreground/50">•</span>
+                                                                <span className="text-[10px] text-muted-foreground font-mono">{format(new Date(a.dueDate), 'HH:mm')} Uhr</span>
+                                                            </div>
+                                                            <h4 className="font-bold text-foreground text-sm truncate">{a.description}</h4>
+                                                            <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-1">
+                                                                <LinkIcon className="w-3 h-3"/> {a.context}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[9px] font-black uppercase",
+                                                            a.status === 'Erledigt' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                                        )}>
+                                                            {a.status}
+                                                        </Badge>
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
+                                                            <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase">Öffnen</Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )
+                    ))}
+                    {filteredActivities.length === 0 && (
+                        <div className="text-center py-20 text-muted-foreground italic bg-muted/20 rounded-2xl border-2 border-dashed border-border/50">
+                            Keine Aktivitäten in dieser Ansicht gefunden.
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const NotesListView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="qhub-reports">
@@ -1150,7 +1311,6 @@ const ReportingView = () => (
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
             <TabsList className="bg-muted/50 p-1">
                 <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
-                <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
                 <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
                 <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
                 <TabsTrigger value="risiko">Risiko</TabsTrigger>
