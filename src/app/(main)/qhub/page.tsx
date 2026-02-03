@@ -34,6 +34,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  BarChart,
   BarChart2,
   BarChart3,
   Bot as BotIcon,
@@ -107,6 +108,17 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { format, formatDistanceToNow, isToday, isTomorrow, isFuture, isYesterday, isThisWeek, isBefore, startOfWeek, endOfWeek, subDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { 
+  ResponsiveContainer, 
+  Line, 
+  ComposedChart, 
+  BarChart as RechartsBarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip as RechartsTooltip 
+} from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 // --- Formatting Utils ---
 const formatZahl = (val: number | string) => {
@@ -1413,7 +1425,16 @@ const LearningsTab = () => {
         <div className="space-y-6" id="qhub-reports">
             <Card>
                 <CardHeader><CardTitle>Top Verlustgründe</CardTitle></CardHeader>
-                <CardContent className="h-64 flex items-center justify-center italic text-muted-foreground">Chart visualisiert Verlustgründe...</CardContent>
+                <CardContent>
+                     <ChartContainer config={{}} className="h-64">
+                         <RechartsBarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
+                             <XAxis type="number" hide />
+                             <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
+                             <RechartsTooltip content={<ChartTooltipContent />} />
+                             <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
+                         </RechartsBarChart>
+                     </ChartContainer>
+                </CardContent>
             </Card>
              <Card className="bg-blue-500/5 border-blue-500/10">
                 <CardHeader>
@@ -1509,7 +1530,7 @@ export default function QhubPage() {
   };
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-10rem)]">
+    <div className="flex h-full min-h-[calc(100vh-10rem)]" id="qhub-reports">
         <aside className="w-56 border-r border-border pr-4 space-y-1">
             <p className="px-3 pb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Q-Hub</p>
             {modules.map((mod) => {
@@ -1551,7 +1572,7 @@ export default function QhubPage() {
                     </DropdownMenu>
                 </div>
             </header>
-            <div className="animate-in fade-in duration-300" id="qhub-reports">
+            <div className="animate-in fade-in duration-300">
                 {renderModule()}
             </div>
         </main>
