@@ -87,6 +87,9 @@ import {
   Workflow,
   X,
   XCircle,
+  Sparkles,
+  FilePen,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -104,7 +107,7 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isTomorrow, isFuture } from 'date-fns';
 import { de } from 'date-fns/locale';
 
 // --- Formatting Utils (Scoped to Reports) ---
@@ -132,45 +135,6 @@ const parseValue = (val: any) => {
   if (typeof val === 'string' && !isNaN(Number(val))) return formatZahl(val);
   return val;
 };
-
-const modules = [
-    { name: 'Dashboard', icon: LayoutDashboard },
-    { name: 'Termine', icon: CalendarDays },
-    { name: 'Aufgaben', icon: CheckSquare },
-    { name: 'Kontakte', icon: Users },
-    { name: 'Firmen', icon: Building2 },
-    { name: 'Deals', icon: Handshake },
-    { name: 'Pipeline', icon: Kanban },
-    { name: 'Aktivitäten', icon: Activity },
-    { name: 'Notizen', icon: FileText },
-    { name: 'E-Mails', icon: Mail },
-    { name: 'Anrufe', icon: Phone },
-    { name: 'Reports', icon: BarChart3 },
-];
-
-const KiTagesfokus = () => (
-    <Card className="bg-blue-950/50 border-blue-500/20">
-        <CardHeader>
-            <CardTitle className="text-base text-blue-300 flex items-center gap-2">
-                <BrainCircuit className="w-5 h-5"/>
-                KI-Tagesfokus
-            </CardTitle>
-            <CardDescription className="text-blue-400/70">Ihre Top 5 Prioritäten für heute, basierend auf Dringlichkeit und Relevanz.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-            {kiTagesfokus.map((item, index) => (
-                <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-500/10">
-                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
-                    <div>
-                        <p className="text-sm font-bold text-white">{item.title}</p>
-                        <p className="text-xs text-blue-400/80">{item.reason}</p>
-                    </div>
-                </div>
-            ))}
-        </CardContent>
-    </Card>
-);
-
 
 const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
     
@@ -268,7 +232,26 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                             </Button>
                         </CardFooter>
                     </Card>
-                    <KiTagesfokus />
+                    <Card className="bg-blue-950/50 border-blue-500/20">
+                        <CardHeader>
+                            <CardTitle className="text-base text-blue-300 flex items-center gap-2">
+                                <BrainCircuit className="w-5 h-5"/>
+                                KI-Tagesfokus
+                            </CardTitle>
+                            <CardDescription className="text-blue-400/70">Ihre Top 5 Prioritäten für heute, basierend auf Dringlichkeit und Relevanz.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            {kiTagesfokus.map((item, index) => (
+                                <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-500/10">
+                                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
+                                    <div>
+                                        <p className="text-sm font-bold text-white">{item.title}</p>
+                                        <p className="text-xs text-blue-400/80">{item.reason}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
             
@@ -356,6 +339,190 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
     );
 };
 
+const TermineView = () => {
+    const bookings = getDynamicQalenderBookings().map(b => ({
+        ...b,
+        startDate: new Date(b.startAt)
+    })).sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+    const today = new Date();
+    const todayBookings = bookings.filter(b => isToday(b.startDate));
+    const customerBookings = bookings.filter(b => b.role === 'Interessent' || b.role === 'Kunde');
+    const nextBooking = bookings.find(b => (isFuture(b.startDate) || isToday(b.startDate)) && b.startDate >= new Date());
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Sektion 1 & 2: Tagesüberblick & KI-Hinweise */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <div className="lg:col-span-8">
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1">Tagesüberblick</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden min-w-0">
+                            <p className="text-xs font-bold text-muted-foreground uppercase truncate">Termine heute</p>
+                            <p className="text-4xl font-bold text-foreground mt-2">{todayBookings.length}</p>
+                        </Card>
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden min-w-0">
+                            <p className="text-xs font-bold text-muted-foreground uppercase truncate">Nächster Termin</p>
+                            <div className="mt-2">
+                                {nextBooking ? (
+                                    <>
+                                        <p className="text-2xl font-bold text-primary">{format(nextBooking.startDate, 'HH:mm')} Uhr</p>
+                                        <p className="text-xs text-muted-foreground font-medium truncate mt-1">{nextBooking.guestName}</p>
+                                    </>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground italic mt-2">Keine anstehenden Termine</p>
+                                )}
+                            </div>
+                        </Card>
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden min-w-0">
+                            <p className="text-xs font-bold text-muted-foreground uppercase truncate">Termine mit Kunden</p>
+                            <p className="text-4xl font-bold text-emerald-400 mt-2">{customerBookings.length}</p>
+                        </Card>
+                    </div>
+                </div>
+                
+                <div className="lg:col-span-4">
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1">KI-Hinweise</h3>
+                    <Card className="bg-blue-500/5 border-blue-500/20 h-[calc(100%-2.5rem)] overflow-hidden flex flex-col">
+                        <CardHeader className="p-4 pb-2">
+                            <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-blue-400 animate-pulse"/>
+                                KI-Assistent
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 flex-1 overflow-auto custom-scrollbar">
+                            <div className="space-y-4 text-xs">
+                                <div className="space-y-2">
+                                    <p className="font-bold text-blue-200 flex items-center gap-1.5"><Info className="w-3.5 h-3.5"/> Heute wichtig</p>
+                                    <ul className="space-y-1.5 pl-1">
+                                        <li className="text-blue-300/90 leading-relaxed">
+                                            {nextBooking ? `Vorbereitung für ${nextBooking.guestName}: Letzter Kontakt vor 14 Tagen.` : 'Keine kritischen Fristen heute.'}
+                                        </li>
+                                        {customerBookings.length > 0 && (
+                                            <li className="text-blue-300/90 leading-relaxed">Fokus auf Abschluss: {customerBookings.length} Kunden-Gespräche stehen an.</li>
+                                        )}
+                                    </ul>
+                                </div>
+                                <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                                    <p className="font-bold text-blue-200 mb-1 flex items-center gap-1.5"><CheckSquare className="w-3.5 h-3.5"/> Vorbereitung</p>
+                                    <p className="text-[10px] text-blue-300/80 leading-relaxed">Prüfen Sie die letzten Notizen im CRM vor dem nächsten Gespräch.</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="p-4 pt-0">
+                            <Button variant="outline" size="sm" className="w-full text-[10px] h-8 border-blue-500/30 text-blue-300 hover:bg-blue-500/20 transition-all">
+                                <FileText className="w-3 h-3 mr-2"/> Vorbereitung öffnen
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Sektion 3: Nächste Termine */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                    <h3 className="text-lg font-bold text-foreground">Nächste Termine</h3>
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">Vergangene Termine anzeigen</Button>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                    {bookings.length > 0 ? bookings.map(b => {
+                        const isApptToday = isToday(b.startDate);
+                        const isApptTomorrow = isTomorrow(b.startDate);
+                        
+                        return (
+                            <Card key={b.bookingId} className={cn(
+                                "group p-4 hover:border-primary/40 transition-all shadow-sm overflow-hidden",
+                                isApptToday && "border-l-4 border-l-primary bg-primary/[0.02]"
+                            )}>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="flex items-start gap-4 min-w-0">
+                                        <div className={cn(
+                                            "text-center shrink-0 min-w-[85px] p-2.5 rounded-xl border border-border transition-colors group-hover:bg-muted",
+                                            isApptToday && "bg-primary/5 border-primary/20"
+                                        )}>
+                                            <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{format(b.startDate, 'EEE', {locale: de})}</p>
+                                            <p className="text-xl font-bold leading-none my-1">{format(b.startDate, 'dd.MM.')}</p>
+                                            <p className={cn("text-xs font-black mt-1", isApptToday ? "text-primary" : "text-muted-foreground")}>
+                                                {format(b.startDate, 'HH:mm')} Uhr
+                                            </p>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                                <h4 className="font-bold text-base text-foreground truncate">{b.eventTypeName}</h4>
+                                                <Badge variant="outline" className={cn(
+                                                    "text-[9px] uppercase font-bold px-1.5 h-4.5 border-border",
+                                                    b.role === 'Interessent' && "text-blue-400 bg-blue-500/5 border-blue-500/10",
+                                                    b.role === 'Kunde' && "text-emerald-400 bg-emerald-500/5 border-emerald-500/10",
+                                                    b.role === 'Intern' && "text-slate-400 bg-slate-500/5 border-slate-500/10"
+                                                )}>
+                                                    {b.role}
+                                                </Badge>
+                                                {isApptToday && <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Heute</span>}
+                                                {isApptTomorrow && <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Morgen</span>}
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                                <p className="flex items-center gap-1.5 font-medium text-foreground/80"><UserIcon className="w-3.5 h-3.5"/> {b.guestName}</p>
+                                                {b.context && (
+                                                    <p className="flex items-center gap-1.5"><Handshake className="w-3.5 h-3.5"/> {b.context}</p>
+                                                )}
+                                                <p className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> {b.assignedOwnerId}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0 sm:ml-4 sm:border-l sm:pl-4 border-border/50">
+                                        <Button variant="outline" size="sm" className="h-9 px-4 text-xs font-bold gap-2 hover:bg-accent">
+                                            <FilePen className="w-3.5 h-3.5"/> Notiz
+                                        </Button>
+                                        <Button variant="default" size="sm" className="h-9 px-4 text-xs font-bold gap-2">
+                                            Öffnen
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Card>
+                        )
+                    }) : (
+                        <div className="text-center py-20 bg-muted/30 border border-dashed rounded-2xl">
+                            <CalendarDays className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4"/>
+                            <p className="text-muted-foreground font-medium">Keine anstehenden Termine gefunden.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const TasksListView = () => {
+    return (
+        <Card>
+            <CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Titel</TableHead>
+                            <TableHead>Zuständig</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Priorität</TableHead>
+                            <TableHead>Fällig</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {mockTasks.map(t => (
+                            <TableRow key={t.id}>
+                                <TableCell className="font-medium">{t.title}</TableCell>
+                                <TableCell>{t.owner}</TableCell>
+                                <TableCell><Badge variant="outline">{t.status}</Badge></TableCell>
+                                <TableCell>{t.prio}</TableCell>
+                                <TableCell>{t.due}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    );
+};
 
 const ContactsView = () => {
     const router = useRouter();
@@ -745,69 +912,6 @@ const PipelineView = () => {
                 })}
             </div>
         </div>
-    );
-};
-
-const TermineView = () => {
-    const bookings = getDynamicQalenderBookings();
-    return (
-        <Card>
-            <CardHeader><CardTitle>Termine</CardTitle></CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Termin</TableHead>
-                            <TableHead>Gast</TableHead>
-                            <TableHead>Datum</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {bookings.map(b => (
-                            <TableRow key={b.bookingId}>
-                                <TableCell className="font-medium">{b.eventTypeName}</TableCell>
-                                <TableCell>{b.guestName}</TableCell>
-                                <TableCell>{format(new Date(b.startAt), "dd.MM.yyyy HH:mm")}</TableCell>
-                                <TableCell><Badge variant="outline" className="capitalize">{b.status}</Badge></TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    );
-};
-
-const TasksListView = () => {
-    return (
-        <Card>
-            <CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Titel</TableHead>
-                            <TableHead>Zuständig</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Priorität</TableHead>
-                            <TableHead>Fällig</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {mockTasks.map(t => (
-                            <TableRow key={t.id}>
-                                <TableCell className="font-medium">{t.title}</TableCell>
-                                <TableCell>{t.owner}</TableCell>
-                                <TableCell><Badge variant="outline">{t.status}</Badge></TableCell>
-                                <TableCell>{t.prio}</TableCell>
-                                <TableCell>{t.due}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
     );
 };
 
