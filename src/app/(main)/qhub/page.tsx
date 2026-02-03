@@ -828,19 +828,20 @@ const PipelineView = () => {
 
 const ActivitiesListView = () => {
     const [selectedFilter, setSelectedFilter] = useState('all');
-    const now = new Date();
+    const [groupBy, setGroupBy] = useState<'time' | 'customer'>('time');
+    const [isPerformanceOpen, setIsPerformanceOpen] = useState(false);
 
     const filteredActivities = useMemo(() => {
         return allActivities.filter(a => {
             if (selectedFilter === 'all') return true;
-            if (selectedFilter === 'kontakt') return a.type === 'Termin' || a.type === 'Anruf';
+            if (selectedFilter === 'kontakt') return a.type === 'Termin' || a.type === 'Anruf' || a.type === 'E-Mail';
             if (selectedFilter === 'vertrieb') return a.type === 'Verkaufschance';
             if (selectedFilter === 'intern') return a.type === 'Aufgabe';
             return true;
         }).sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
     }, [selectedFilter]);
 
-    const groupedActivities = useMemo(() => {
+    const groupedByTime = useMemo(() => {
         const groups: { [key: string]: any[] } = {
             'Heute': [],
             'Gestern': [],
@@ -859,12 +860,23 @@ const ActivitiesListView = () => {
         return groups;
     }, [filteredActivities]);
 
+    const groupedByCustomer = useMemo(() => {
+        // Use mockContacts as base for customer timelines
+        return mockContacts.map(contact => {
+            const customerActivities = allActivities.filter(a => a.context.includes(contact.name) || a.context.includes(contact.company));
+            return {
+                ...contact,
+                activities: customerActivities.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+            };
+        }).filter(c => c.activities.length > 0);
+    }, []);
+
     // KPI Calculation
     const stats = useMemo(() => {
         const heute = allActivities.filter(a => isToday(new Date(a.dueDate)));
         return {
             today: heute.length,
-            contacts: heute.filter(a => a.type === 'Termin' || a.type === 'Anruf').length,
+            contacts: heute.filter(a => a.type === 'Termin' || a.type === 'Anruf' || a.type === 'E-Mail').length,
             done: heute.filter(a => a.status === 'Erledigt').length,
             open: heute.filter(a => a.status === 'Offen').length
         }
@@ -882,81 +894,90 @@ const ActivitiesListView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* Sektion 1: Tagesüberblick */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aktivitäten heute</p>
-                    <p className="text-4xl font-bold mt-2">{stats.today || 'Keine'}</p>
-                </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kundenkontakte</p>
-                    <p className="text-4xl font-bold mt-2 text-blue-400">{stats.contacts || 'Keine'}</p>
-                </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Abgeschlossene Aktionen</p>
-                    <p className="text-4xl font-bold mt-2 text-emerald-400">{stats.done || 'Keine'}</p>
-                </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Offene Folgeaktionen</p>
-                    <p className="text-4xl font-bold mt-2 text-amber-400">{stats.open || 'Keine'}</p>
-                </Card>
+            {/* Sektion 1: Tagesüberblick & Eskalationen */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aktivitäten heute</p>
+                        <p className="text-4xl font-bold mt-2">{stats.today || 'Keine'}</p>
+                    </Card>
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kundenkontakte</p>
+                        <p className="text-4xl font-bold mt-2 text-blue-400">{stats.contacts || 'Keine'}</p>
+                    </Card>
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Abgeschlossen</p>
+                        <p className="text-4xl font-bold mt-2 text-emerald-400">{stats.done || 'Keine'}</p>
+                    </Card>
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Folgeaktionen</p>
+                        <p className="text-4xl font-bold mt-2 text-amber-400">{stats.open || 'Keine'}</p>
+                    </Card>
+                </div>
+                
+                <div className="lg:col-span-4">
+                    <Card className="bg-amber-500/5 border-amber-500/20 h-full flex flex-col">
+                        <CardHeader className="p-4 pb-2">
+                            <CardTitle className="text-sm text-amber-400 flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4"/> Hinweise & Eskalationen
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 space-y-3 flex-1 overflow-auto">
+                            <div className="space-y-1.5 p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                                <p className="text-[11px] font-bold text-amber-200">Kritisch</p>
+                                <p className="text-[11px] text-amber-300 leading-tight">Seit 10 Tagen kein Kontakt mit Innovate GmbH.</p>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase p-0 hover:bg-transparent text-amber-400">Jetzt anrufen</Button>
+                            </div>
+                            <div className="space-y-1.5 p-2 bg-slate-500/10 rounded-lg border border-slate-500/20">
+                                <p className="text-[11px] font-bold text-slate-300">Achtung</p>
+                                <p className="text-[11px] text-slate-400 leading-tight">Deal 'Data Corp' ohne geplante Folgeaktion.</p>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase p-0 hover:bg-transparent text-primary">Aufgabe anlegen</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
 
-            {/* Sektion 2: KI-Zusammenfassung */}
-            <Card className="bg-blue-500/5 border-blue-500/20">
-                <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Zusammenfassung
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-1">
-                            <p className="text-xs font-bold text-foreground">Kurzüberblick</p>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Heute {stats.today} Aktivitäten, davon {stats.contacts} Kundenkontakte. Ein Deal-Fortschritt in Phase 'Angebot'.
-                            </p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-xs font-bold text-foreground">Wichtig</p>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                Nach dem Gespräch mit Innovate GmbH wurde noch keine Follow-up Aufgabe angelegt.
-                            </p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-xs font-bold text-foreground">Empfohlene Aktion</p>
-                            <Button size="sm" variant="outline" className="h-7 text-[10px] w-full">Folgeaktion prüfen</Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Sektion 2: Umschalter & Filter */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
+                <div className="flex items-center gap-2 p-1 bg-muted rounded-xl border border-border">
+                    <button 
+                        onClick={() => setGroupBy('time')}
+                        className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", groupBy === 'time' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                    >
+                        Nach Zeit
+                    </button>
+                    <button 
+                        onClick={() => setGroupBy('customer')}
+                        className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", groupBy === 'customer' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                    >
+                        Nach Kunde
+                    </button>
+                </div>
 
-            {/* Sektion 3: Filter & Liste */}
-            <div className="space-y-6">
-                <div className="flex items-center gap-2 px-1">
-                    {[
-                        { id: 'all', label: 'Alle' },
-                        { id: 'kontakt', label: 'Kundenkontakt' },
-                        { id: 'vertrieb', label: 'Vertrieb' },
-                        { id: 'intern', label: 'Intern' }
-                    ].map(f => (
+                <div className="flex items-center gap-2">
+                    {['all', 'kontakt', 'vertrieb', 'intern'].map(f => (
                         <button
-                            key={f.id}
-                            onClick={() => setSelectedFilter(f.id)}
+                            key={f}
+                            onClick={() => setSelectedFilter(f)}
                             className={cn(
                                 "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border",
-                                selectedFilter === f.id 
-                                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
+                                selectedFilter === f 
+                                    ? "bg-primary border-primary text-primary-foreground"
                                     : "bg-muted border-transparent text-muted-foreground hover:border-border"
                             )}
                         >
-                            {f.label}
+                            {f === 'all' ? 'Alle' : f === 'kontakt' ? 'Kundenkontakt' : f === 'vertrieb' ? 'Vertrieb' : 'Intern'}
                         </button>
                     ))}
                 </div>
+            </div>
 
-                <div className="space-y-8">
-                    {Object.entries(groupedActivities).map(([group, acts]) => (
+            {/* Sektion 3: Hauptliste (Zeit vs. Kunde) */}
+            <div className="space-y-8">
+                {groupBy === 'time' ? (
+                    /* Zeit-Timeline */
+                    Object.entries(groupedByTime).map(([group, acts]) => (
                         acts.length > 0 && (
                             <div key={group} className="space-y-3">
                                 <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">{group}</h4>
@@ -964,7 +985,7 @@ const ActivitiesListView = () => {
                                     {acts.map(a => {
                                         const Icon = typeIcons[a.type] || Activity;
                                         return (
-                                            <Card key={a.id} className="p-4 hover:border-primary/40 transition-all overflow-hidden group">
+                                            <Card key={a.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden">
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                                     <div className="flex items-center gap-4 flex-1 min-w-0">
                                                         <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors shrink-0 border border-transparent group-hover:border-primary/20">
@@ -1001,13 +1022,111 @@ const ActivitiesListView = () => {
                                 </div>
                             </div>
                         )
-                    ))}
-                    {filteredActivities.length === 0 && (
-                        <div className="text-center py-20 text-muted-foreground italic bg-muted/20 rounded-2xl border-2 border-dashed border-border/50">
-                            Keine Aktivitäten in dieser Ansicht gefunden.
+                    ))
+                ) : (
+                    /* Kunden-Timeline */
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {groupedByCustomer.map(customer => (
+                            <Card key={customer.id} className="flex flex-col h-full overflow-hidden hover:border-primary/30 transition-all">
+                                <CardHeader className="p-4 bg-muted/30 border-b border-border/50">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <div className="min-w-0">
+                                            <h4 className="font-bold text-foreground truncate">{customer.name}</h4>
+                                            <p className="text-[10px] text-muted-foreground truncate">{customer.company}</p>
+                                        </div>
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase bg-background">
+                                            {customer.leadStatus}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase mt-2">Letzter Kontakt: {customer.lastActivity}</p>
+                                </CardHeader>
+                                <CardContent className="p-4 flex-1">
+                                    <div className="space-y-4">
+                                        {customer.activities.slice(0, 3).map((act, i) => {
+                                            const Icon = typeIcons[act.type] || Activity;
+                                            return (
+                                                <div key={i} className="flex gap-3 text-xs relative">
+                                                    {i < customer.activities.slice(0, 3).length - 1 && (
+                                                        <div className="absolute left-[13px] top-7 bottom-[-16px] w-[1px] bg-border"/>
+                                                    )}
+                                                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0 border border-border/50">
+                                                        <Icon className="w-3.5 h-3.5"/>
+                                                    </div>
+                                                    <div className="min-w-0 pt-0.5">
+                                                        <p className="font-bold text-foreground truncate">{act.description}</p>
+                                                        <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(act.dueDate), 'dd.MM.yyyy HH:mm')} Uhr</p>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                        {customer.activities.length > 3 && (
+                                            <Button variant="ghost" className="w-full h-8 text-[10px] font-bold text-muted-foreground uppercase hover:text-primary">
+                                                + {customer.activities.length - 3} weitere anzeigen
+                                            </Button>
+                                        )}
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="p-2 border-t border-border/50 bg-muted/10 gap-2">
+                                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[10px] font-bold uppercase">Anrufen</Button>
+                                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[10px] font-bold uppercase">Termin</Button>
+                                    <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] font-bold uppercase">Kunde öffnen</Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Sektion 4: Leistungsauswertung (Collapsible) */}
+            <div className="pt-8 border-t border-border">
+                <Collapsible open={isPerformanceOpen} onOpenChange={setIsPerformanceOpen}>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between hover:bg-transparent px-1 text-muted-foreground">
+                            <span className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest">
+                                <BarChart className="w-4 h-4"/> Aktivitäts-Übersicht (ROI & Trends)
+                            </span>
+                            <ChevronDown className={cn("w-4 h-4 transition-transform", isPerformanceOpen && "rotate-180")}/>
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Card className="p-6 bg-blue-500/5 border-blue-500/10">
+                                <h5 className="text-xs font-bold text-blue-300 uppercase mb-4 flex items-center gap-2"><Clock className="w-3.5 h-3.5"/> Diese Woche</h5>
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center pb-2 border-b border-blue-500/10">
+                                        <span className="text-sm text-blue-200/80">Kundenkontakte geführt</span>
+                                        <span className="text-lg font-bold text-white">42</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pb-2 border-b border-blue-500/10">
+                                        <span className="text-sm text-blue-200/80">Termine durchgeführt</span>
+                                        <span className="text-lg font-bold text-white">12</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-blue-200/80">Folgeaktionen erstellt</span>
+                                        <span className="text-lg font-bold text-white">28</span>
+                                    </div>
+                                </div>
+                            </Card>
+                            <Card className="p-6 bg-emerald-500/5 border-emerald-500/10">
+                                <h5 className="text-xs font-bold text-emerald-300 uppercase mb-4 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5"/> Letzte 30 Tage</h5>
+                                <div className="space-y-4">
+                                    <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                                        <p className="text-xs font-bold text-emerald-200">Aktivitäts-Trend</p>
+                                        <p className="text-sm text-emerald-300 mt-1 flex items-center gap-2">
+                                            Die Gesamtaktivität ist im Vergleich zum Vormonat stabil geblieben.
+                                        </p>
+                                    </div>
+                                    <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                                        <p className="text-xs font-bold text-blue-200">Effizienz-Verhältnis</p>
+                                        <p className="text-sm text-blue-300 mt-1">
+                                            Im Schnitt führten 18 qualifizierte Gespräche zu 4 erfolgreichen Abschlüssen.
+                                        </p>
+                                    </div>
+                                </div>
+                            </Card>
                         </div>
-                    )}
-                </div>
+                    </CollapsibleContent>
+                </Collapsible>
             </div>
         </div>
     );
