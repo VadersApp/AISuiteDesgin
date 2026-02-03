@@ -49,7 +49,6 @@ const navGroups = [
     {
         title: "Interaktion",
         items: [
-            { href: "/chat", icon: MessageSquare, label: "Chat" },
             { href: "/knowledge-base", icon: Database, label: "Wissensdatenbank" },
             { href: "/meeting", icon: Video, label: "AI Meeting" },
         ]
@@ -59,7 +58,6 @@ const navGroups = [
         items: [
             { href: "/departments", icon: Building2, label: "Abteilungen" },
             { href: "/agents", icon: Bot, label: "KI-Mitarbeiter" },
-            { href: "/tasks", icon: CheckSquare, label: "Aufgaben" },
         ]
     },
     {
