@@ -110,7 +110,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { format, formatDistanceToNow, isToday, isTomorrow, isFuture } from 'date-fns';
 import { de } from 'date-fns/locale';
 
-// --- Formatting Utils (Scoped to Reports) ---
+// --- Formatting Utils ---
 const formatZahl = (val: number | string) => {
   const num = typeof val === 'string' ? parseFloat(val.replace(/[^0-9.-]+/g, "")) : val;
   if (isNaN(num)) return val;
@@ -136,8 +136,9 @@ const parseValue = (val: any) => {
   return val;
 };
 
+// --- Sub-Views ---
+
 const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThreads, filteredTasks } : { currentUser: any, filteredKpiMitarbeiter: any[], filteredChatThreads: any[], filteredTasks: any[]}) => {
-    
     const geschaeftsueberblickData = [
         { title: "Pipeline-Gesamtwert", value: "€90.000", subtitle: "Summe aller aktiven Verkaufschancen" },
         { title: "Aktive Deals", value: "4", subtitle: "Derzeit in Bearbeitung" },
@@ -172,11 +173,9 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
     ];
 
     return (
-        <div className="space-y-8">
-            
+        <div className="space-y-8" id="qhub-reports">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    {/* ZONE A: Geschäftsüberblick */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {geschaeftsueberblickData.map(item => (
                             <Card key={item.title}>
@@ -184,35 +183,24 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                                     <CardTitle className="text-base">{item.title}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <p className="text-4xl font-bold">{item.value}</p>
+                                    <p className="text-4xl font-bold">{parseValue(item.value)}</p>
                                     <p className="text-xs text-muted-foreground">{item.subtitle}</p>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
-
-                    {/* ZONE B: Handlungsbedarf & Systemzustand */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {handlungsbedarfData.map(item => {
                             const Icon = item.icon;
                             return (
-                                <Card key={item.title} className={`p-4 bg-card/50 border-l-4 border-${item.color}-500/50`}>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <div className="flex items-center gap-4">
-                                                    <Icon className={`h-6 w-6 text-${item.color}-400`} />
-                                                    <div>
-                                                        <p className="text-2xl font-bold">{item.value}</p>
-                                                        <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-                                                    </div>
-                                                </div>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{item.tooltip}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
+                                <Card key={item.title} className={cn("p-4 bg-card/50 border-l-4", item.color === 'rose' ? 'border-rose-500/50' : item.color === 'amber' ? 'border-amber-500/50' : item.color === 'blue' ? 'border-blue-500/50' : 'border-emerald-500/50')}>
+                                    <div className="flex items-center gap-4">
+                                        <Icon className={cn("h-6 w-6", item.color === 'rose' ? 'text-rose-400' : item.color === 'amber' ? 'text-amber-400' : item.color === 'blue' ? 'text-blue-400' : 'text-emerald-400')} />
+                                        <div>
+                                            <p className="text-2xl font-bold">{item.value}</p>
+                                            <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                                        </div>
+                                    </div>
                                 </Card>
                             );
                         })}
@@ -224,117 +212,44 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                             <CardTitle className="text-rose-400 text-base">KI-Eskalation</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm">Deal 'Data Corp' stagniert, da seit 5 Tagen keine Aktivität verzeichnet wurde. Die Reaktionsfrist ist überschritten.</p>
+                            <p className="text-sm">Deal 'Data Corp' stagniert, da seit 5 Tagen keine Aktivität verzeichnet wurde.</p>
                         </CardContent>
                         <CardFooter>
                             <Button asChild variant="outline" size="sm">
-                                <Link href="/dashboard/system-alerts/esc-deal-stagnation">Details ansehen</Link>
+                                <Link href="/dashboard/system-alerts/esc-deal-stagnation">Details</Link>
                             </Button>
                         </CardFooter>
                     </Card>
                     <Card className="bg-blue-950/50 border-blue-500/20">
                         <CardHeader>
                             <CardTitle className="text-base text-blue-300 flex items-center gap-2">
-                                <BrainCircuit className="w-5 h-5"/>
-                                KI-Tagesfokus
+                                <BrainCircuit className="w-5 h-5"/> KI-Tagesfokus
                             </CardTitle>
-                            <CardDescription className="text-blue-400/70">Ihre Top 5 Prioritäten für heute, basierend auf Dringlichkeit und Relevanz.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {kiTagesfokus.map((item, index) => (
+                            {kiTagesfokus.slice(0, 3).map((item, index) => (
                                 <div key={index} className="flex items-start gap-3 p-2 rounded-lg hover:bg-blue-500/10">
                                     <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
-                                    <div>
-                                        <p className="text-sm font-bold text-white">{item.title}</p>
-                                        <p className="text-xs text-blue-400/80">{item.reason}</p>
-                                    </div>
+                                    <p className="text-sm font-bold text-white line-clamp-1">{item.title}</p>
                                 </div>
                             ))}
                         </CardContent>
                     </Card>
                 </div>
             </div>
-            
-            {/* ZONE C: Operative Bereiche */}
             <div className="space-y-8">
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Vertrieb – aktueller Status</CardTitle>
-                    </CardHeader>
+                    <CardHeader><CardTitle>Vertrieb – Status</CardTitle></CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {vertriebsKpiData.map(kpi => (
                              <Card key={kpi.title} className="p-4 bg-muted/50">
                                 <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                                <p className="text-3xl font-bold">{kpi.value}</p>
+                                <p className="text-3xl font-bold">{parseValue(kpi.value)}</p>
                              </Card>
-                        ))}
-                    </CardContent>
-                    <CardFooter>
-                         <Button variant="link" className="p-0 h-auto text-primary" asChild>
-                            <Link href="/qhub?module=Pipeline">Zur Pipeline →</Link>
-                         </Button>
-                    </CardFooter>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Kundenservice – aktuelle Lage</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {kundenserviceKpiData.map(kpi => (
-                            <TooltipProvider key={kpi.title}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Card className="p-4 bg-muted/50">
-                                            <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                                            <p className="text-3xl font-bold">{kpi.value}</p>
-                                        </Card>
-                                    </TooltipTrigger>
-                                    {kpi.tooltip && <TooltipContent><p>{kpi.tooltip}</p></TooltipContent>}
-                                </Tooltip>
-                            </TooltipProvider>
-                        ))}
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Marketing & Kundenentwicklung</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                         {marketingKpiData.map(kpi => (
-                             <TooltipProvider key={kpi.title}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                         <Card className="p-4 bg-muted/50">
-                                            <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                                            <p className="text-3xl font-bold">{kpi.value}</p>
-                                         </Card>
-                                    </TooltipTrigger>
-                                    {kpi.tooltip && <TooltipContent><p>{kpi.tooltip}</p></TooltipContent>}
-                                </Tooltip>
-                            </TooltipProvider>
                         ))}
                     </CardContent>
                 </Card>
             </div>
-
-            {/* ZONE D: Analyse & Wirkung */}
-            <Collapsible>
-                <CollapsibleTrigger asChild>
-                    <Button variant="outline" className="w-full">
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        Analyse anzeigen
-                    </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-4">
-                    <Card className="p-6">
-                        <CardTitle>Analyse & Wirkung</CardTitle>
-                        <p className="text-muted-foreground mt-2">Detaillierte Auswertungen zu Trends, Prozess-Durchlaufzeiten und KI-Leistung.</p>
-                         <div className="text-center py-12 text-muted-foreground italic">Inhalt für Analyse & Wirkung wird hier angezeigt.</div>
-                    </Card>
-                </CollapsibleContent>
-            </Collapsible>
         </div>
     );
 };
@@ -345,23 +260,21 @@ const TermineView = () => {
         startDate: new Date(b.startAt)
     })).sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
-    const today = new Date();
     const todayBookings = bookings.filter(b => isToday(b.startDate));
     const customerBookings = bookings.filter(b => b.role === 'Interessent' || b.role === 'Kunde');
     const nextBooking = bookings.find(b => (isFuture(b.startDate) || isToday(b.startDate)) && b.startDate >= new Date());
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Sektion 1 & 2: Tagesüberblick & KI-Hinweise */}
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                 <div className="lg:col-span-8">
                     <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1">Tagesüberblick</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Card className="p-5 flex flex-col justify-between overflow-hidden min-w-0">
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden">
                             <p className="text-xs font-bold text-muted-foreground uppercase truncate">Termine heute</p>
                             <p className="text-4xl font-bold text-foreground mt-2">{todayBookings.length}</p>
                         </Card>
-                        <Card className="p-5 flex flex-col justify-between overflow-hidden min-w-0">
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden">
                             <p className="text-xs font-bold text-muted-foreground uppercase truncate">Nächster Termin</p>
                             <div className="mt-2">
                                 {nextBooking ? (
@@ -370,11 +283,11 @@ const TermineView = () => {
                                         <p className="text-xs text-muted-foreground font-medium truncate mt-1">{nextBooking.guestName}</p>
                                     </>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground italic mt-2">Keine anstehenden Termine</p>
+                                    <p className="text-sm text-muted-foreground italic mt-2">Keine Termine</p>
                                 )}
                             </div>
                         </Card>
-                        <Card className="p-5 flex flex-col justify-between overflow-hidden min-w-0">
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden">
                             <p className="text-xs font-bold text-muted-foreground uppercase truncate">Termine mit Kunden</p>
                             <p className="text-4xl font-bold text-emerald-400 mt-2">{customerBookings.length}</p>
                         </Card>
@@ -383,207 +296,95 @@ const TermineView = () => {
                 
                 <div className="lg:col-span-4">
                     <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1">KI-Hinweise</h3>
-                    <Card className="bg-blue-500/5 border-blue-500/20 h-[calc(100%-2.5rem)] overflow-hidden flex flex-col">
+                    <Card className="bg-blue-500/5 border-blue-500/20 h-[calc(100%-2.5rem)] flex flex-col">
                         <CardHeader className="p-4 pb-2">
                             <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-blue-400 animate-pulse"/>
-                                KI-Assistent
+                                <Sparkles className="w-4 h-4 text-blue-400"/> KI-Assistent
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0 flex-1 overflow-auto custom-scrollbar">
+                        <CardContent className="p-4 pt-0 flex-1 overflow-auto">
                             <div className="space-y-4 text-xs">
                                 <div className="space-y-2">
                                     <p className="font-bold text-blue-200 flex items-center gap-1.5"><Info className="w-3.5 h-3.5"/> Heute wichtig</p>
-                                    <ul className="space-y-1.5 pl-1">
-                                        <li className="text-blue-300/90 leading-relaxed">
-                                            {nextBooking ? `Vorbereitung für ${nextBooking.guestName}: Letzter Kontakt vor 14 Tagen.` : 'Keine kritischen Fristen heute.'}
-                                        </li>
-                                        {customerBookings.length > 0 && (
-                                            <li className="text-blue-300/90 leading-relaxed">Fokus auf Abschluss: {customerBookings.length} Kunden-Gespräche stehen an.</li>
-                                        )}
-                                    </ul>
-                                </div>
-                                <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                    <p className="font-bold text-blue-200 mb-1 flex items-center gap-1.5"><CheckSquare className="w-3.5 h-3.5"/> Vorbereitung</p>
-                                    <p className="text-[10px] text-blue-300/80 leading-relaxed">Prüfen Sie die letzten Notizen im CRM vor dem nächsten Gespräch.</p>
+                                    <p className="text-blue-300/90 leading-relaxed">
+                                        {nextBooking ? `Vorbereitung für ${nextBooking.guestName}: Letzter Kontakt vor 14 Tagen.` : 'Keine kritischen Fristen heute.'}
+                                    </p>
                                 </div>
                             </div>
                         </CardContent>
-                        <CardFooter className="p-4 pt-0">
-                            <Button variant="outline" size="sm" className="w-full text-[10px] h-8 border-blue-500/30 text-blue-300 hover:bg-blue-500/20 transition-all">
-                                <FileText className="w-3 h-3 mr-2"/> Vorbereitung öffnen
-                            </Button>
-                        </CardFooter>
                     </Card>
                 </div>
             </div>
 
-            {/* Sektion 3: Nächste Termine */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between px-1">
-                    <h3 className="text-lg font-bold text-foreground">Nächste Termine</h3>
-                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">Vergangene Termine anzeigen</Button>
-                </div>
+                <h3 className="text-lg font-bold text-foreground px-1">Nächste Termine</h3>
                 <div className="grid grid-cols-1 gap-3">
-                    {bookings.length > 0 ? bookings.map(b => {
-                        const isApptToday = isToday(b.startDate);
-                        const isApptTomorrow = isTomorrow(b.startDate);
-                        
-                        return (
-                            <Card key={b.bookingId} className={cn(
-                                "group p-4 hover:border-primary/40 transition-all shadow-sm overflow-hidden",
-                                isApptToday && "border-l-4 border-l-primary bg-primary/[0.02]"
-                            )}>
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <div className="flex items-start gap-4 min-w-0">
-                                        <div className={cn(
-                                            "text-center shrink-0 min-w-[85px] p-2.5 rounded-xl border border-border transition-colors group-hover:bg-muted",
-                                            isApptToday && "bg-primary/5 border-primary/20"
-                                        )}>
-                                            <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">{format(b.startDate, 'EEE', {locale: de})}</p>
-                                            <p className="text-xl font-bold leading-none my-1">{format(b.startDate, 'dd.MM.')}</p>
-                                            <p className={cn("text-xs font-black mt-1", isApptToday ? "text-primary" : "text-muted-foreground")}>
-                                                {format(b.startDate, 'HH:mm')} Uhr
-                                            </p>
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                                <h4 className="font-bold text-base text-foreground truncate">{b.eventTypeName}</h4>
-                                                <Badge variant="outline" className={cn(
-                                                    "text-[9px] uppercase font-bold px-1.5 h-4.5 border-border",
-                                                    b.role === 'Interessent' && "text-blue-400 bg-blue-500/5 border-blue-500/10",
-                                                    b.role === 'Kunde' && "text-emerald-400 bg-emerald-500/5 border-emerald-500/10",
-                                                    b.role === 'Intern' && "text-slate-400 bg-slate-500/5 border-slate-500/10"
-                                                )}>
-                                                    {b.role}
-                                                </Badge>
-                                                {isApptToday && <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest">Heute</span>}
-                                                {isApptTomorrow && <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Morgen</span>}
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                                                <p className="flex items-center gap-1.5 font-medium text-foreground/80"><UserIcon className="w-3.5 h-3.5"/> {b.guestName}</p>
-                                                {b.context && (
-                                                    <p className="flex items-center gap-1.5"><Handshake className="w-3.5 h-3.5"/> {b.context}</p>
-                                                )}
-                                                <p className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> {b.assignedOwnerId}</p>
-                                            </div>
-                                        </div>
+                    {bookings.map(b => (
+                        <Card key={b.bookingId} className={cn("p-4 hover:border-primary/40 transition-all", isToday(b.startDate) && "border-l-4 border-l-primary")}>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="text-center min-w-[80px] p-2 bg-muted rounded-lg">
+                                        <p className="text-[10px] font-bold uppercase text-muted-foreground">{format(b.startDate, 'EEE', {locale: de})}</p>
+                                        <p className="text-lg font-bold">{format(b.startDate, 'dd.MM.')}</p>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0 sm:ml-4 sm:border-l sm:pl-4 border-border/50">
-                                        <Button variant="outline" size="sm" className="h-9 px-4 text-xs font-bold gap-2 hover:bg-accent">
-                                            <FilePen className="w-3.5 h-3.5"/> Notiz
-                                        </Button>
-                                        <Button variant="default" size="sm" className="h-9 px-4 text-xs font-bold gap-2">
-                                            Öffnen
-                                        </Button>
+                                    <div>
+                                        <h4 className="font-bold text-foreground">{b.eventTypeName}</h4>
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                            <Badge variant="outline" className="text-[10px]">{b.role}</Badge>
+                                            <span>{format(b.startDate, 'HH:mm')} Uhr</span>
+                                            <span>•</span>
+                                            <span>{b.guestName}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </Card>
-                        )
-                    }) : (
-                        <div className="text-center py-20 bg-muted/30 border border-dashed rounded-2xl">
-                            <CalendarDays className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4"/>
-                            <p className="text-muted-foreground font-medium">Keine anstehenden Termine gefunden.</p>
-                        </div>
-                    )}
+                                <Button variant="outline" size="sm">Details</Button>
+                            </div>
+                        </Card>
+                    ))}
                 </div>
             </div>
         </div>
     );
 };
 
-const TasksListView = () => {
-    return (
-        <Card>
-            <CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Titel</TableHead>
-                            <TableHead>Zuständig</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Priorität</TableHead>
-                            <TableHead>Fällig</TableHead>
+const TasksListView = () => (
+    <Card id="qhub-reports">
+        <CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Titel</TableHead>
+                        <TableHead>Zuständig</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Priorität</TableHead>
+                        <TableHead>Fällig</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {mockTasks.map(t => (
+                        <TableRow key={t.id}>
+                            <TableCell className="font-medium">{t.title}</TableCell>
+                            <TableCell>{t.owner}</TableCell>
+                            <TableCell><Badge variant="outline">{t.status}</Badge></TableCell>
+                            <TableCell>{t.prio}</TableCell>
+                            <TableCell>{t.due}</TableCell>
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {mockTasks.map(t => (
-                            <TableRow key={t.id}>
-                                <TableCell className="font-medium">{t.title}</TableCell>
-                                <TableCell>{t.owner}</TableCell>
-                                <TableCell><Badge variant="outline">{t.status}</Badge></TableCell>
-                                <TableCell>{t.prio}</TableCell>
-                                <TableCell>{t.due}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    );
-};
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
 
 const ContactsView = () => {
     const router = useRouter();
-    const [filter, setFilter] = useState('Alle');
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const filteredContacts = useMemo(() => {
-        let contacts = mockContacts;
-
-        if (searchTerm) {
-            const lowercasedFilter = searchTerm.toLowerCase();
-            contacts = contacts.filter(c => 
-                c.name.toLowerCase().includes(lowercasedFilter) ||
-                c.company.toLowerCase().includes(lowercasedFilter) ||
-                c.email.toLowerCase().includes(lowercasedFilter)
-            );
-        }
-        
-        switch (filter) {
-            case 'Aktiv':
-                return contacts.filter(c => c.status === 'Aktiv');
-            case 'Mit Handlungsbedarf':
-                return contacts.filter(c => c.priority === 'critical' || c.priority === 'attention');
-            case 'Kunden':
-                return contacts.filter(c => c.leadStatus === 'Kunde' || c.leadStatus === 'In Betreuung');
-            case 'Alle':
-            default:
-                return contacts;
-        }
-    }, [filter, searchTerm]);
-
-    const getPriorityClass = (priority: string | undefined) => {
-        switch (priority) {
-            case 'critical': return 'bg-rose-500/5 hover:bg-rose-500/10';
-            case 'attention': return 'bg-amber-500/5 hover:bg-amber-500/10';
-            default: return 'hover:bg-muted/50';
-        }
-    };
-    
     return (
-        <Card>
+        <Card id="qhub-reports">
             <CardHeader>
                 <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Kontakte</CardTitle>
-                        <CardDescription>Alle bekannten Personen im System</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Input placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-48 bg-input" />
-                        <Button><Plus className="mr-2 h-4 w-4" /> Kontakt erstellen</Button>
-                    </div>
-                </div>
-                <div className="pt-4">
-                    <Tabs value={filter} onValueChange={setFilter}>
-                        <TabsList>
-                            <TabsTrigger value="Alle">Alle</TabsTrigger>
-                            <TabsTrigger value="Aktiv">Aktiv</TabsTrigger>
-                            <TabsTrigger value="Mit Handlungsbedarf">Mit Handlungsbedarf</TabsTrigger>
-                            <TabsTrigger value="Kunden">Kunden</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    <CardTitle>Kontakte</CardTitle>
+                    <Button><Plus className="mr-2 h-4 w-4" /> Kontakt erstellen</Button>
                 </div>
             </CardHeader>
             <CardContent>
@@ -593,26 +394,18 @@ const ContactsView = () => {
                             <TableHead>Name</TableHead>
                             <TableHead>Firma</TableHead>
                             <TableHead>E-Mail</TableHead>
-                            <TableHead>Kontaktphase</TableHead>
                             <TableHead>Zuständig</TableHead>
-                            <TableHead>Kontakt aktiv</TableHead>
-                            <TableHead>Letzte Aktivität</TableHead>
+                            <TableHead>Status</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredContacts.map(c => (
-                            <TableRow key={c.id} onClick={() => router.push(`/qhub/contacts/${c.id}`)} className={cn("cursor-pointer", getPriorityClass(c.priority))}>
+                        {mockContacts.map(c => (
+                            <TableRow key={c.id} onClick={() => router.push(`/qhub/contacts/${c.id}`)} className="cursor-pointer hover:bg-muted/50">
                                 <TableCell className="font-medium">{c.name}</TableCell>
                                 <TableCell>{c.company}</TableCell>
                                 <TableCell>{c.email}</TableCell>
-                                <TableCell><Badge variant="outline">{c.leadStatus}</Badge></TableCell>
                                 <TableCell>{c.owner}</TableCell>
-                                <TableCell>
-                                    <Badge variant={c.status === 'Aktiv' ? 'default' : 'secondary'} className={c.status === 'Aktiv' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}>
-                                        {c.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{c.lastActivity}</TableCell>
+                                <TableCell><Badge variant={c.status === 'Aktiv' ? 'default' : 'secondary'}>{c.status}</Badge></TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -622,428 +415,187 @@ const ContactsView = () => {
     );
 };
 
-const CompaniesView = () => {
-    const [filter, setFilter] = useState('Alle');
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const filteredCompanies = useMemo(() => {
-        return mockCompanies.filter(c => {
-            const matchesSearch = searchTerm === '' || c.name.toLowerCase().includes(searchTerm.toLowerCase());
-            if (!matchesSearch) return false;
-
-            switch (filter) {
-                case 'Aktiv':
-                    return c.status === 'Aktiv';
-                case 'Mit Verkaufschancen':
-                    return c.aktiveVorgange.includes('Verkaufschance');
-                case 'Mit Servicefällen':
-                    return c.aktiveVorgange.includes('Servicefall');
-                case 'Alle':
-                default:
-                    return true;
-            }
-        });
-    }, [filter, searchTerm]);
-
-    const getPriorityClass = (priority?: string) => {
-        switch (priority) {
-            case 'critical': return 'bg-rose-500/5 hover:bg-rose-500/10';
-            case 'attention': return 'bg-amber-500/5 hover:bg-amber-500/10';
-            default: return 'hover:bg-muted/50';
-        }
-    };
-
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>Firmen</CardTitle>
-                        <CardDescription>Alle Unternehmen im System</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Input placeholder="Suchen..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-48 bg-input" />
-                        <Button><Plus className="mr-2 h-4 w-4" /> Firma erstellen</Button>
-                    </div>
-                </div>
-                <div className="pt-4">
-                    <Tabs value={filter} onValueChange={setFilter}>
-                        <TabsList>
-                            <TabsTrigger value="Alle">Alle</TabsTrigger>
-                            <TabsTrigger value="Aktiv">Aktiv</TabsTrigger>
-                            <TabsTrigger value="Mit Verkaufschancen">Mit Verkaufschancen</TabsTrigger>
-                            <TabsTrigger value="Mit Servicefällen">Mit Servicefällen</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="font-semibold">Firmenname</TableHead>
-                            <TableHead>Branche</TableHead>
-                            <TableHead>Zuständig</TableHead>
-                            <TableHead>Firma aktiv</TableHead>
-                            <TableHead>Aktive Vorgänge</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredCompanies.map(c => (
-                            <TableRow key={c.id} className={cn("cursor-pointer", getPriorityClass(c.priority))}>
-                                <TableCell className="font-semibold text-foreground">{c.name}</TableCell>
-                                <TableCell className="text-muted-foreground">{c.industry}</TableCell>
-                                <TableCell>{c.owner}</TableCell>
-                                <TableCell>
-                                    <Badge variant={c.status === 'Aktiv' ? 'default' : 'secondary'} className={c.status === 'Aktiv' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}>
-                                        {c.status}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{c.aktiveVorgange}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    );
-};
-
-const DealsView = () => {
-    const [filter, setFilter] = useState('Alle');
-
-    const filteredDeals = useMemo(() => {
-        let deals = mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren');
-        switch (filter) {
-            case 'Mit Handlungsbedarf':
-                return deals.filter(d => d.slaDue === 'heute' || d.slaDue === 'morgen' || d.slaDue === 'überschritten');
-            case 'Frist kritisch':
-                return deals.filter(d => d.slaDue === 'überschritten');
-            case 'In Verhandlung':
-                return deals.filter(d => d.stage === 'Verhandlung');
-            case 'Alle':
-            default:
-                return deals;
-        }
-    }, [filter]);
-
-    const getPriorityClass = (slaDue?: string | null) => {
-        if (slaDue === 'überschritten') return 'bg-rose-500/5 hover:bg-rose-500/10';
-        if (slaDue === 'heute' || slaDue === 'morgen') return 'bg-amber-500/5 hover:bg-amber-500/10';
-        return 'hover:bg-muted/50';
-    };
-    
-    const formatFristStatus = (slaDue: string | null) => {
-        if (!slaDue) return "Im Plan";
-        if (slaDue === 'überschritten') return "Reaktionsfrist überschritten";
-        return `Nächster Schritt ${slaDue} fällig`;
-    };
-
-    return (
-     <Card>
+const CompaniesView = () => (
+    <Card id="qhub-reports">
         <CardHeader>
             <div className="flex justify-between items-center">
-                <div>
-                    <CardTitle>Deals</CardTitle>
-                    <CardDescription>Alle laufenden Verkaufschancen</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Input placeholder="Suchen..." className="w-48 bg-input" />
-                    <Button><Plus className="mr-2 h-4 w-4" /> Deal erstellen</Button>
-                </div>
-            </div>
-            <div className="pt-4">
-                <Tabs value={filter} onValueChange={setFilter}>
-                    <TabsList>
-                        <TabsTrigger value="Alle">Alle</TabsTrigger>
-                        <TabsTrigger value="Mit Handlungsbedarf">Mit Handlungsbedarf</TabsTrigger>
-                        <TabsTrigger value="Frist kritisch">Frist kritisch</TabsTrigger>
-                        <TabsTrigger value="In Verhandlung">In Verhandlung</TabsTrigger>
-                    </TabsList>
-                </Tabs>
+                <CardTitle>Firmen</CardTitle>
+                <Button><Plus className="mr-2 h-4 w-4" /> Firma erstellen</Button>
             </div>
         </CardHeader>
         <CardContent>
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="font-bold">Deal-Name</TableHead>
-                        <TableHead>Nächster Schritt</TableHead>
-                        <TableHead>Phase</TableHead>
-                        <TableHead>Wert</TableHead>
-                        <TableHead>Frist-Status</TableHead>
+                        <TableHead>Firmenname</TableHead>
+                        <TableHead>Branche</TableHead>
                         <TableHead>Zuständig</TableHead>
-                        <TableHead className="text-right">KI-Analyse</TableHead>
+                        <TableHead>Status</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filteredDeals.map(d => (
-                        <TableRow key={d.id} className={cn("cursor-pointer", getPriorityClass(d.slaDue))}>
-                            <TableCell className="font-semibold text-foreground">{d.name}</TableCell>
-                            <TableCell className="text-primary font-medium">{d.nextStep}</TableCell>
-                            <TableCell><Badge variant="secondary">{d.stage}</Badge></TableCell>
-                            <TableCell>{d.value}</TableCell>
-                            <TableCell>
-                                <Badge variant="outline" className={cn(
-                                    'text-xs',
-                                    d.slaDue === 'überschritten' && 'border-rose-500/50 text-rose-400',
-                                    (d.slaDue === 'heute' || d.slaDue === 'morgen') && 'border-amber-500/50 text-amber-400',
-                                )}>{formatFristStatus(d.slaDue)}</Badge>
-                            </TableCell>
-                            <TableCell>{d.owner}</TableCell>
-                             <TableCell className="text-right">
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button variant="ghost" size="sm"><BrainCircuit className="w-4 h-4 mr-2" /> Analysieren</Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>KI-Dealcheck: {d.name}</DialogTitle>
-                                        </DialogHeader>
-                                        <div className="space-y-4 py-4 text-sm">
-                                            <p><strong className="text-muted-foreground">Aktuelle Phase:</strong> {d.stage}</p>
-                                            <h4 className="font-bold text-base mt-4">Checkliste für Phase '{d.stage}'</h4>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li>Angebot vollständig versendet?</li>
-                                                <li>Entscheider identifiziert?</li>
-                                                <li>Budget bestätigt?</li>
-                                            </ul>
-                                            <h4 className="font-bold text-base mt-4">KI-Risikoanalyse</h4>
-                                            <p>Der Deal stagniert, da seit 5 Tagen keine Aktivität verzeichnet wurde. Nächster Schritt sollte dringend erfolgen.</p>
-                                            <h4 className="font-bold text-base mt-4">Vorgeschlagener nächster Schritt</h4>
-                                            <p>Anruf zur Klärung des Angebotsstatus.</p>
-                                        </div>
-                                    </DialogContent>
-                                </Dialog>
-                            </TableCell>
+                    {mockCompanies.map(c => (
+                        <TableRow key={c.id}>
+                            <TableCell className="font-semibold">{c.name}</TableCell>
+                            <TableCell>{c.industry}</TableCell>
+                            <TableCell>{c.owner}</TableCell>
+                            <TableCell><Badge variant={c.status === 'Aktiv' ? 'default' : 'secondary'}>{c.status}</Badge></TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
         </CardContent>
     </Card>
-    );
-};
+);
 
-const PipelineView = () => {
-    const formatCurrency = (valueStr: string) => {
-        const number = parseInt(valueStr.replace(/[^0-9]/g, ''), 10);
-        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
-    };
-
-    const formatFristStatus = (slaDue: string | null): string => {
-        if (!slaDue) return "";
-        if (slaDue === 'überschritten') return "Reaktionsfrist überschritten";
-        return `Nächster Schritt ${slaDue} fällig`;
-    };
-
-    return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start min-h-[60vh]">
-                {pipelineStages.map(phase => {
-                    const dealsInPhase = mockDeals.filter(d => d.stage === phase);
-                    const phaseTotalValue = dealsInPhase.reduce((sum, deal) => sum + parseInt(deal.value.replace(/[^0-9]/g, ''), 10), 0);
-                    const phaseDealCount = dealsInPhase.length;
-
-                    return (
-                        <div key={phase} className="bg-muted/50 rounded-xl flex flex-col h-full overflow-hidden">
-                            <div className="text-left p-4 border-b border-border">
-                                <h3 className="text-base font-bold text-foreground">{phase}</h3>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    {phaseDealCount} {phaseDealCount !== 1 ? 'Deals' : 'Deal'} <span className="mx-1">•</span> {formatCurrency(phaseTotalValue.toString())}
-                                </p>
-                            </div>
-                            <div className="space-y-3 p-3 flex-1 overflow-y-auto custom-scrollbar">
-                                {dealsInPhase.map(deal => {
-                                    const isCritical = deal.slaDue === 'überschritten';
-                                    const isAttention = deal.slaDue === 'heute' || deal.slaDue === 'morgen';
-                                    
-                                    const cardClasses = cn(
-                                        "p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all border",
-                                        isCritical ? 'bg-rose-500/5 border-rose-500/20' : 
-                                        isAttention ? 'bg-amber-500/5 border-amber-500/20' : 
-                                        'bg-card border-border'
-                                    );
-
-                                    return (
-                                        <Card key={deal.id} className={cardClasses}>
-                                            <div>
-                                                <h4 className="font-bold text-foreground truncate">{deal.name}</h4>
-                                                <p className="text-sm text-muted-foreground">{formatCurrency(deal.value)}</p>
-                                            </div>
-                                            
-                                            <div className="my-2 py-2 border-t border-border/50 text-xs">
-                                                {deal.inactiveDays > 0 && (
-                                                    <p className="text-muted-foreground/80 mb-1">{deal.inactiveDays} Tage ohne Aktivität</p>
-                                                )}
-                                                {deal.slaDue && (
-                                                    <div className={cn("flex items-center gap-1.5 font-medium", isCritical ? "text-rose-500" : isAttention ? "text-amber-500" : "text-muted-foreground")}>
-                                                        <AlertTriangle className="w-3.5 h-3.5" />
-                                                        <span className="truncate">{formatFristStatus(deal.slaDue)}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="bg-primary/10 p-2 rounded-md text-center mt-2">
-                                                <p className="text-[9px] font-bold text-primary/80 uppercase">Nächster Schritt:</p>
-                                                <p className="text-sm font-bold text-primary truncate">{deal.nextStep}</p>
-                                            </div>
-                                            
-                                            {deal.aiNextStepSuggestion && (
-                                                <Collapsible className="mt-2">
-                                                    <CollapsibleTrigger asChild>
-                                                        <Button variant="ghost" size="sm" className="w-full text-xs gap-2 text-blue-400 hover:text-blue-300">
-                                                            <BrainCircuit className="w-4 h-4"/> KI-Vorschlag
-                                                        </Button>
-                                                    </CollapsibleTrigger>
-                                                    <CollapsibleContent className="p-2 bg-blue-950/50 rounded-md border border-blue-500/20 mt-1 text-xs">
-                                                        <p className="font-bold">Vorschlag:</p>
-                                                        <p>{deal.aiNextStepSuggestion}</p>
-                                                        {deal.aiRisk && <p className="mt-1 text-amber-400/80"><strong className="font-bold">Risiko:</strong> {deal.aiRisk}</p>}
-                                                    </CollapsibleContent>
-                                                </Collapsible>
-                                            )}
-                                        </Card>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    );
-                })}
+const DealsView = () => (
+    <Card id="qhub-reports">
+        <CardHeader>
+            <div className="flex justify-between items-center">
+                <CardTitle>Deals</CardTitle>
+                <Button><Plus className="mr-2 h-4 w-4" /> Deal erstellen</Button>
             </div>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Deal-Name</TableHead>
+                        <TableHead>Phase</TableHead>
+                        <TableHead>Wert</TableHead>
+                        <TableHead>Zuständig</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren').map(d => (
+                        <TableRow key={d.id}>
+                            <TableCell className="font-semibold">{d.name}</TableCell>
+                            <TableCell><Badge variant="secondary">{d.stage}</Badge></TableCell>
+                            <TableCell>{d.value}</TableCell>
+                            <TableCell>{d.owner}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
+
+const PipelineView = () => (
+    <div className="space-y-4" id="qhub-reports">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start">
+            {pipelineStages.map(phase => (
+                <div key={phase} className="bg-muted/50 rounded-xl flex flex-col min-h-[400px]">
+                    <div className="p-4 border-b border-border">
+                        <h3 className="text-sm font-bold truncate">{phase}</h3>
+                    </div>
+                    <div className="p-3 space-y-3">
+                        {mockDeals.filter(d => d.stage === phase).map(deal => (
+                            <Card key={deal.id} className="p-3 shadow-sm text-xs">
+                                <p className="font-bold truncate">{deal.name}</p>
+                                <p className="text-muted-foreground mt-1">{deal.value}</p>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            ))}
         </div>
-    );
-};
+    </div>
+);
 
-const ActivitiesListView = () => {
-    return (
-        <Card>
-            <CardHeader><CardTitle>Aktivitäten</CardTitle></CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Typ</TableHead>
-                            <TableHead>Beschreibung</TableHead>
-                            <TableHead>Bezug</TableHead>
-                            <TableHead>Datum</TableHead>
+const ActivitiesListView = () => (
+    <Card id="qhub-reports">
+        <CardHeader><CardTitle>Aktivitäten</CardTitle></CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Typ</TableHead>
+                        <TableHead>Beschreibung</TableHead>
+                        <TableHead>Datum</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {allActivities.map(a => (
+                        <TableRow key={a.id}>
+                            <TableCell><Badge variant="secondary">{a.type}</Badge></TableCell>
+                            <TableCell className="font-medium">{a.description}</TableCell>
+                            <TableCell className="text-xs">{format(new Date(a.dueDate), "dd.MM.yyyy")}</TableCell>
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {allActivities.map(a => (
-                            <TableRow key={a.id}>
-                                <TableCell><Badge variant="secondary">{a.type}</Badge></TableCell>
-                                <TableCell className="font-medium">{a.description}</TableCell>
-                                <TableCell>{a.context}</TableCell>
-                                <TableCell>{format(new Date(a.dueDate), "dd.MM.yyyy")}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    );
-};
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
 
-const NotesListView = () => {
-    return (
-        <div className="space-y-4">
-            <h2 className="text-xl font-bold px-1">Notizen</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mockNotes.map(note => (
-                    <Card key={note.id}>
-                        <CardHeader className="pb-2">
-                            <div className="flex justify-between items-start">
-                                <CardTitle className="text-base">{note.title}</CardTitle>
-                                <Badge variant="outline" className="text-[10px] uppercase font-bold">{note.contextType}</Badge>
-                            </div>
-                            <CardDescription>{note.contextName || 'Allgemein'}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground line-clamp-3">{note.content}</p>
-                        </CardContent>
-                        <CardFooter className="pt-0 text-[10px] text-muted-foreground flex justify-between">
-                            <span className="font-bold">{note.createdBy}</span>
-                            <span className="font-mono">{format(new Date(note.createdAt), "dd.MM.yyyy")}</span>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
-        </div>
-    );
-};
+const NotesListView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="qhub-reports">
+        {mockNotes.map(note => (
+            <Card key={note.id}>
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-base">{note.title}</CardTitle>
+                    <CardDescription>{note.contextName || 'Allgemein'}</CardDescription>
+                </CardHeader>
+                <CardContent><p className="text-sm line-clamp-3">{note.content}</p></CardContent>
+            </Card>
+        ))}
+    </div>
+);
 
-const EmailsListView = () => {
-    return (
-        <Card>
-            <CardHeader><CardTitle>E-Mails</CardTitle></CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Betreff</TableHead>
-                            <TableHead>Kontakt</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Datum</TableHead>
+const EmailsListView = () => (
+    <Card id="qhub-reports">
+        <CardHeader><CardTitle>E-Mails</CardTitle></CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Betreff</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Datum</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {mockEmails.map(e => (
+                        <TableRow key={e.id}>
+                            <TableCell className="font-medium max-w-xs truncate">{e.subject}</TableCell>
+                            <TableCell><Badge variant="outline">{e.status}</Badge></TableCell>
+                            <TableCell className="text-xs">{formatDistanceToNow(new Date(e.createdAt), { addSuffix: true, locale: de })}</TableCell>
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {mockEmails.map(e => (
-                            <TableRow key={e.id}>
-                                <TableCell className="font-medium">
-                                    <div className="flex items-center gap-2 truncate max-w-md">
-                                        {e.direction === 'Eingehend' ? <Mail className="w-3 h-3 text-blue-400 shrink-0"/> : <ArrowRight className="w-3 h-3 text-emerald-400 shrink-0"/>}
-                                        {e.subject}
-                                    </div>
-                                </TableCell>
-                                <TableCell>{e.contactName}</TableCell>
-                                <TableCell><Badge variant="outline">{e.status}</Badge></TableCell>
-                                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatDistanceToNow(new Date(e.createdAt), { addSuffix: true, locale: de })}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    );
-};
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
 
-const CallsListView = () => {
-    return (
-        <Card>
-            <CardHeader><CardTitle>Anrufe</CardTitle></CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Typ</TableHead>
-                            <TableHead>Kontakt</TableHead>
-                            <TableHead>Dauer</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Datum</TableHead>
+const CallsListView = () => (
+    <Card id="qhub-reports">
+        <CardHeader><CardTitle>Anrufe</CardTitle></CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Typ</TableHead>
+                        <TableHead>Kontakt</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Datum</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {mockCalls.map(c => (
+                        <TableRow key={c.id}>
+                            <TableCell className="flex items-center gap-2">{c.type}</TableCell>
+                            <TableCell>{c.contactName}</TableCell>
+                            <TableCell><Badge variant="outline">{c.status}</Badge></TableCell>
+                            <TableCell className="text-xs">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: de })}</TableCell>
                         </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {mockCalls.map(c => (
-                            <TableRow key={c.id}>
-                                <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        {c.type === 'Verpasst' ? <PhoneMissed className="w-3 h-3 text-rose-400"/> : c.type === 'Eingehend' ? <PhoneIncoming className="w-3 h-3 text-blue-400"/> : <PhoneOutgoing className="w-3 h-3 text-emerald-400"/>}
-                                        {c.type}
-                                    </div>
-                                </TableCell>
-                                <TableCell>{c.contactName}</TableCell>
-                                <TableCell className="font-mono text-xs">{c.duration || '-'}</TableCell>
-                                <TableCell><Badge variant="outline">{c.status}</Badge></TableCell>
-                                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: de })}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
-    );
-};
+                    ))}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
 
 const UebersichtTab = () => {
     const { uebersicht } = qSalesReportingData;
@@ -1057,7 +609,7 @@ const UebersichtTab = () => {
           {uebersicht.kpis.map(kpi => {
             const Icon = IconMap[kpi.icon as string] || Activity;
             return (
-              <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full">
+              <Card key={kpi.title} className="overflow-hidden">
                 <CardHeader className="pb-2 p-4 flex flex-row items-center justify-between space-y-0 gap-2">
                   <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate flex-1">
                     {kpi.title}
@@ -1065,7 +617,7 @@ const UebersichtTab = () => {
                   <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                  <p className="text-[clamp(1.25rem,2.5vw,1.75rem)] font-bold text-foreground leading-none truncate font-mono">
+                  <p className="text-2xl font-bold text-foreground font-mono truncate">
                     {parseValue(kpi.value)}
                   </p>
                 </CardContent>
@@ -1079,7 +631,7 @@ const UebersichtTab = () => {
                 <CardTitle>Sales Flow</CardTitle>
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-around overflow-x-auto p-6 gap-6 no-scrollbar min-w-0">
+            <CardContent className="flex items-center justify-around overflow-x-auto p-6 gap-6 no-scrollbar">
                 {uebersicht.salesFlow.map((step, index) => (
                     <React.Fragment key={step.stage}>
                         <div className="text-center shrink-0 min-w-[80px]">
@@ -1088,8 +640,8 @@ const UebersichtTab = () => {
                         </div>
                         {index < uebersicht.salesFlow.length - 1 && (
                             <div className="text-center shrink-0">
-                                <ChevronsRight className="w-6 h-6 text-muted-foreground/30 hidden sm:block mx-auto"/>
-                                <p className="text-emerald-400 font-bold mt-1 text-xs whitespace-nowrap">
+                                <ChevronsRight className="w-6 h-6 text-muted-foreground/30 mx-auto"/>
+                                <p className="text-emerald-400 font-bold mt-1 text-xs">
                                   {formatProzent(parseFloat(uebersicht.salesFlow[index+1].conversion || '0'))}
                                 </p>
                             </div>
@@ -1113,27 +665,17 @@ const AktivitaetTab = () => {
 
     const getKpiColor = (value: number, target: number, invert: boolean = false) => {
         const performance = value / target;
-        if (invert) {
-            if (value === 0) return 'text-emerald-400';
-            if (value < target) return 'text-amber-400';
-            return 'text-rose-400';
-        }
-        if (performance >= 1) return 'text-emerald-400';
-        if (performance >= 0.8) return 'text-amber-400';
-        return 'text-rose-400';
+        if (invert) return value === 0 ? 'text-emerald-400' : value < target ? 'text-amber-400' : 'text-rose-400';
+        return performance >= 1 ? 'text-emerald-400' : performance >= 0.8 ? 'text-amber-400' : 'text-rose-400';
     }
 
     return (
          <div className="space-y-8" id="qhub-reports">
-            <CardHeader className="p-0">
-                <CardTitle>Aktivität</CardTitle>
-                <CardDescription>So aktiv war dein Team im ausgewählten Zeitraum.</CardDescription>
-            </CardHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {kpiData.map(kpi => {
                     const Icon = kpi.icon;
                     return(
-                    <Card key={kpi.title} className="overflow-hidden">
+                    <Card key={kpi.title}>
                         <CardHeader className="p-4 pb-2 flex-row items-center justify-between gap-2 space-y-0">
                             <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate">{kpi.title}</CardTitle>
                             <Icon className={cn('w-3.5 h-3.5 shrink-0', getKpiColor(kpi.value, kpi.target, kpi.invertColor))} />
@@ -1144,39 +686,23 @@ const AktivitaetTab = () => {
                     </Card>
                 )})}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <CardHeader><CardTitle className="text-base">Anrufe über Zeit</CardTitle></CardHeader>
-                    <CardContent className="h-64 flex items-center justify-center"><p className="text-muted-foreground italic text-sm">Visualisierung lädt...</p></CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader><CardTitle className="text-base">Termine über Zeit</CardTitle></CardHeader>
-                    <CardContent className="h-64 flex items-center justify-center"><p className="text-muted-foreground italic text-sm">Visualisierung lädt...</p></CardContent>
-                </Card>
-            </div>
-             <Card className="overflow-hidden">
-                <CardHeader><CardTitle className="text-base">Wer macht was?</CardTitle></CardHeader>
-                <CardContent className="overflow-x-auto p-0">
+             <Card>
+                <CardHeader><CardTitle className="text-base">Zuständigkeiten</CardTitle></CardHeader>
+                <CardContent className="p-0 overflow-x-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead className="text-right">Anrufe</TableHead><TableHead className="text-right">Termine</TableHead><TableHead className="text-right">Follow-ups (erl.)</TableHead><TableHead className="text-right">Follow-ups (offen)</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead className="text-right">Anrufe</TableHead><TableHead className="text-right">Termine</TableHead><TableHead className="text-right">Überfällig</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {aktivitaet.ranking.map(r => (
                                 <TableRow key={r.assignee}>
                                     <TableCell className="font-bold">{r.assignee}</TableCell>
                                     <TableCell className="text-right font-mono">{formatZahl(r.calls)}</TableCell>
                                     <TableCell className="text-right font-mono">{formatZahl(r.meetings)}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatZahl(r.followupsDone)}</TableCell>
                                     <TableCell className={cn("text-right font-mono font-bold", r.followupsOverdue > 0 ? 'text-rose-400' : 'text-emerald-400')}>{formatZahl(r.followupsOverdue)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </CardContent>
-                 <CardFooter className="p-4 border-t gap-2 flex-wrap">
-                     <Button variant="outline" size="sm">Call-Queue starten</Button>
-                     <Button variant="outline" size="sm">Follow-ups verteilen</Button>
-                     <Button variant="outline" size="sm">KI: Tagesplan</Button>
-                 </CardFooter>
             </Card>
          </div>
     )
@@ -1193,10 +719,6 @@ const AbschluesseTab = () => {
     ];
     return (
         <div className="space-y-8" id="qhub-reports">
-            <CardHeader className="p-0">
-                <CardTitle>Abschlüsse</CardTitle>
-                <CardDescription>Analyse der gewonnenen und verlorenen Verkaufschancen.</CardDescription>
-            </CardHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {kpiData.map(kpi => {
                     const Icon = kpi.icon;
@@ -1215,37 +737,22 @@ const AbschluesseTab = () => {
                     </Card>
                 )})}
             </div>
-             <Card className="overflow-hidden">
-                <CardHeader><CardTitle>Detailübersicht</CardTitle></CardHeader>
+             <Card>
+                <CardHeader><CardTitle>Laufende Deals</CardTitle></CardHeader>
                 <CardContent className="p-0 overflow-x-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead className="text-right">Wert</TableHead><TableHead>Zuständig</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Dauer</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead className="text-right">Wert</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                          <TableBody>
                             {abschluesse.deals.map(d => (
                                 <TableRow key={d.id}>
                                     <TableCell className="font-bold">{d.name}</TableCell>
                                     <TableCell className="text-right font-mono">{formatWaehrung(d.value)}</TableCell>
-                                    <TableCell>{d.assignee}</TableCell>
-                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'} className={cn('text-[10px] font-bold', d.status === 'Won' ? 'bg-emerald-500/20 text-emerald-400' : '')}>{d.status}</Badge></TableCell>
-                                    <TableCell className="text-right font-mono">{d.durationDays} T.</TableCell>
+                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'}>{d.status}</Badge></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </CardContent>
-            </Card>
-            <Card className="bg-blue-500/5 border-blue-500/10 p-4">
-                <h4 className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2 flex items-center gap-2"><BrainCircuit className="w-4 h-4"/> KI-Abschluss-Analyse</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[10px] font-bold text-emerald-400 uppercase">Top Gründe für Gewinne</p>
-                    <p className="text-xs text-blue-200/80 mt-1">Schnelle Reaktionszeit und klare Bedarfsanalyse im Erstgespräch.</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-rose-400 uppercase">Top Gründe für Verluste</p>
-                    <p className="text-xs text-blue-200/80 mt-1">Preis wurde zu spät im Prozess thematisiert.</p>
-                  </div>
-                </div>
             </Card>
         </div>
     )
@@ -1256,15 +763,11 @@ const RisikoTab = () => {
     const kpiData = [
         { title: 'At-Risk Deals', value: risiko.atRiskDeals.length, icon: Flame, color: 'rose' },
         { title: 'Warning Deals', value: risiko.warningDeals.length, icon: AlertTriangle, color: 'amber' },
-        { title: 'Überfällige Aktionen', value: risiko.overdueActions, icon: Clock, color: 'amber' },
+        { title: 'Überfällig', value: risiko.overdueActions, icon: Clock, color: 'amber' },
         { title: 'Keine Reaktion', value: risiko.noResponse, icon: UserX, color: 'rose' },
     ];
     return (
          <div className="space-y-8" id="qhub-reports">
-            <CardHeader className="p-0">
-                <CardTitle>Risiko-Analyse</CardTitle>
-                <CardDescription>Deals mit gefährdeter Abschlusswahrscheinlichkeit.</CardDescription>
-            </CardHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {kpiData.map(kpi => {
                      const Icon = kpi.icon;
@@ -1285,30 +788,17 @@ const RisikoTab = () => {
                 <CardHeader><CardTitle>Dringender Handlungsbedarf</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     {risiko.atRiskDeals.map(d => (
-                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5 hover:bg-rose-500/10 transition-colors">
+                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5">
                             <div className="flex justify-between items-start gap-4">
                                 <div className="min-w-0">
-                                    <p className="font-bold text-foreground truncate">{d.name}</p>
+                                    <p className="font-bold truncate">{d.name}</p>
                                     <p className="text-sm font-mono text-muted-foreground">{formatWaehrung(d.dealValue)}</p>
                                 </div>
-                                <div className="text-right shrink-0">
-                                     <Badge variant="destructive" className="text-[10px] font-bold uppercase">At Risk</Badge>
-                                     <p className="text-[10px] text-rose-400 mt-1 font-medium">{d.health.reasons.join(', ')}</p>
-                                </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-rose-500/10 gap-3">
-                                <p className="text-xs"><strong className="text-muted-foreground uppercase text-[10px]">Nächster Schritt:</strong> {d.nextAction}</p>
-                                <div className="flex gap-2">
-                                    <Button size="sm" variant="outline" className="h-8 text-[10px] font-bold uppercase">Jetzt anrufen</Button>
-                                    <Button size="sm" variant="outline" className="h-8 text-[10px] font-bold uppercase">Follow-up Draft</Button>
-                                </div>
+                                <Badge variant="destructive">At Risk</Badge>
                             </div>
                          </Card>
                     ))}
                 </CardContent>
-                 <CardFooter className="p-4 border-t">
-                     <Button className="w-full sm:w-auto"><BrainCircuit className="w-4 h-4 mr-2"/>KI: Rettungsplan für Top 10 erstellen</Button>
-                 </CardFooter>
             </Card>
         </div>
     )
@@ -1319,72 +809,66 @@ const LearningsTab = () => {
     return (
         <div className="space-y-6" id="qhub-reports">
             <Card>
-                <CardHeader>
-                    <CardTitle>Top Verlustgründe</CardTitle>
-                </CardHeader>
-                <CardContent>
-                     <ChartContainer config={{}} className="h-64 w-full">
-                         <BarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
-                             <XAxis type="number" hide />
-                             <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }} width={120}/>
-                             <RechartsTooltip content={<ChartTooltipContent />} />
-                             <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} barSize={24} />
-                         </BarChart>
-                     </ChartContainer>
-                </CardContent>
+                <CardHeader><CardTitle>Top Verlustgründe</CardTitle></CardHeader>
+                <CardContent className="h-64 flex items-center justify-center italic text-muted-foreground">Chart visualisiert Verlustgründe...</CardContent>
             </Card>
              <Card className="bg-blue-500/5 border-blue-500/10">
                 <CardHeader>
                     <CardTitle className="text-blue-300 text-sm font-bold uppercase flex items-center gap-2"><BrainCircuit className="w-4 h-4"/> KI-Zusammenfassung</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-blue-200/90 text-sm leading-relaxed">{learnings.aiSummary}</p>
-                </CardContent>
+                <CardContent><p className="text-blue-200/90 text-sm leading-relaxed">{learnings.aiSummary}</p></CardContent>
             </Card>
         </div>
     );
 };
 
+const ReportingView = () => (
+    <Tabs defaultValue="uebersicht" className="w-full">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+            <TabsList className="bg-muted/50 p-1">
+                <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
+                <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
+                <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
+                <TabsTrigger value="risiko">Risiko</TabsTrigger>
+                <TabsTrigger value="learnings">Learnings</TabsTrigger>
+            </TabsList>
+            <Select defaultValue="30d">
+                <SelectTrigger className="w-full md:w-[180px] bg-input"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="today">Heute</SelectItem>
+                    <SelectItem value="7d">Diese Woche</SelectItem>
+                    <SelectItem value="30d">Dieser Monat</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
+        <TabsContent value="uebersicht"><UebersichtTab /></TabsContent>
+        <TabsContent value="aktivitaet"><AktivitaetTab /></TabsContent>
+        <TabsContent value="abschluesse"><AbschluesseTab /></TabsContent>
+        <TabsContent value="risiko"><RisikoTab /></TabsContent>
+        <TabsContent value="learnings"><LearningsTab /></TabsContent>
+    </Tabs>
+);
 
-const ReportingView = () => {
-    return (
-        <Tabs defaultValue="uebersicht" className="w-full">
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
-                <TabsList className="bg-muted/50 p-1">
-                    <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
-                    <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
-                    <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
-                    <TabsTrigger value="risiko">Risiko</TabsTrigger>
-                    <TabsTrigger value="learnings">Learnings</TabsTrigger>
-                </TabsList>
-                <div className="flex items-center gap-2">
-                    <Select defaultValue="30d">
-                        <SelectTrigger className="w-full md:w-[180px] bg-input">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="today">Heute</SelectItem>
-                            <SelectItem value="7d">Diese Woche</SelectItem>
-                            <SelectItem value="30d">Dieser Monat</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-            <TabsContent value="uebersicht"><UebersichtTab /></TabsContent>
-            <TabsContent value="aktivitaet"><AktivitaetTab /></TabsContent>
-            <TabsContent value="abschluesse"><AbschluesseTab /></TabsContent>
-            <TabsContent value="risiko"><RisikoTab /></TabsContent>
-            <TabsContent value="learnings"><LearningsTab /></TabsContent>
-        </Tabs>
-    )
-}
+const modules = [
+    { name: 'Dashboard', icon: LayoutDashboard },
+    { name: 'Termine', icon: CalendarDays },
+    { name: 'Aufgaben', icon: CheckSquare },
+    { name: 'Kontakte', icon: Users },
+    { name: 'Firmen', icon: Building2 },
+    { name: 'Deals', icon: Handshake },
+    { name: 'Pipeline', icon: Kanban },
+    { name: 'Aktivitäten', icon: Activity },
+    { name: 'Notizen', icon: FileText },
+    { name: 'E-Mails', icon: Mail },
+    { name: 'Anrufe', icon: Phone },
+    { name: 'Reports', icon: BarChart3 },
+];
 
 export default function QhubPage() {
   const [activeModule, setActiveModule] = useState(modules[0].name);
   const pathname = usePathname();
   const router = useRouter();
 
-  // Simulate the currently logged-in user. In a real app, this would come from an auth context.
   const [currentUserId, setCurrentUserId] = useState('dr-mueller');
   const currentUser = useMemo(() => kpiMitarbeiter.find(m => m.id === currentUserId), [currentUserId]);
   
@@ -1398,14 +882,6 @@ export default function QhubPage() {
         setActiveModule(moduleParam);
     }
   }, []);
-
-  useEffect(() => {
-    if (pathname.startsWith('/q-space/chat')) {
-      if (activeModule !== 'Q-Chat') {
-          setActiveModule('Q-Chat');
-      }
-    }
-  }, [pathname, activeModule]);
 
   if (!currentUser || !isClient) {
     return <div className="p-8">Wird geladen...</div>;
@@ -1425,48 +901,21 @@ export default function QhubPage() {
           case 'E-Mails': return <EmailsListView />;
           case 'Anrufe': return <CallsListView />;
           case 'Reports': return <ReportingView />;
-          default: return <GenericView title={activeModule} />;
+          default: return <DashboardView currentUser={currentUser} filteredKpiMitarbeiter={kpiMitarbeiter} filteredChatThreads={chatThreads} filteredTasks={mockTasks} />;
       }
   };
 
-  const handleModuleClick = (moduleName: string) => {
-    if (moduleName === 'Q-Chat') {
-        router.push('/q-space/chat');
-    } else {
-        if (pathname.startsWith('/q-space/chat')) {
-            router.push('/q-space');
-        }
-        setActiveModule(moduleName);
-    }
-  };
-  
-  const GenericView = ({ title }: { title: string }) => (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground italic text-center py-12">
-          Ansicht für "{title}" wird hier angezeigt.
-        </p>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
-        {/* Left Sidebar for Modules */}
         <aside className="w-56 border-r border-border pr-4 space-y-1">
             <p className="px-3 pb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Q-Hub</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
-                const isActive = activeModule === mod.name;
-
-                 return (
+                return (
                     <Button
                         key={mod.name}
-                        variant={isActive ? 'secondary' : 'ghost'}
-                        onClick={() => handleModuleClick(mod.name)}
+                        variant={activeModule === mod.name ? 'secondary' : 'ghost'}
+                        onClick={() => setActiveModule(mod.name)}
                         className="w-full justify-start text-sm"
                     >
                         <Icon className="mr-2 h-4 w-4" />
@@ -1476,16 +925,11 @@ export default function QhubPage() {
             })}
         </aside>
 
-        {/* Main Area */}
         <main className="flex-1 pl-6 space-y-6 overflow-hidden">
              <header className="flex justify-between items-center gap-4">
                  <div>
-                    <h1 className="text-3xl font-bold text-foreground tracking-tight">
-                        Q-Hub
-                    </h1>
-                    <p className="text-muted-foreground text-sm">
-                        Zentrale für Kunden, Vertrieb & Service
-                    </p>
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight">Q-Hub</h1>
+                    <p className="text-muted-foreground text-sm">Zentrale für Kunden, Vertrieb & Service</p>
                 </div>
                  <div className="flex items-center gap-3">
                     <div className="relative hidden lg:block w-72">
@@ -1494,17 +938,12 @@ export default function QhubPage() {
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                           <Button>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Erstellen
-                            </Button>
+                           <Button><Plus className="mr-2 h-4 w-4" /> Erstellen</Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem>Neuer Kontakt</DropdownMenuItem>
                             <DropdownMenuItem>Neue Firma</DropdownMenuItem>
                             <DropdownMenuItem>Neuer Deal</DropdownMenuItem>
-                            <DropdownMenuItem>Neue Aufgabe</DropdownMenuItem>
-                            <DropdownMenuItem>Neue Notiz</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
