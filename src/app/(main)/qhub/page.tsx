@@ -713,27 +713,118 @@ const DealsView = () => {
     );
 };
 
-const PipelineView = () => (
-    <div className="space-y-4" id="qhub-reports">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start">
-            {pipelineStages.map(phase => (
-                <div key={phase} className="bg-muted/50 rounded-xl flex flex-col min-h-[400px]">
-                    <div className="p-4 border-b border-border">
-                        <h3 className="text-sm font-bold truncate">{phase}</h3>
+const PipelineView = () => {
+    const activeDeals = mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren');
+    const pipelineTotalValue = activeDeals.reduce((sum, d) => sum + (parseFloat(d.value.replace(/[^0-9.-]+/g, "")) || 0), 0);
+    const inactiveCount = activeDeals.filter(d => d.inactiveDays > 3).length;
+    const criticalCount = activeDeals.filter(d => d.aiRisk).length;
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
+            {/* Sektion 1: Tagesüberblick */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aktive Deals</p>
+                    <p className="text-4xl font-bold mt-2">{activeDeals.length}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pipeline-Wert gesamt</p>
+                    <p className="text-4xl font-bold mt-2 text-primary">{formatWaehrung(pipelineTotalValue)}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Deals ohne Aktivität</p>
+                    <p className={cn("text-4xl font-bold mt-2", inactiveCount > 0 ? "text-amber-400" : "text-muted-foreground")}>
+                        {inactiveCount || 'Keine'}
+                    </p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden border-l-4 border-l-rose-500/50">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kritische Deals</p>
+                    <p className={cn("text-4xl font-bold mt-2", criticalCount > 0 ? "text-rose-400" : "text-muted-foreground")}>
+                        {criticalCount || 'Keine'}
+                    </p>
+                </Card>
+            </div>
+
+            {/* Sektion 2: KI-Hinweise */}
+            <Card className="bg-blue-500/5 border-blue-500/20">
+                <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweise zur Pipeline
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold text-foreground">Fokus heute</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                {inactiveCount} Deals seit über 3 Tagen ohne Aktivität. Dringende Prüfung empfohlen.
+                            </p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold text-foreground">Risiko erkannt</p>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                {criticalCount} Deals in Phase 'Angebot' haben kein folgendes Meeting.
+                            </p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold text-foreground">Empfohlene Aktion</p>
+                            <Button size="sm" variant="outline" className="h-7 text-[10px] w-full">Zu den relevanten Deals</Button>
+                        </div>
                     </div>
-                    <div className="p-3 space-y-3">
-                        {mockDeals.filter(d => d.stage === phase).map(deal => (
-                            <Card key={deal.id} className="p-3 shadow-sm text-xs">
-                                <p className="font-bold truncate">{deal.name}</p>
-                                <p className="text-muted-foreground mt-1">{deal.value}</p>
-                            </Card>
-                        ))}
-                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Sektion 3: Pipeline-Grid */}
+            <div className="overflow-x-auto pb-4 custom-scrollbar">
+                <div className="flex gap-4 min-w-[1200px]">
+                    {pipelineStages.map(phase => {
+                        const phaseDeals = mockDeals.filter(d => d.stage === phase);
+                        const phaseValue = phaseDeals.reduce((sum, d) => sum + (parseFloat(d.value.replace(/[^0-9.-]+/g, "")) || 0), 0);
+                        const isArchivedPhase = phase === 'Gewonnen' || phase === 'Verloren';
+
+                        return (
+                            <div key={phase} className={cn("flex-1 min-w-[200px] bg-muted/30 rounded-xl p-2", isArchivedPhase && "opacity-60")}>
+                                <div className="p-3 mb-3 border-b border-border/50">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-sm font-black uppercase text-foreground/80">{phase}</h3>
+                                        <Badge variant="outline" className="text-[10px] font-bold">{phaseDeals.length}</Badge>
+                                    </div>
+                                    <p className="text-[10px] font-bold text-muted-foreground mt-1">{formatWaehrung(phaseValue)}</p>
+                                </div>
+                                <div className="space-y-3">
+                                    {phaseDeals.map(deal => (
+                                        <Card key={deal.id} className={cn(
+                                            "p-3 shadow-sm hover:border-primary/40 transition-all cursor-pointer",
+                                            !isArchivedPhase && deal.inactiveDays > 3 && "border-l-4 border-l-amber-500/50",
+                                            !isArchivedPhase && deal.aiRisk && "border-l-4 border-l-rose-500/50"
+                                        )}>
+                                            <p className="font-bold text-xs text-foreground truncate">{deal.name}</p>
+                                            <p className="text-[10px] text-muted-foreground truncate">{deal.company || 'Unbekannt'}</p>
+                                            <div className="mt-2 pt-2 border-t border-border/50 flex justify-between items-center">
+                                                <span className="text-[10px] font-bold">{deal.value}</span>
+                                                <span className={cn("text-[9px] font-medium", deal.inactiveDays > 3 ? "text-amber-400" : "text-muted-foreground")}>
+                                                    {deal.inactiveDays === 0 ? 'Aktiv' : `Vor ${deal.inactiveDays} T.`}
+                                                </span>
+                                            </div>
+                                            {!isArchivedPhase && (
+                                                <p className="mt-2 text-[9px] text-blue-400 font-bold flex items-center gap-1 italic">
+                                                    <Sparkles className="w-2.5 h-2.5"/> {deal.nextStep || 'Nächster Schritt fehlt'}
+                                                </p>
+                                            )}
+                                        </Card>
+                                    ))}
+                                    {phaseDeals.length === 0 && (
+                                        <div className="text-center py-8 text-[10px] text-muted-foreground italic">Leer</div>
+                                    )}
+                                </div>
+                            </div>
+                        )
+                    })}
                 </div>
-            ))}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const ActivitiesListView = () => (
     <Card id="qhub-reports">
@@ -1059,6 +1150,7 @@ const ReportingView = () => (
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
             <TabsList className="bg-muted/50 p-1">
                 <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
+                <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
                 <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
                 <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
                 <TabsTrigger value="risiko">Risiko</TabsTrigger>
