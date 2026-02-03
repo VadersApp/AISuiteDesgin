@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, FormEvent, useEffect } from 'react';
@@ -115,8 +113,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Checkbox } from '@/components/ui/checkbox';
 
-
 const modules = [
+    { name: 'Q-Chat', icon: MessageSquare },
     { name: 'Übersicht', icon: LayoutDashboard },
     { name: 'Zeiterfassung', icon: Clock },
     { name: 'Workspace', icon: Briefcase },
@@ -1225,7 +1223,7 @@ const SystemAdminView = () => {
                                 <p className="text-xs text-muted-foreground">Zeitraum, in dem Korrekturen rückwirkend möglich sind.</p>
                             </div>
                         </CardContent>
-                        <CardFooter className="border-t pt-6">
+                        <CardFooter className="border-t border-border px-6 py-4 justify-end">
                             <Button>Einstellungen speichern</Button>
                         </CardFooter>
                     </Card>
@@ -1402,7 +1400,7 @@ export default function QSpacePage() {
           case 'KPI-Dashboard': return <KpiDashboard mitarbeiter={filteredKpiMitarbeiter} />;
           case 'Mitarbeiter': return <MitarbeiterView mitarbeiter={filteredKpiMitarbeiter} />;
           case 'System Admin (Q-Space)': return <SystemAdminView />;
-          case 'Q-Chat': return null; // Should redirect
+          case 'Q-Chat': return null; // Should redirect via useEffect or handleModuleClick
           case 'Business Builder': return null; // Should redirect
           case 'Erfolgsplaner': return null; // Should redirect
           case 'Day Planer': return null; // Should redirect
@@ -1438,7 +1436,6 @@ export default function QSpacePage() {
   };
 
   return (
-    <>
     <div className="flex h-full min-h-[calc(100vh-10rem)]">
         {/* Left Sidebar for Modules */}
         <aside className="w-64 border-r border-border pr-4 space-y-1">
@@ -1474,13 +1471,12 @@ export default function QSpacePage() {
                                !pathname.startsWith('/q-space/zeiterfassung');
                 }
 
-
                  return (
                     <div key={mod.name} className="relative">
                         <Button
                             variant={isActive ? 'secondary' : 'ghost'}
                             onClick={() => handleModuleClick(mod.name)}
-                            className="w-full justify-start text-sm"
+                            className="w-full justify-start text-sm font-bold"
                         >
                             <Icon className="mr-2 h-4 w-4" />
                             {mod.name}
@@ -1535,6 +1531,5 @@ export default function QSpacePage() {
             </div>
         </main>
     </div>
-    </>
   );
 }
