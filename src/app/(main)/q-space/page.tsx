@@ -103,7 +103,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -795,27 +794,115 @@ const TaskCard = ({ task }: { task: any }) => {
     );
 };
 
+const ProjectCard = ({ project }: { project: any }) => {
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Aktiv': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            case 'Blockiert': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            case 'Abgeschlossen': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            case 'Planung': return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+            default: return 'bg-muted';
+        }
+    };
+
+    return (
+        <Card className="flex flex-col h-full hover:border-primary/40 transition-all group overflow-hidden relative">
+            <CardHeader className="p-4 pb-2 border-b border-border/50 flex flex-row items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                    <CardTitle className="text-sm font-bold line-clamp-2" title={project.name}>{project.name}</CardTitle>
+                </div>
+                <Badge variant="outline" className={cn("text-[9px] font-black uppercase shrink-0 h-5 px-1.5", getStatusColor(project.status))}>
+                    {project.status}
+                </Badge>
+            </CardHeader>
+            <CardContent className="p-4 flex-1 space-y-4">
+                <div className="space-y-2">
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                        {project.desc || 'Keine Projektbeschreibung vorhanden.'}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5 border border-border/50">
+                            <AvatarFallback className="text-[8px] font-black">{project.owner?.split(' ').map((n:any) => n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-[11px] font-medium text-foreground/80">{project.owner}</span>
+                    </div>
+                </div>
+                <div className="pt-2 grid grid-cols-2 gap-4 text-[11px] border-t border-border/30">
+                    <div>
+                        <p className="text-muted-foreground font-bold uppercase text-[9px] mb-0.5 tracking-wider">Start</p>
+                        <p className="font-bold flex items-center gap-1">
+                            <CalendarDays className="w-3 h-3 text-primary/60"/> 01.01.24
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground font-bold uppercase text-[9px] mb-0.5 tracking-wider">Status</p>
+                        <p className="font-bold flex items-center gap-1">
+                            <Activity className="w-3 h-3 text-emerald-400"/> Stabil
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter className="p-3 bg-muted/10 border-t border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Tasks</span>
+                        <span className="text-[11px] font-bold">2 / 8</span>
+                    </div>
+                    <Separator orientation="vertical" className="h-6"/>
+                    <div className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase text-muted-foreground tracking-widest">Risiko</span>
+                        <span className="text-[11px] font-bold text-emerald-400">Keine</span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5"/></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem className="text-xs font-bold uppercase">Status ändern</DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-bold uppercase">Mitglied einladen</DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-bold uppercase text-rose-400 font-black">Archivieren</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button size="sm" className="h-7 text-[10px] font-black uppercase px-4">Öffnen</Button>
+                </div>
+            </CardFooter>
+        </Card>
+    );
+};
+
 const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredSops, filteredDocs, filteredFolders } : { currentUser: any, filteredTasks: any[], filteredProjects: any[], filteredSops: any[], filteredDocs: any[], filteredFolders: any[]}) => {
+    // Tasks Filter
     const [taskTimeFilter, setTaskTimeFilter] = useState('all');
     const [taskStatusFilter, setTaskStatusFilter] = useState('all');
     const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('me');
 
+    // Projects Filter
+    const [projectStatusFilter, setProjectStatusFilter] = useState('all');
+    const [projectTimeFilter, setProjectTimeFilter] = useState('all');
+    const [projectAssigneeFilter, setProjectAssigneeFilter] = useState('me');
+
     const finalFilteredTasks = useMemo(() => {
         return filteredTasks.filter(t => {
-            // Time filter
             if (taskTimeFilter === 'today' && t.due !== 'Heute') return false;
             if (taskTimeFilter === 'week' && (t.due !== 'Diese Woche' && t.due !== 'Heute' && t.due !== 'Morgen' && t.due !== 'Sofort')) return false;
             if (taskTimeFilter === 'overdue' && (t.due !== 'Sofort' && t.status !== 'Überfällig')) return false;
-
-            // Status filter
             if (taskStatusFilter !== 'all' && t.status.toLowerCase().replace(' ', '_') !== taskStatusFilter) return false;
-
-            // Assignee filter
             if (taskAssigneeFilter === 'me' && t.ownerId !== currentUser.id && t.owner !== currentUser.name) return false;
-
             return true;
         });
     }, [filteredTasks, taskTimeFilter, taskStatusFilter, taskAssigneeFilter, currentUser]);
+
+    const finalFilteredProjects = useMemo(() => {
+        return filteredProjects.filter(p => {
+            if (projectStatusFilter !== 'all' && p.status.toLowerCase() !== projectStatusFilter) return false;
+            if (projectAssigneeFilter === 'me' && p.ownerId !== currentUser.id && p.owner !== currentUser.name) return false;
+            // Time filter for projects is mock logic here
+            if (projectTimeFilter === 'overdue' && p.status === 'Abgeschlossen') return false; 
+            return true;
+        });
+    }, [filteredProjects, projectStatusFilter, projectTimeFilter, projectAssigneeFilter, currentUser]);
 
     return (
         <div className="space-y-6">
@@ -886,12 +973,62 @@ const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredS
                         </Card>
                     )}
                 </TabsContent>
-                <TabsContent value="projekte" className="mt-4">
-                    <Card><CardHeader><CardTitle>Projekte</CardTitle></CardHeader><CardContent>
-                         <Table><TableHeader><TableRow><TableHead>Projektname</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                            <TableBody>{filteredProjects.map(p => (<TableRow key={p.id}><TableCell>{p.name}</TableCell><TableCell>{p.owner}</TableCell><TableCell>{p.status}</TableCell></TableRow>))}</TableBody>
-                        </Table>
-                    </CardContent></Card>
+                <TabsContent value="projekte" className="mt-6 space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1 p-1 bg-muted rounded-lg border border-border">
+                                {['all', 'running', 'week', 'overdue'].map(f => (
+                                    <button 
+                                        key={f}
+                                        onClick={() => setProjectTimeFilter(f)}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all",
+                                            projectTimeFilter === f ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                                        )}
+                                    >
+                                        {f === 'all' ? 'Alle' : f === 'running' ? 'Laufend' : f === 'week' ? 'Woche' : 'Überfällig'}
+                                    </button>
+                                ))}
+                            </div>
+                            <Separator orientation="vertical" className="h-8 mx-2 hidden md:block" />
+                            <Select value={projectStatusFilter} onValueChange={setProjectStatusFilter}>
+                                <SelectTrigger className="h-9 w-32 bg-input text-[10px] font-black uppercase">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle Status</SelectItem>
+                                    <SelectItem value="aktiv">Aktiv</SelectItem>
+                                    <SelectItem value="blockiert">Blockiert</SelectItem>
+                                    <SelectItem value="abgeschlossen">Abgeschlossen</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={projectAssigneeFilter} onValueChange={setProjectAssigneeFilter}>
+                                <SelectTrigger className="h-9 w-40 bg-input text-[10px] font-black uppercase">
+                                    <SelectValue placeholder="Verantwortung" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="me">Meine Projekte</SelectItem>
+                                    <SelectItem value="team">Gesamtes Team</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button className="h-9 font-black uppercase text-[10px] tracking-wider"><FolderPlus className="w-4 h-4 mr-2" /> Neues Projekt</Button>
+                    </div>
+
+                    {finalFilteredProjects.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-500">
+                            {finalFilteredProjects.map(p => (
+                                <ProjectCard key={p.id} project={p} />
+                            ))}
+                        </div>
+                    ) : (
+                        <Card className="p-12 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/10">
+                            <FolderKanban className="w-12 h-12 mb-4 opacity-20" />
+                            <h3 className="text-lg font-bold">Keine aktiven Projekte.</h3>
+                            <p className="text-sm mt-1 max-w-xs">Starten Sie ein neues Projekt oder passen Sie Ihre Filter an.</p>
+                            <Button variant="outline" className="mt-6" onClick={() => { setProjectStatusFilter('all'); setProjectTimeFilter('all'); }}>Filter zurücksetzen</Button>
+                        </Card>
+                    )}
                 </TabsContent>
                 <TabsContent value="dokumente" className="mt-4">
                     <DocumentsView currentUser={currentUser} filteredDocs={filteredDocs} filteredFolders={filteredFolders} />
