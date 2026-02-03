@@ -42,6 +42,7 @@ import {
   Briefcase,
   Building,
   Building2,
+  Calendar,
   CalendarDays,
   Check,
   CheckCircle,
@@ -419,7 +420,7 @@ const TasksListView = () => {
                         <div className="space-y-2">
                             <p className="text-xs font-bold text-foreground">Blockaden erkannt</p>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                2 Aufgaben warten seit &gt;3 Tagen auf Rückmeldung. Prüfung der Abhängigkeiten empfohlen.
+                                2 Aufgaben warten seit &gt; 3 Tagen auf Rückmeldung. Prüfung der Abhängigkeiten empfohlen.
                             </p>
                         </div>
                         <div className="space-y-2">
@@ -769,13 +770,13 @@ const PipelineView = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-1">
                             <p className="text-xs font-bold text-foreground">Fokus heute</p>
-                            <p className="text-[11px] text-blue-300/90 leading-relaxed">
+                            <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
                                 {inactiveCount} Deals seit über 3 Tagen ohne Aktivität. Dringende Prüfung empfohlen.
                             </p>
                         </div>
                         <div className="space-y-1">
                             <p className="text-xs font-bold text-foreground">Risiko erkannt</p>
-                            <p className="text-[11px] text-blue-300/90 leading-relaxed">
+                            <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
                                 {criticalCount} Deals in Phase 'Angebot' haben kein folgendes Meeting.
                             </p>
                         </div>
