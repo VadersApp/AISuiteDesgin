@@ -396,7 +396,7 @@ const TasksListView = () => {
                         <div className="space-y-2">
                             <p className="text-xs font-bold text-foreground">Blockaden erkannt</p>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                2 Aufgaben warten seit >3 Tagen auf Rückmeldung. Prüfung der Abhängigkeiten empfohlen.
+                                2 Aufgaben warten seit &gt;3 Tagen auf Rückmeldung. Prüfung der Abhängigkeiten empfohlen.
                             </p>
                         </div>
                         <div className="space-y-2">
