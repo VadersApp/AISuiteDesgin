@@ -97,7 +97,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, chatThreads, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, qSalesReportingData, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes as initialMockNotes, mockEmails, mockCalls, kiTagesfokus, mockLeaveRequests } from '@/lib/data';
+import { kpiMitarbeiter, chatThreads, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, qSalesReportingData, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes as initialMockNotes, mockEmails, mockCalls, kiTagesfokus } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -109,7 +109,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { format, formatDistanceToNow, isToday, isTomorrow, isFuture, isYesterday, isThisWeek, isBefore, startOfWeek, endOfWeek, subDays, isSameDay } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { 
     BarChart as RechartsBarChart, 
@@ -259,7 +259,7 @@ const TermineView = () => {
 
     const todayBookings = bookings.filter(b => isToday(b.startDate));
     const customerBookings = bookings.filter(b => b.role === 'Interessent' || b.role === 'Kunde');
-    const nextBooking = bookings.find(b => (isFuture(b.startDate) || isToday(b.startDate)) && b.startDate >= new Date());
+    const nextBooking = bookings.find(b => (new Date(b.startAt) >= new Date()));
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
@@ -363,7 +363,6 @@ const TermineView = () => {
 const TasksListView = () => {
     const [isDoneTasksOpen, setIsDoneTasksOpen] = useState(false);
     
-    // Derived task data
     const openTasks = mockTasks.filter(t => t.status !== 'Erledigt');
     const doneTasks = mockTasks.filter(t => t.status === 'Erledigt');
     
@@ -374,7 +373,6 @@ const TasksListView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* Sektion 1: Tagesüberblick */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aufgaben heute</p>
@@ -402,7 +400,6 @@ const TasksListView = () => {
                 </Card>
             </div>
 
-            {/* Sektion 2: KI-Hinweise */}
             <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
@@ -436,7 +433,6 @@ const TasksListView = () => {
                 </CardContent>
             </Card>
 
-            {/* Sektion 3: Offene Aufgaben */}
             <div className="space-y-4">
                 <h3 className="text-lg font-bold text-foreground px-1">Offene Aufgaben</h3>
                 <div className="grid grid-cols-1 gap-3">
@@ -483,7 +479,6 @@ const TasksListView = () => {
                 </div>
             </div>
 
-            {/* Sektion 4: Erledigte Aufgaben */}
             {doneTasks.length > 0 && (
                 <Collapsible open={isDoneTasksOpen} onOpenChange={setIsDoneTasksOpen}>
                     <CollapsibleTrigger asChild>
@@ -587,12 +582,10 @@ const CompaniesView = () => (
 const DealsView = () => {
     const [isClosedDealsOpen, setIsClosedDealsOpen] = useState(false);
 
-    // Filter deals
     const activeDeals = mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren');
     const wonDeals = mockDeals.filter(d => d.stage === 'Gewonnen');
     const lostDeals = mockDeals.filter(d => d.stage === 'Verloren');
 
-    // KPI Calculations
     const openDealsCount = activeDeals.length;
     const pipelineValue = activeDeals.reduce((sum, d) => {
         const val = parseFloat(d.value.replace(/[^0-9.-]+/g, "")) || 0;
@@ -603,7 +596,6 @@ const DealsView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* Sektion 1: Tagesüberblick */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Offene Deals</p>
@@ -625,7 +617,6 @@ const DealsView = () => {
                 </Card>
             </div>
 
-            {/* Sektion 2: KI-Hinweise */}
             <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
@@ -657,7 +648,6 @@ const DealsView = () => {
                 </CardContent>
             </Card>
 
-            {/* Sektion 3: Aktive Deals Kartenliste */}
             <div className="space-y-4">
                 <h3 className="text-lg font-bold text-foreground px-1">Aktive Deals</h3>
                 <div className="grid grid-cols-1 gap-3">
@@ -696,7 +686,6 @@ const DealsView = () => {
                 </div>
             </div>
 
-            {/* Sektion 4: Geschlossene Deals Collapsible */}
             <div className="pt-4">
                 <Collapsible open={isClosedDealsOpen} onOpenChange={setIsClosedDealsOpen}>
                     <CollapsibleTrigger asChild>
@@ -747,7 +736,6 @@ const PipelineView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* Sektion 1: Tagesüberblick */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aktive Deals</p>
@@ -771,7 +759,6 @@ const PipelineView = () => {
                 </Card>
             </div>
 
-            {/* Sektion 2: KI-Hinweise */}
             <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
@@ -800,7 +787,6 @@ const PipelineView = () => {
                 </CardContent>
             </Card>
 
-            {/* Sektion 3: Pipeline-Grid */}
             <div className="overflow-x-auto pb-4 custom-scrollbar">
                 <div className="flex gap-4 min-w-[1200px]">
                     {pipelineStages.map(phase => {
@@ -1293,12 +1279,6 @@ const NotesListView = () => {
                                 </div>
                             )
                         ))}
-                        {Object.values(groupedNotes).every(g => g.length === 0) && (
-                            <div className="text-center py-20 text-muted-foreground italic bg-muted/20 rounded-2xl border border-dashed border-border/50">
-                                <FileText className="w-8 h-8 mx-auto mb-3 opacity-20"/>
-                                <p className="text-sm font-medium">Keine Notizen für die aktuelle Auswahl gefunden.</p>
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -1411,7 +1391,6 @@ const EmailsListView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* KPI Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Neue Sales-Mails</p>
@@ -1431,7 +1410,6 @@ const EmailsListView = () => {
                 </Card>
             </div>
 
-            {/* AI Hints */}
             <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden relative">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2 uppercase tracking-widest">
@@ -1459,7 +1437,6 @@ const EmailsListView = () => {
                 </CardContent>
             </Card>
 
-            {/* Filter and List */}
             <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -1518,16 +1495,10 @@ const EmailsListView = () => {
                                 </div>
                             </Card>
                         ))}
-                        {filteredEmails.length === 0 && (
-                            <Card className="p-12 text-center text-muted-foreground italic border-dashed">
-                                Keine E-Mails in dieser Kategorie.
-                            </Card>
-                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Email Detail Dialog */}
             <Dialog open={!!detailEmail} onOpenChange={open => !open && setDetailNote(null)}>
                 <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-background">
                     {detailEmail && (
@@ -1564,15 +1535,6 @@ const EmailsListView = () => {
                                             </Badge>
                                         </div>
                                     </div>
-
-                                    <Card className="bg-blue-500/5 border-blue-500/10">
-                                        <CardHeader className="p-4 pb-2"><CardTitle className="text-xs text-blue-300 uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3.5 h-3.5"/> KI-Entwurf</CardTitle></CardHeader>
-                                        <CardContent className="p-4 pt-0">
-                                            <p className="text-[11px] text-blue-200/80 leading-relaxed font-medium">
-                                                {detailEmail.aiSuggestion?.text || 'KI berechnet Antwortvorschlag...'}
-                                            </p>
-                                        </CardContent>
-                                    </Card>
                                 </div>
                             </ScrollArea>
                             <DialogFooter className="p-4 bg-muted/20 border-t border-border/50 flex flex-wrap gap-2">
@@ -1618,7 +1580,6 @@ const CallsListView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* Sektion 1: Tagesüberblick */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Anrufe heute</p>
@@ -1642,7 +1603,6 @@ const CallsListView = () => {
                 </Card>
             </div>
 
-            {/* Sektion 2: KI-Hinweise */}
             <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden relative">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2 uppercase tracking-widest">
@@ -1670,7 +1630,6 @@ const CallsListView = () => {
                 </CardContent>
             </Card>
 
-            {/* Filter and List */}
             <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -1738,16 +1697,10 @@ const CallsListView = () => {
                                 </div>
                             </Card>
                         ))}
-                        {filteredCalls.length === 0 && (
-                            <Card className="p-12 text-center text-muted-foreground italic border-dashed">
-                                Keine Anrufe in dieser Kategorie gefunden.
-                            </Card>
-                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Call Detail Dialog */}
             <Dialog open={!!detailCall} onOpenChange={open => !open && setDetailCall(null)}>
                 <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden bg-background">
                     {detailCall && (
@@ -1790,25 +1743,6 @@ const CallsListView = () => {
                                         <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Gesprächsnotiz</Label>
                                         <Textarea placeholder="Notiz zum Gespräch hinzufügen..." className="bg-input min-h-[100px] text-sm resize-none" />
                                     </div>
-
-                                    {detailCall.aiHelpContent && (
-                                        <Card className="bg-blue-500/5 border-blue-500/10">
-                                            <CardHeader className="p-4 pb-2"><CardTitle className="text-xs text-blue-300 uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3.5 h-3.5"/> KI-Leitfaden</CardTitle></CardHeader>
-                                            <CardContent className="p-4 pt-0 space-y-3">
-                                                <ul className="space-y-1.5">
-                                                    {detailCall.aiHelpContent.leitfaden.map((item: string, i: number) => (
-                                                        <li key={i} className="text-[11px] text-blue-200/80 flex items-start gap-2">
-                                                            <div className="w-1 h-1 rounded-full bg-blue-400 mt-1.5 shrink-0"/> {item}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                                <div className="pt-2 border-t border-blue-500/10">
-                                                    <p className="text-[10px] font-bold text-blue-300 uppercase">Empfohlene Nachbearbeitung</p>
-                                                    <p className="text-[11px] text-blue-200/80 mt-1">{detailCall.aiHelpContent.nachbearbeitung}</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    )}
                                 </div>
                             </ScrollArea>
                             <DialogFooter className="p-4 bg-muted/20 border-t border-border/50 flex flex-wrap gap-2">
@@ -1820,6 +1754,236 @@ const CallsListView = () => {
                     )}
                 </DialogContent>
             </Dialog>
+        </div>
+    );
+};
+
+// --- Reporting Tabs ---
+
+const UebersichtTab = () => {
+    const { uebersicht } = qSalesReportingData;
+    const IconMap: { [key: string]: React.ElementType } = { Phone, Calendar, Handshake, Percent, DollarSign, AlertTriangle };
+  
+    return (
+      <div className="space-y-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {uebersicht.kpis.map(kpi => {
+            const Icon = IconMap[kpi.icon as string] || Activity;
+            return (
+              <Card key={kpi.title}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+                    {kpi.title} <Icon className="w-4 h-4" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{kpi.value}</p>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Sales Flow</CardTitle>
+                <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-around flex-wrap gap-4">
+                {uebersicht.salesFlow.map((step, index) => (
+                    <React.Fragment key={step.stage}>
+                        <div className="text-center">
+                            <p className="text-sm font-bold text-muted-foreground">{step.stage}</p>
+                            <p className="text-3xl font-bold">{step.value}</p>
+                        </div>
+                        {index < uebersicht.salesFlow.length - 1 && (
+                            <div className="text-center">
+                                <ChevronsRight className="w-8 h-8 text-muted-foreground/50 hidden md:block"/>
+                                <p className="text-emerald-400 font-bold mt-2 text-sm">{uebersicht.salesFlow[index+1].conversion}</p>
+                            </div>
+                        )}
+                    </React.Fragment>
+                ))}
+            </CardContent>
+        </Card>
+      </div>
+    );
+};
+
+const AktivitaetTab = () => {
+    const { aktivitaet } = qSalesReportingData;
+    const kpiData = [
+        { title: 'Anrufe', value: aktivitaet.calls, target: 80, icon: Phone, color: 'blue' },
+        { title: 'Erreichte Leads', value: aktivitaet.reachedLeads, target: 60, icon: UserCheck, color: 'emerald' },
+        { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: Calendar, color: 'purple' },
+        { title: 'Überfällige Follow-ups', value: aktivitaet.overdueFollowups, target: 5, icon: AlertTriangle, color: 'amber', invertColor: true },
+    ];
+
+    const getKpiColor = (value: number, target: number, invert: boolean = false) => {
+        const performance = value / target;
+        if (invert) {
+            if (value === 0) return 'text-emerald-400';
+            if (value < target) return 'text-amber-400';
+            return 'text-rose-400';
+        }
+        if (performance >= 1) return 'text-emerald-400';
+        if (performance >= 0.8) return 'text-amber-400';
+        return 'text-rose-400';
+    }
+
+    return (
+         <div className="space-y-8">
+            <CardHeader className="p-0">
+                <CardTitle>Aktivität</CardTitle>
+                <CardDescription>So aktiv war dein Team im ausgewählten Zeitraum.</CardDescription>
+            </CardHeader>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {kpiData.map(kpi => {
+                    const Icon = kpi.icon;
+                    return(
+                    <Card key={kpi.title}>
+                        <CardHeader className="pb-2 flex-row items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                            <Icon className={cn('w-4 h-4', getKpiColor(kpi.value, kpi.target, kpi.invertColor))} />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-bold">{kpi.value}</p>
+                        </CardContent>
+                    </Card>
+                )})}
+            </div>
+             <Card>
+                <CardHeader><CardTitle className="text-base">Wer macht was?</CardTitle></CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead>Anrufe</TableHead><TableHead>Termine</TableHead><TableHead>Follow-ups (erledigt)</TableHead><TableHead>Follow-ups (überfällig)</TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {aktivitaet.ranking.map(r => (
+                                <TableRow key={r.assignee}>
+                                    <TableCell className="font-medium">{r.assignee}</TableCell>
+                                    <TableCell>{r.calls}</TableCell>
+                                    <TableCell>{r.meetings}</TableCell>
+                                    <TableCell>{r.followupsDone}</TableCell>
+                                    <TableCell className={r.followupsOverdue > 0 ? 'text-rose-400 font-bold' : ''}>{r.followupsOverdue}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+         </div>
+    )
+};
+
+const AbschluesseTab = () => {
+    const { abschluesse } = qSalesReportingData;
+    const kpiData = [
+        { title: 'Gewonnene Deals', value: abschluesse.wonDeals.count, icon: CheckCircle2, color: 'emerald' },
+        { title: 'Verlorene Deals', value: abschluesse.lostDeals.count, icon: XCircle, color: 'rose' },
+        { title: 'Win-Rate', value: `${abschluesse.winRate}%`, icon: Percent, color: 'blue' },
+        { title: 'Ø Deal-Wert', value: `€${(abschluesse.avgDealValue/1000).toFixed(1)}k`, icon: DollarSign, color: 'emerald' },
+        { title: 'Ø Abschlussdauer', value: `${abschluesse.avgCycleTime} Tage`, icon: Clock, color: 'purple' },
+    ];
+    return (
+        <div className="space-y-8">
+            <CardHeader className="p-0">
+                <CardTitle>Abschlüsse</CardTitle>
+                <CardDescription>Gewonnene und verlorene Deals im Zeitraum – inkl. Deal-Wert und Dauer.</CardDescription>
+            </CardHeader>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {kpiData.map(kpi => {
+                    const Icon = kpi.icon;
+                    return(
+                    <Card key={kpi.title}>
+                        <CardHeader className="pb-2 flex-row items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                            <Icon className={cn('w-4 h-4', `text-${kpi.color}-400`)} />
+                        </CardHeader>
+                        <CardContent><p className="text-3xl font-bold">{kpi.value}</p></CardContent>
+                    </Card>
+                )})}
+            </div>
+             <Card>
+                <CardHeader><CardTitle>Deals im Zeitraum</CardTitle></CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead>Wert</TableHead><TableHead>Zuständig</TableHead><TableHead>Status</TableHead><TableHead>Dauer</TableHead></TableRow></TableHeader>
+                         <TableBody>
+                            {abschluesse.deals.map(d => (
+                                <TableRow key={d.id}>
+                                    <TableCell className="font-medium">{d.name}</TableCell>
+                                    <TableCell>€{d.value.toLocaleString('de-DE')}</TableCell>
+                                    <TableCell>{d.assignee}</TableCell>
+                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'} className={d.status === 'Won' ? 'bg-emerald-500/20 text-emerald-400' : ''}>{d.status}</Badge></TableCell>
+                                    <TableCell>{d.durationDays} Tage</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    )
+};
+
+const RisikoTab = () => {
+    const { risiko } = qSalesReportingData;
+    const kpiData = [
+        { title: 'At-Risk Deals', value: risiko.atRiskDeals.length, icon: Flame, color: 'rose' },
+        { title: 'Warning Deals', value: risiko.warningDeals.length, icon: AlertTriangle, color: 'amber' },
+        { title: 'Überfällige Aktionen', value: risiko.overdueActions, icon: Clock, color: 'amber' },
+        { title: 'Keine Reaktion (>7 T.)', value: risiko.noResponse, icon: UserX, color: 'rose' },
+    ];
+    return (
+         <div className="space-y-8">
+            <CardHeader className="p-0">
+                <CardTitle>Risiko</CardTitle>
+                <CardDescription>Deals, die gerade drohen zu kippen.</CardDescription>
+            </CardHeader>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {kpiData.map(kpi => {
+                     const Icon = kpi.icon;
+                    return (
+                        <Card key={kpi.title}>
+                            <CardHeader className="pb-2 flex-row items-center justify-between">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
+                                <Icon className={cn('w-4 h-4', `text-${kpi.color}-400`)} />
+                            </CardHeader>
+                            <CardContent><p className="text-3xl font-bold">{kpi.value}</p></CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
+        </div>
+    )
+};
+
+const LearningsTab = () => {
+    const { learnings } = qSalesReportingData;
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Top Verlustgründe</CardTitle>
+                </CardHeader>
+                <CardContent>
+                     <ChartContainer config={{}} className="h-64">
+                         <RechartsBarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
+                             <RechartsXAxis type="number" hide />
+                             <RechartsYAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
+                             <RechartsTooltip content={<ChartTooltipContent />} />
+                             <RechartsBar dataKey="count" fill="hsl(var(--primary))" radius={4} />
+                         </RechartsBarChart>
+                     </ChartContainer>
+                </CardContent>
+            </Card>
+             <Card className="bg-blue-500/10 border-blue-500/20">
+                <CardHeader>
+                    <CardTitle className="text-blue-300 text-base flex items-center gap-2"><BrainCircuit/> KI-Zusammenfassung</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-blue-200">{learnings.aiSummary}</p>
+                </CardContent>
+            </Card>
         </div>
     );
 };
