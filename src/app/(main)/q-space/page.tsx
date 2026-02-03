@@ -76,10 +76,6 @@ import {
   Mail,
   MessageSquare,
   MoreVertical,
-  Phone,
-  PhoneIncoming,
-  PhoneMissed,
-  PhoneOutgoing,
   Plus,
   Search,
   Settings,
@@ -98,7 +94,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
 import { kpiMitarbeiter, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, qSalesReportingData, mockLeaveRequests } from '@/lib/data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -1412,7 +1408,7 @@ const SystemAdminView = () => {
                 
                 <TabsContent value="kpi-policies">
                     <Card>
-                        <CardHeader><CardTitle>KPI-Richtlinien</CardTitle><p className="text-sm text-muted-foreground">Nur für `exec` Rolle sichtbar/bearbeitbar.</p></CardHeader>
+                        <CardHeader><CardTitle>KPI-Richtlinien</CardTitle><h2 className="text-sm text-muted-foreground">Nur für `exec` Rolle sichtbar/bearbeitbar.</h2></CardHeader>
                         <CardContent className="space-y-4">
                            <div className="grid grid-cols-3 gap-4">
                                 <div><Label>OK-Schwelle (≥)</Label><Input type="number" defaultValue="90" className="bg-input"/></div>
