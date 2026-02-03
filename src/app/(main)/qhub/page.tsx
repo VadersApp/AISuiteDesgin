@@ -105,8 +105,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { format, formatDistanceToNow, isToday, isTomorrow, isFuture } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -156,20 +154,6 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
         { title: "Deals in Bearbeitung", value: "4" },
         { title: "Pipeline-Wert", value: "€90.000" },
         { title: "Übergaben aus Marketing", value: "8" },
-    ];
-
-    const kundenserviceKpiData = [
-        { title: "Offene Tickets", value: "43" },
-        { title: "Dringende Tickets", value: "7" },
-        { title: "SLA-Verstöße", value: "3", tooltip: "Service-Level-Agreement-Verstöße" },
-        { title: "AVA-Antworten heute", value: "76", tooltip: "AVA ist Ihre Kundenservice-KI" },
-    ];
-
-    const marketingKpiData = [
-        { title: "Aktive Nurture-Kontakte", value: '124' },
-        { title: "Übergaben an Vertrieb", value: '8' },
-        { title: "Soziale Interaktionen", value: '1.2k' },
-        { title: "E-Mail-Wirkung", value: '42%', tooltip: "Öffnungen und Klicks zusammengefasst" },
     ];
 
     return (
@@ -337,7 +321,10 @@ const TermineView = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <Button variant="outline" size="sm">Details</Button>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
+                                    <Button variant="outline" size="sm">Details</Button>
+                                </div>
                             </div>
                         </Card>
                     ))}
@@ -347,35 +334,158 @@ const TermineView = () => {
     );
 };
 
-const TasksListView = () => (
-    <Card id="qhub-reports">
-        <CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Titel</TableHead>
-                        <TableHead>Zuständig</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Priorität</TableHead>
-                        <TableHead>Fällig</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockTasks.map(t => (
-                        <TableRow key={t.id}>
-                            <TableCell className="font-medium">{t.title}</TableCell>
-                            <TableCell>{t.owner}</TableCell>
-                            <TableCell><Badge variant="outline">{t.status}</Badge></TableCell>
-                            <TableCell>{t.prio}</TableCell>
-                            <TableCell>{t.due}</TableCell>
-                        </TableRow>
+const TasksListView = () => {
+    const [isDoneTasksOpen, setIsDoneTasksOpen] = useState(false);
+    
+    // Derived task data
+    const openTasks = mockTasks.filter(t => t.status !== 'Erledigt');
+    const doneTasks = mockTasks.filter(t => t.status === 'Erledigt');
+    
+    const tasksHeute = openTasks.filter(t => t.due === 'Heute').length;
+    const tasksUeberfaellig = openTasks.filter(t => t.status === 'Überfällig' || t.due === 'Sofort').length;
+    const tasksHighPrio = openTasks.filter(t => t.prio === 'Hoch').length;
+    const tasksInArbeit = openTasks.filter(t => t.status === 'In Arbeit').length;
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
+            {/* Sektion 1: Tagesüberblick */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aufgaben heute</p>
+                    <p className={cn("text-4xl font-bold mt-2", tasksHeute > 0 ? "text-primary" : "text-muted-foreground")}>
+                        {tasksHeute || 'Keine'}
+                    </p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden border-l-4 border-l-rose-500/50">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Überfällig</p>
+                    <p className={cn("text-4xl font-bold mt-2", tasksUeberfaellig > 0 ? "text-rose-400" : "text-muted-foreground")}>
+                        {tasksUeberfaellig || 'Keine'}
+                    </p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hohe Priorität</p>
+                    <p className={cn("text-4xl font-bold mt-2", tasksHighPrio > 0 ? "text-amber-400" : "text-muted-foreground")}>
+                        {tasksHighPrio || 'Keine'}
+                    </p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">In Arbeit</p>
+                    <p className={cn("text-4xl font-bold mt-2", tasksInArbeit > 0 ? "text-blue-400" : "text-muted-foreground")}>
+                        {tasksInArbeit || 'Keine'}
+                    </p>
+                </Card>
+            </div>
+
+            {/* Sektion 2: KI-Hinweise */}
+            <Card className="bg-blue-500/5 border-blue-500/20">
+                <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweise zu Aufgaben
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <p className="text-xs font-bold text-foreground">Heute priorisieren</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                {tasksUeberfaellig > 0 
+                                    ? `Bearbeite zuerst die ${tasksUeberfaellig} überfälligen Aufgaben, um Prozess-Staus zu vermeiden.`
+                                    : "Fokussiere dich heute auf die Aufgaben mit hoher Priorität für den Projekterfolg."}
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="text-xs font-bold text-foreground">Blockaden erkannt</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                2 Aufgaben warten seit >3 Tagen auf Rückmeldung. Prüfung der Abhängigkeiten empfohlen.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="text-xs font-bold text-foreground">Empfohlene Aktion</p>
+                            <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Aufgabe öffnen</Button>
+                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Notiz hinzufügen</Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Sektion 3: Offene Aufgaben */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-foreground px-1">Offene Aufgaben</h3>
+                <div className="grid grid-cols-1 gap-3">
+                    {openTasks.map(t => (
+                        <Card key={t.id} className={cn(
+                            "p-4 hover:border-primary/40 transition-all overflow-hidden",
+                            (t.status === 'Überfällig' || t.due === 'Sofort') && "border-l-4 border-l-rose-500/50",
+                            t.due === 'Heute' && "border-l-4 border-l-primary/50"
+                        )}>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Badge variant="outline" className={cn(
+                                            "text-[10px] font-bold uppercase",
+                                            t.prio === 'Hoch' ? "border-rose-500/50 text-rose-400" : "border-muted text-muted-foreground"
+                                        )}>
+                                            {t.prio}
+                                        </Badge>
+                                        <h4 className="font-bold text-foreground truncate">{t.title}</h4>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1.5"><UserIcon className="w-3.5 h-3.5"/> {t.owner}</span>
+                                        <span className={cn("font-medium", (t.status === 'Überfällig' || t.due === 'Sofort') && "text-rose-400")}>
+                                            <Clock className="w-3.5 h-3.5 inline mr-1"/> {t.due}
+                                        </span>
+                                        <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5"/> Q-Hub</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Notiz hinzufügen</TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                    <Button variant="outline" size="sm" className="h-8">Erledigt</Button>
+                                    <Button variant="default" size="sm" className="h-8">Öffnen</Button>
+                                </div>
+                            </div>
+                        </Card>
                     ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+                </div>
+            </div>
+
+            {/* Sektion 4: Erledigte Aufgaben */}
+            {doneTasks.length > 0 && (
+                <Collapsible open={isDoneTasksOpen} onOpenChange={setIsDoneTasksOpen}>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between hover:bg-transparent px-1">
+                            <span className="text-sm font-bold text-muted-foreground flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4"/> Erledigte Aufgaben ({doneTasks.length})
+                            </span>
+                            <ChevronDown className={cn("w-4 h-4 transition-transform", isDoneTasksOpen && "rotate-180")}/>
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-4 space-y-3">
+                        {doneTasks.map(t => (
+                            <Card key={t.id} className="p-4 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all overflow-hidden">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-foreground truncate line-through">{t.title}</h4>
+                                        <p className="text-[10px] text-muted-foreground mt-1">Erledigt am {format(new Date(), 'dd.MM.yyyy')}</p>
+                                    </div>
+                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 uppercase font-black text-[9px]">Erledigt</Badge>
+                                </div>
+                            </Card>
+                        ))}
+                    </CollapsibleContent>
+                </Collapsible>
+            )}
+        </div>
+    )
+}
 
 const ContactsView = () => {
     const router = useRouter();
