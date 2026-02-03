@@ -93,9 +93,9 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, qSalesReportingData } from '@/lib/data';
+import { kpiMitarbeiter, chatThreads, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, qSalesReportingData, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -558,38 +558,160 @@ const CompaniesView = () => (
     </Card>
 );
 
-const DealsView = () => (
-    <Card id="qhub-reports">
-        <CardHeader>
-            <div className="flex justify-between items-center">
-                <CardTitle>Deals</CardTitle>
-                <Button><Plus className="mr-2 h-4 w-4" /> Deal erstellen</Button>
+const DealsView = () => {
+    const [isClosedDealsOpen, setIsClosedDealsOpen] = useState(false);
+
+    // Filter deals
+    const activeDeals = mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren');
+    const wonDeals = mockDeals.filter(d => d.stage === 'Gewonnen');
+    const lostDeals = mockDeals.filter(d => d.stage === 'Verloren');
+
+    // KPI Calculations
+    const openDealsCount = activeDeals.length;
+    const pipelineValue = activeDeals.reduce((sum, d) => {
+        const val = parseFloat(d.value.replace(/[^0-9.-]+/g, "")) || 0;
+        return sum + val;
+    }, 0);
+    const inNegotiationCount = activeDeals.filter(d => d.stage === 'Verhandlung').length;
+    const criticalDealsCount = activeDeals.filter(d => d.inactiveDays > 3 || d.aiRisk).length;
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
+            {/* Sektion 1: Tagesüberblick */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Offene Deals</p>
+                    <p className="text-4xl font-bold mt-2">{openDealsCount || 'Keine'}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pipeline-Wert</p>
+                    <p className="text-4xl font-bold mt-2 text-primary">{formatWaehrung(pipelineValue)}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">In Verhandlung</p>
+                    <p className="text-4xl font-bold mt-2 text-blue-400">{inNegotiationCount || 'Keine'}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden border-l-4 border-l-rose-500/50">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kritische Deals</p>
+                    <p className={cn("text-4xl font-bold mt-2", criticalDealsCount > 0 ? "text-rose-400" : "text-muted-foreground")}>
+                        {criticalDealsCount || 'Keine'}
+                    </p>
+                </Card>
             </div>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Deal-Name</TableHead>
-                        <TableHead>Phase</TableHead>
-                        <TableHead>Wert</TableHead>
-                        <TableHead>Zuständig</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockDeals.filter(d => d.stage !== 'Gewonnen' && d.stage !== 'Verloren').map(d => (
-                        <TableRow key={d.id}>
-                            <TableCell className="font-semibold">{d.name}</TableCell>
-                            <TableCell><Badge variant="secondary">{d.stage}</Badge></TableCell>
-                            <TableCell>{d.value}</TableCell>
-                            <TableCell>{d.owner}</TableCell>
-                        </TableRow>
+
+            {/* Sektion 2: KI-Hinweise */}
+            <Card className="bg-blue-500/5 border-blue-500/20">
+                <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweise zu Deals
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <p className="text-xs font-bold text-foreground">Heute fokussieren</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                Deal 'Innovate GmbH' hat einen hohen Wert und ist seit 2 Tagen unverändert. Abschlusschance: 85%.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="text-xs font-bold text-foreground">Risiken erkannt</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                'Data Corp' zeigt hohe Inaktivität (5 Tage). Letzte Reaktion der Gegenseite war vor einer Woche.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="text-xs font-bold text-foreground">Empfohlener Schritt</p>
+                            <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Angebot nachfassen</Button>
+                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Termin vorschlagen</Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Sektion 3: Aktive Deals Kartenliste */}
+            <div className="space-y-4">
+                <h3 className="text-lg font-bold text-foreground px-1">Aktive Deals</h3>
+                <div className="grid grid-cols-1 gap-3">
+                    {activeDeals.map(d => (
+                        <Card key={d.id} className={cn(
+                            "p-4 hover:border-primary/40 transition-all overflow-hidden",
+                            (d.inactiveDays > 3 || d.aiRisk) && "border-l-4 border-l-rose-500/50",
+                            d.stage === 'Verhandlung' && "border-l-4 border-l-blue-500/50"
+                        )}>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Badge variant="secondary" className="text-[10px] font-bold uppercase">
+                                            {d.stage}
+                                        </Badge>
+                                        <h4 className="font-bold text-foreground truncate">{d.name}</h4>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1.5 font-bold text-foreground"><DollarSign className="w-3.5 h-3.5 text-emerald-400"/> {d.value}</span>
+                                        <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5"/> Q-Hub</span>
+                                        <span className="flex items-center gap-1.5"><UserIcon className="w-3.5 h-3.5"/> {d.owner}</span>
+                                        <span className={cn("font-medium", d.inactiveDays > 3 && "text-rose-400")}>
+                                            <Clock className="w-3.5 h-3.5 inline mr-1"/> {d.inactiveDays === 0 ? 'Heute aktiv' : `Vor ${d.inactiveDays} Tagen`}
+                                        </span>
+                                    </div>
+                                    {d.aiRisk && <p className="text-[10px] text-rose-400 font-medium mt-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> {d.aiRisk}</p>}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
+                                    <Button variant="outline" size="sm" className="h-8">Aufgabe</Button>
+                                    <Button variant="default" size="sm" className="h-8">Öffnen</Button>
+                                </div>
+                            </div>
+                        </Card>
                     ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+                </div>
+            </div>
+
+            {/* Sektion 4: Geschlossene Deals Collapsible */}
+            <div className="pt-4">
+                <Collapsible open={isClosedDealsOpen} onOpenChange={setIsClosedDealsOpen}>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between hover:bg-transparent px-1 text-muted-foreground">
+                            <span className="text-sm font-bold flex items-center gap-2">
+                                <HistoryIcon className="w-4 h-4"/> Geschlossene Deals ({wonDeals.length + lostDeals.length})
+                            </span>
+                            <ChevronDown className={cn("w-4 h-4 transition-transform", isClosedDealsOpen && "rotate-180")}/>
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-4 space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                                <p className="text-xs font-bold text-emerald-400 uppercase px-1">Gewonnen</p>
+                                {wonDeals.map(d => (
+                                    <Card key={d.id} className="p-3 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+                                        <div className="flex justify-between items-center gap-2">
+                                            <p className="text-sm font-bold truncate">{d.name}</p>
+                                            <span className="text-xs font-mono font-bold text-emerald-400">{d.value}</span>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                            <div className="space-y-3">
+                                <p className="text-xs font-bold text-rose-400 uppercase px-1">Verloren</p>
+                                {lostDeals.map(d => (
+                                    <Card key={d.id} className="p-3 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+                                        <div className="flex justify-between items-center gap-2">
+                                            <p className="text-sm font-bold truncate">{d.name}</p>
+                                            <span className="text-xs font-mono font-bold text-rose-400">{d.value}</span>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    </CollapsibleContent>
+                </Collapsible>
+            </div>
+        </div>
+    );
+};
 
 const PipelineView = () => (
     <div className="space-y-4" id="qhub-reports">
