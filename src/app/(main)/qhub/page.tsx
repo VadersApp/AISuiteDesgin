@@ -1320,7 +1320,7 @@ const NotesListView = () => {
                             <Separator className="bg-blue-500/10"/>
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Wissens-Cluster</p>
-                                <p className="text-[11px] text-blue-300/90 leading-relaxed">
+                                <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
                                     Zu 'John Doe' existieren 5 einzelne Notizen aus dieser Woche.
                                 </p>
                                 <Button variant="link" className="h-auto p-0 text-[10px] font-black text-primary uppercase tracking-widest">Zusammenfassen</Button>
@@ -1588,298 +1588,270 @@ const EmailsListView = () => {
     );
 };
 
-const CallsListView = () => (
-    <Card id="qhub-reports" className="overflow-hidden relative">
-        <CardHeader><CardTitle>Anrufe</CardTitle></CardHeader>
-        <CardContent className="p-0">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Typ</TableHead>
-                        <TableHead>Kontakt</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Datum</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockCalls.map(c => (
-                        <TableRow key={c.id}>
-                            <TableCell className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">{c.type}</TableCell>
-                            <TableCell className="font-medium">{c.contactName}</TableCell>
-                            <TableCell><Badge variant="outline" className="text-[10px] font-black uppercase">{c.status}</Badge></TableCell>
-                            <TableCell className="text-xs font-mono font-bold text-muted-foreground">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: de })}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+const CallsListView = () => {
+    const [selectedFilter, setSelectedFilter] = useState('pending');
+    const [detailCall, setDetailCall] = useState<any | null>(null);
 
-const UebersichtTab = () => {
-    const { uebersicht } = qSalesReportingData;
-    const IconMap: { [key: string]: React.ElementType } = { 
-      Phone, Calendar: CalendarDays, Handshake, Percent, DollarSign, AlertTriangle 
+    const filteredCalls = useMemo(() => {
+        return mockCalls.filter(c => {
+            if (selectedFilter === 'all') return true;
+            if (selectedFilter === 'verpasst') return c.type === 'Verpasst';
+            if (selectedFilter === 'pending') return c.status === 'Rückruf offen';
+            if (selectedFilter === 'customer') return c.contactName && c.companyName;
+            if (selectedFilter === 'done') return c.status === 'Erfolgreich geführt';
+            return true;
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [selectedFilter]);
+
+    const stats = {
+        totalToday: mockCalls.filter(c => isToday(new Date(c.createdAt))).length,
+        missed: mockCalls.filter(c => c.type === 'Verpasst').length,
+        pending: mockCalls.filter(c => c.status === 'Rückruf offen').length,
+        customer: mockCalls.filter(c => c.contactName && c.companyName).length
     };
-  
+
+    const getCallIcon = (type: string) => {
+        if (type === 'Verpasst') return <PhoneMissed className="w-4 h-4 text-rose-400"/>;
+        if (type === 'Eingehend') return <PhoneIncoming className="w-4 h-4 text-blue-400"/>;
+        return <PhoneOutgoing className="w-4 h-4 text-emerald-400"/>;
+    };
+
     return (
-      <div className="space-y-8" id="qhub-reports">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {uebersicht.kpis.map(kpi => {
-            const Icon = IconMap[kpi.icon as string] || Activity;
-            return (
-              <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
-                <CardHeader className="pb-2 p-4 flex flex-row items-center justify-between space-y-0 gap-2">
-                  <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate flex-1 tracking-wider">
-                    {kpi.title}
-                  </CardTitle>
-                  <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
+            {/* Sektion 1: Tagesüberblick */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Anrufe heute</p>
+                    <p className="text-4xl font-bold mt-2 font-mono text-primary">{stats.totalToday || 'Keine'}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative border-l-4 border-l-rose-500/50">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verpasste Anrufe</p>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", stats.missed > 0 ? "text-rose-400" : "text-muted-foreground")}>
+                        {stats.missed || 'Keine'}
+                    </p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Rückrufe offen</p>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", stats.pending > 0 ? "text-amber-400" : "text-muted-foreground")}>
+                        {stats.pending || 'Keine'}
+                    </p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kundenanrufe</p>
+                    <p className="text-4xl font-bold mt-2 font-mono text-blue-400">{stats.customer || 'Keine'}</p>
+                </Card>
+            </div>
+
+            {/* Sektion 2: KI-Hinweise */}
+            <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden relative">
+                <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm text-blue-300 flex items-center gap-2 uppercase tracking-widest">
+                        <Sparkles className="w-4 h-4 text-blue-400 shrink-0"/> KI-Hinweise zu Anrufen
+                    </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="font-bold text-foreground font-mono truncate" style={{ fontSize: 'clamp(20px, 2.5vw, 32px)', lineHeight: '1.1' }}>
-                    {parseValue(kpi.value)}
-                  </p>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-        
-        <Card className="overflow-hidden relative">
-            <CardHeader>
-                <CardTitle>Sales Flow</CardTitle>
-                <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center justify-around overflow-x-auto p-6 gap-6 no-scrollbar min-w-0">
-                {uebersicht.salesFlow.map((step, index) => (
-                    <React.Fragment key={step.stage}>
-                        <div className="text-center shrink-0 min-w-[80px]">
-                            <p className="text-[10px] font-black text-muted-foreground uppercase mb-1 tracking-widest">{step.stage}</p>
-                            <p className="text-2xl font-bold font-mono tracking-tighter">{formatZahl(step.value)}</p>
+                <CardContent className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Nachbearbeitung</p>
+                        <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
+                            Der Anruf von 'Max Mustermann' (vor 1,5 Std.) wurde noch nicht mit einer Notiz versehen.
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold uppercase border-blue-500/30 text-blue-300">Notiz hinzufügen</Button>
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold uppercase border-blue-500/30 text-blue-300">Aufgabe anlegen</Button>
                         </div>
-                        {index < uebersicht.salesFlow.length - 1 && (
-                            <div className="text-center shrink-0">
-                                <ChevronsRight className="w-6 h-6 text-muted-foreground/30 mx-auto"/>
-                                <p className="text-emerald-400 font-bold mt-1 text-[11px] font-mono">
-                                  {formatProzent(parseFloat(uebersicht.salesFlow[index+1].conversion || '0'))}
-                                </p>
-                            </div>
-                        )}
-                    </React.Fragment>
-                ))}
-            </CardContent>
-        </Card>
-      </div>
-    );
-};
-
-const AktivitaetTab = () => {
-    const { aktivitaet } = qSalesReportingData;
-    const kpiData = [
-        { title: 'Anrufe', value: aktivitaet.calls, target: 80, icon: Phone, color: 'blue' },
-        { title: 'Erreichte Leads', value: aktivitaet.reachedLeads, target: 60, icon: UserCheck, color: 'emerald' },
-        { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: Calendar, color: 'purple' },
-        { title: 'Überfällige Follow-ups', value: aktivitaet.overdueFollowups, target: 5, icon: AlertTriangle, color: 'amber', invertColor: true },
-    ];
-
-    const getKpiColor = (value: number, target: number, invert: boolean = false) => {
-        const performance = value / target;
-        if (invert) return value === 0 ? 'text-emerald-400' : value < target ? 'text-amber-400' : 'text-rose-400';
-        return performance >= 1 ? 'text-emerald-400' : performance >= 0.8 ? 'text-amber-400' : 'text-rose-400';
-    }
-
-    return (
-         <div className="space-y-8" id="qhub-reports">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {kpiData.map(kpi => {
-                    const Icon = kpi.icon;
-                    return(
-                    <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
-                        <CardHeader className="p-4 pb-2 flex-row items-center justify-between gap-2 space-y-0">
-                            <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate tracking-wider">{kpi.title}</CardTitle>
-                            <Icon className={cn('w-3.5 h-3.5 shrink-0', getKpiColor(kpi.value, kpi.target, kpi.invertColor))} />
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                            <p className="text-3xl font-bold font-mono tracking-tighter">{formatZahl(kpi.value)}</p>
-                        </CardContent>
-                    </Card>
-                )})}
-            </div>
-             <Card className="overflow-hidden relative">
-                <CardHeader><CardTitle className="text-base">Zuständigkeiten</CardTitle></CardHeader>
-                <CardContent className="p-0 overflow-x-auto custom-scrollbar">
-                    <Table>
-                        <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead className="text-right">Anrufe</TableHead><TableHead className="text-right">Termine</TableHead><TableHead className="text-right">Überfällig</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            {aktivitaet.ranking.map(r => (
-                                <TableRow key={r.assignee}>
-                                    <TableCell className="font-bold">{r.assignee}</TableCell>
-                                    <TableCell className="text-right font-mono font-bold">{formatZahl(r.calls)}</TableCell>
-                                    <TableCell className="text-right font-mono font-bold">{formatZahl(r.meetings)}</TableCell>
-                                    <TableCell className={cn("text-right font-mono font-black", r.followupsOverdue > 0 ? 'text-rose-400' : 'text-emerald-400')}>{formatZahl(r.followupsOverdue)}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    </div>
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Priorität</p>
+                        <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
+                            Ein verpasster Anruf von 'Peter Panik' (Deal-relevant) erfordert zeitnahen Rückruf.
+                        </p>
+                        <Button variant="link" className="h-auto p-0 text-[10px] font-black text-primary uppercase tracking-widest">In Q-Sales zurückrufen</Button>
+                    </div>
                 </CardContent>
             </Card>
-         </div>
-    )
-};
 
-const AbschluesseTab = () => {
-    const { abschluesse } = qSalesReportingData;
-    const kpiData = [
-        { title: 'Gewonnen', value: abschluesse.wonDeals.count, icon: CheckCircle2, color: 'emerald' },
-        { title: 'Verloren', value: abschluesse.lostDeals.count, icon: XCircle, color: 'rose' },
-        { title: 'Win-Rate', value: abschluesse.winRate, icon: Percent, color: 'blue', isPercent: true },
-        { title: 'Ø Deal-Wert', value: abschluesse.avgDealValue, icon: DollarSign, color: 'emerald', isCurrency: true },
-        { title: 'Ø Dauer', value: abschluesse.avgCycleTime, icon: Clock, color: 'purple', suffix: ' Tage' },
-    ];
-    return (
-        <div className="space-y-8" id="qhub-reports">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                {kpiData.map(kpi => {
-                    const Icon = kpi.icon;
-                    return(
-                    <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
-                        <CardHeader className="p-4 pb-2 flex-row items-center justify-between space-y-0 gap-2">
-                            <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate tracking-wider">{kpi.title}</CardTitle>
-                            <Icon className={cn('w-3.5 h-3.5 shrink-0', `text-${kpi.color}-400`)} />
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="font-bold font-mono truncate tracking-tighter" style={{ fontSize: 'clamp(18px, 2vw, 28px)' }}>
-                            {kpi.isCurrency ? formatWaehrung(kpi.value) : kpi.isPercent ? formatProzent(kpi.value) : formatZahl(kpi.value)}
-                            {kpi.suffix}
-                          </p>
-                        </CardContent>
-                    </Card>
-                )})}
-            </div>
-             <Card className="overflow-hidden relative">
-                <CardHeader><CardTitle>Laufende Deals</CardTitle></CardHeader>
-                <CardContent className="p-0 overflow-x-auto custom-scrollbar">
-                    <Table>
-                        <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead className="text-right">Wert</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                         <TableBody>
-                            {abschluesse.deals.map(d => (
-                                <TableRow key={d.id}>
-                                    <TableCell className="font-bold">{d.name}</TableCell>
-                                    <TableCell className="text-right font-mono font-bold">{formatWaehrung(d.value)}</TableCell>
-                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'} className={cn("text-[10px] font-black uppercase", d.status === 'Won' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "")}>{d.status}</Badge></TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
-    )
-};
+            {/* Filter and List */}
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {['all', 'verpasst', 'pending', 'customer', 'done'].map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setSelectedFilter(f)}
+                                className={cn(
+                                    "px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border",
+                                    selectedFilter === f 
+                                        ? "bg-primary border-primary text-primary-foreground shadow-lg"
+                                        : "bg-muted border-transparent text-muted-foreground hover:border-border"
+                                )}
+                            >
+                                {f === 'all' ? 'Alle' : f === 'verpasst' ? 'Verpasst' : f === 'pending' ? 'Rückruf offen' : f === 'customer' ? 'Kundenanrufe' : 'Erledigt'}
+                            </button>
+                        ))}
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest"><Phone className="w-3 h-3 mr-2"/> In Q-Sales öffnen</Button>
+                </div>
 
-const RisikoTab = () => {
-    const { risiko } = qSalesReportingData;
-    const kpiData = [
-        { title: 'At-Risk Deals', value: risiko.atRiskDeals.length, icon: Flame, color: 'rose' },
-        { title: 'Warning Deals', value: risiko.warningDeals.length, icon: AlertTriangle, color: 'amber' },
-        { title: 'Überfällig', value: risiko.overdueActions, icon: Clock, color: 'amber' },
-        { title: 'Keine Reaktion', value: risiko.noResponse, icon: UserX, color: 'rose' },
-    ];
-    return (
-         <div className="space-y-8" id="qhub-reports">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {kpiData.map(kpi => {
-                     const Icon = kpi.icon;
-                    return (
-                        <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
-                            <CardHeader className="p-4 pb-2 flex-row items-center justify-between space-y-0 gap-2">
-                                <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate tracking-wider">{kpi.title}</CardTitle>
-                                <Icon className={cn('w-3.5 h-3.5 shrink-0', `text-${kpi.color}-400`)} />
-                            </CardHeader>
-                            <CardContent className="p-4 pt-0">
-                              <p className="text-3xl font-bold font-mono tracking-tighter">{formatZahl(kpi.value)}</p>
-                            </CardContent>
-                        </Card>
-                    )
-                })}
-            </div>
-             <Card className="overflow-hidden relative">
-                <CardHeader><CardTitle>Dringender Handlungsbedarf</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                    {risiko.atRiskDeals.map(d => (
-                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5 overflow-hidden">
-                            <div className="flex justify-between items-start gap-4">
-                                <div className="min-w-0">
-                                    <p className="font-bold truncate">{d.name}</p>
-                                    <p className="text-xs font-mono font-bold text-muted-foreground">{formatWaehrung(d.dealValue)}</p>
+                <div className="space-y-3">
+                    <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">Letzte Anrufe</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                        {filteredCalls.map(call => (
+                            <Card key={call.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden relative cursor-pointer" onClick={() => setDetailCall(call)}>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0 border border-border/50 shadow-inner">
+                                            {getCallIcon(call.type)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{call.type}</span>
+                                                {call.duration && (
+                                                    <>
+                                                        <span className="text-[10px] text-muted-foreground/50">•</span>
+                                                        <span className="text-[10px] text-muted-foreground font-mono font-bold">{call.duration}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <h4 className="font-bold text-foreground text-sm truncate">{call.contactName || 'Unbekannter Anrufer'}</h4>
+                                            <div className="flex items-center gap-3 mt-1">
+                                                <span className="text-[10px] text-muted-foreground font-mono font-bold tracking-tighter">{formatDistanceToNow(new Date(call.createdAt), { addSuffix: true, locale: de })}</span>
+                                                {call.contextName && (
+                                                    <Badge variant="outline" className="text-[9px] font-black uppercase bg-primary/5 border-transparent text-primary/80 gap-1.5 h-5">
+                                                        <LinkIcon className="w-2.5 h-2.5"/> {call.contextName}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
+                                        <Badge variant="outline" className={cn(
+                                            "text-[9px] font-black uppercase h-5 px-2",
+                                            call.status === 'Rückruf offen' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                        )}>
+                                            {call.status}
+                                        </Badge>
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
+                                            <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase px-3">Öffnen</Button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <Badge variant="destructive" className="text-[9px] font-black uppercase">At Risk</Badge>
-                            </div>
-                         </Card>
-                    ))}
-                </CardContent>
-            </Card>
-        </div>
-    )
-};
+                            </Card>
+                        ))}
+                        {filteredCalls.length === 0 && (
+                            <Card className="p-12 text-center text-muted-foreground italic border-dashed">
+                                Keine Anrufe in dieser Kategorie gefunden.
+                            </Card>
+                        )}
+                    </div>
+                </div>
+            </div>
 
-const LearningsTab = () => {
-    const { learnings } = qSalesReportingData;
-    return (
-        <div className="space-y-6" id="qhub-reports">
-            <Card className="overflow-hidden relative">
-                <CardHeader>
-                    <CardTitle>Top Verlustgründe</CardTitle>
-                </CardHeader>
-                <CardContent>
-                     <div className="h-64 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RechartsBarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
-                                <RechartsXAxis type="number" hide />
-                                <RechartsYAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' }} width={120}/>
-                                <RechartsTooltip content={<ChartTooltipContent />} />
-                                <RechartsBar dataKey="count" fill="hsl(var(--primary))" radius={4} barSize={24} />
-                            </RechartsBarChart>
-                        </ResponsiveContainer>
-                     </div>
-                </CardContent>
-            </Card>
-             <Card className="bg-blue-500/5 border-blue-500/10 overflow-hidden relative">
-                <CardHeader>
-                    <CardTitle className="text-blue-300 text-[10px] font-black uppercase flex items-center gap-2 tracking-widest"><BrainCircuit className="w-4 h-4 shrink-0"/> KI-Zusammenfassung</CardTitle>
-                </CardHeader>
-                <CardContent><p className="text-blue-200/90 text-sm leading-relaxed font-medium">{learnings.aiSummary}</p></CardContent>
-            </Card>
+            {/* Call Detail Dialog */}
+            <Dialog open={!!detailCall} onOpenChange={open => !open && setDetailCall(null)}>
+                <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden bg-background">
+                    {detailCall && (
+                        <div className="flex flex-col h-full">
+                            <DialogHeader className="p-6 pb-4 border-b border-border/50">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        {getCallIcon(detailCall.type)}
+                                        <DialogTitle className="text-xl font-bold">{detailCall.contactName || 'Unbekannt'}</DialogTitle>
+                                    </div>
+                                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                        {detailCall.companyName || 'Keine Firma'} • {format(new Date(detailCall.createdAt), 'dd.MM.yyyy HH:mm', {locale: de})} Uhr
+                                    </div>
+                                </div>
+                            </DialogHeader>
+                            <ScrollArea className="flex-1 max-h-[500px]">
+                                <div className="p-6 space-y-6">
+                                    <div className="grid grid-cols-2 gap-4 text-center">
+                                        <Card className="p-3 bg-muted/30">
+                                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Dauer</Label>
+                                            <p className="font-mono font-bold mt-1">{detailCall.duration || '--:--'}</p>
+                                        </Card>
+                                        <Card className="p-3 bg-muted/30">
+                                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Status</Label>
+                                            <p className={cn("text-[11px] font-bold uppercase mt-1", detailCall.status === 'Rückruf offen' ? 'text-amber-400' : 'text-emerald-400')}>{detailCall.status}</p>
+                                        </Card>
+                                    </div>
+
+                                    {detailCall.contextName && (
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Verknüpfter Kontext</Label>
+                                            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                                                <Handshake className="w-4 h-4 text-primary shrink-0"/>
+                                                <span className="text-[11px] font-bold text-foreground uppercase truncate">{detailCall.contextName}</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Gesprächsnotiz</Label>
+                                        <Textarea placeholder="Notiz zum Gespräch hinzufügen..." className="bg-input min-h-[100px] text-sm resize-none" />
+                                    </div>
+
+                                    {detailCall.aiHelpContent && (
+                                        <Card className="bg-blue-500/5 border-blue-500/10">
+                                            <CardHeader className="p-4 pb-2"><CardTitle className="text-xs text-blue-300 uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3.5 h-3.5"/> KI-Leitfaden</CardTitle></CardHeader>
+                                            <CardContent className="p-4 pt-0 space-y-3">
+                                                <ul className="space-y-1.5">
+                                                    {detailCall.aiHelpContent.leitfaden.map((item: string, i: number) => (
+                                                        <li key={i} className="text-[11px] text-blue-200/80 flex items-start gap-2">
+                                                            <div className="w-1 h-1 rounded-full bg-blue-400 mt-1.5 shrink-0"/> {item}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                                <div className="pt-2 border-t border-blue-500/10">
+                                                    <p className="text-[10px] font-bold text-blue-300 uppercase">Empfohlene Nachbearbeitung</p>
+                                                    <p className="text-[11px] text-blue-200/80 mt-1">{detailCall.aiHelpContent.nachbearbeitung}</p>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )}
+                                </div>
+                            </ScrollArea>
+                            <DialogFooter className="p-4 bg-muted/20 border-t border-border/50 flex flex-wrap gap-2">
+                                <Button variant="outline" size="sm" className="font-bold text-[10px] uppercase tracking-wider"><CheckSquare className="w-3.5 h-3.5 mr-2"/> Aufgabe erstellen</Button>
+                                <Button variant="outline" size="sm" className="font-bold text-[10px] uppercase tracking-wider"><FilePen className="w-3.5 h-3.5 mr-2"/> Notiz speichern</Button>
+                                <Button size="sm" className="font-bold text-[10px] uppercase tracking-wider ml-auto"><Phone className="w-3.5 h-3.5 mr-2"/> In Q-Sales öffnen</Button>
+                            </DialogFooter>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
 
-const ReportingView = () => (
-    <Tabs defaultValue="uebersicht" className="w-full">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
-            <TabsList className="bg-muted/50 p-1">
-                <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
-                <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
-                <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
-                <TabsTrigger value="risiko">Risiko</TabsTrigger>
-                <TabsTrigger value="learnings">Learnings</TabsTrigger>
-            </TabsList>
-            <Select defaultValue="30d">
-                <SelectTrigger className="w-full md:w-[180px] bg-input font-bold text-xs uppercase"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="today">Heute</SelectItem>
-                    <SelectItem value="7d">Diese Woche</SelectItem>
-                    <SelectItem value="30d">Dieser Monat</SelectItem>
-                </SelectContent>
-            </Select>
-        </div>
-        <TabsContent value="uebersicht"><UebersichtTab /></TabsContent>
-        <TabsContent value="aktivitaet"><AktivitaetTab /></TabsContent>
-        <TabsContent value="abschluesse"><AbschluesseTab /></TabsContent>
-        <TabsContent value="risiko"><RisikoTab /></TabsContent>
-        <TabsContent value="learnings"><LearningsTab /></TabsContent>
-    </Tabs>
-);
+const ReportingView = () => {
+    return (
+        <Tabs defaultValue="uebersicht" className="w-full">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+                <TabsList className="bg-muted/50 p-1">
+                    <TabsTrigger value="uebersicht">Übersicht</TabsTrigger>
+                    <TabsTrigger value="aktivitaet">Aktivität</TabsTrigger>
+                    <TabsTrigger value="abschluesse">Abschlüsse</TabsTrigger>
+                    <TabsTrigger value="risiko">Risiko</TabsTrigger>
+                    <TabsTrigger value="learnings">Learnings</TabsTrigger>
+                </TabsList>
+                <Select defaultValue="30d">
+                    <SelectTrigger className="w-full md:w-[180px] bg-input font-bold text-xs uppercase"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="today">Heute</SelectItem>
+                        <SelectItem value="7d">Diese Woche</SelectItem>
+                        <SelectItem value="30d">Dieser Monat</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <TabsContent value="uebersicht"><UebersichtTab /></TabsContent>
+            <TabsContent value="aktivitaet"><AktivitaetTab /></TabsContent>
+            <TabsContent value="abschluesse"><AbschluesseTab /></TabsContent>
+            <TabsContent value="risiko"><RisikoTab /></TabsContent>
+            <TabsContent value="learnings"><LearningsTab /></TabsContent>
+        </Tabs>
+    );
+};
 
 const modules = [
     { name: 'Dashboard', icon: LayoutDashboard },
