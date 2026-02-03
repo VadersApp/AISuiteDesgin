@@ -35,6 +35,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BarChart as BarChartIcon,
+  BarChart2,
   BarChart3,
   Bot as BotIcon,
   BrainCircuit,
@@ -92,6 +93,7 @@ import {
   FilePen,
   Link as LinkIcon,
   Trash2,
+  ArrowUpRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
@@ -862,7 +864,7 @@ const ActivitiesListView = () => {
             if (selectedFilter === 'vertrieb') return a.type === 'Verkaufschance';
             if (selectedFilter === 'intern') return a.type === 'Aufgabe';
             return true;
-        }).sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+        }).sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.createdAt || a.dueDate).getTime());
     }, [selectedFilter]);
 
     const groupedByTime = useMemo(() => {
@@ -885,17 +887,15 @@ const ActivitiesListView = () => {
     }, [filteredActivities]);
 
     const groupedByCustomer = useMemo(() => {
-        // Use mockContacts as base for customer timelines
         return mockContacts.map(contact => {
             const customerActivities = allActivities.filter(a => a.context.includes(contact.name) || a.context.includes(contact.company));
             return {
                 ...contact,
-                activities: customerActivities.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+                activities: customerActivities.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.createdAt || a.dueDate).getTime())
             };
         }).filter(c => c.activities.length > 0);
     }, []);
 
-    // KPI Calculation
     const stats = useMemo(() => {
         const heute = allActivities.filter(a => isToday(new Date(a.dueDate)));
         return {
@@ -918,7 +918,6 @@ const ActivitiesListView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* Sektion 1: Tagesüberblick & Eskalationen */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                 <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
@@ -962,7 +961,6 @@ const ActivitiesListView = () => {
                 </div>
             </div>
 
-            {/* Sektion 2: Umschalter & Filter */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
                 <div className="flex items-center gap-2 p-1 bg-muted rounded-xl border border-border">
                     <button 
@@ -997,10 +995,8 @@ const ActivitiesListView = () => {
                 </div>
             </div>
 
-            {/* Sektion 3: Hauptliste (Zeit vs. Kunde) */}
             <div className="space-y-8">
                 {groupBy === 'time' ? (
-                    /* Zeit-Timeline */
                     Object.entries(groupedByTime).map(([group, acts]) => (
                         acts.length > 0 && (
                             <div key={group} className="space-y-3">
@@ -1048,7 +1044,6 @@ const ActivitiesListView = () => {
                         )
                     ))
                 ) : (
-                    /* Kunden-Timeline */
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {groupedByCustomer.map(customer => (
                             <Card key={customer.id} className="flex flex-col h-full overflow-hidden hover:border-primary/30 transition-all relative">
@@ -1101,7 +1096,6 @@ const ActivitiesListView = () => {
                 )}
             </div>
 
-            {/* Sektion 4: Leistungsauswertung (Collapsible) */}
             <div className="pt-8 border-t border-border">
                 <Collapsible open={isPerformanceOpen} onOpenChange={setIsPerformanceOpen}>
                     <CollapsibleTrigger asChild>
@@ -1164,7 +1158,6 @@ const NotesListView = () => {
     const [detailNote, setDetailNote] = useState<any | null>(null);
     const { toast } = useToast();
 
-    // Grouping notes
     const groupedNotes = useMemo(() => {
         const filtered = initialMockNotes.filter(n => {
             if (selectedFilter === 'kunden' && n.contextType !== 'Kontakt' && n.contextType !== 'Firma') return false;
@@ -1199,7 +1192,6 @@ const NotesListView = () => {
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
-            {/* Sektion 1: Schnellerstellung */}
             <Card className="border-primary/20 shadow-sm overflow-hidden relative">
                 <CardHeader className="p-4 pb-2 border-b bg-muted/30">
                     <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest">
@@ -1237,7 +1229,6 @@ const NotesListView = () => {
                 </CardContent>
             </Card>
 
-            {/* Sektion 2: KI-Hinweise & Filter */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="lg:col-span-8 space-y-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
@@ -1268,7 +1259,6 @@ const NotesListView = () => {
                         </div>
                     </div>
 
-                    {/* Notizenliste */}
                     <div className="space-y-8">
                         {Object.entries(groupedNotes).map(([group, notes]) => (
                             notes.length > 0 && (
@@ -1312,7 +1302,6 @@ const NotesListView = () => {
                     </div>
                 </div>
 
-                {/* Rechte Spalte: KI-Hinweise */}
                 <div className="lg:col-span-4 space-y-6">
                     <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden relative">
                         <CardHeader className="p-4 pb-2">
@@ -1331,7 +1320,7 @@ const NotesListView = () => {
                             <Separator className="bg-blue-500/10"/>
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Wissens-Cluster</p>
-                                <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
+                                <p className="text-[11px] text-blue-300/90 leading-relaxed">
                                     Zu 'John Doe' existieren 5 einzelne Notizen aus dieser Woche.
                                 </p>
                                 <Button variant="link" className="h-auto p-0 text-[10px] font-black text-primary uppercase tracking-widest">Zusammenfassen</Button>
@@ -1341,7 +1330,6 @@ const NotesListView = () => {
                 </div>
             </div>
 
-            {/* Notiz-Detail Dialog */}
             <Dialog open={!!detailNote} onOpenChange={open => !open && setDetailNote(null)}>
                 <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl bg-background">
                     {detailNote && (
@@ -1390,31 +1378,215 @@ const NotesListView = () => {
     );
 };
 
-const EmailsListView = () => (
-    <Card id="qhub-reports" className="overflow-hidden relative">
-        <CardHeader><CardTitle>E-Mails</CardTitle></CardHeader>
-        <CardContent className="p-0">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Betreff</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Datum</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {mockEmails.map(e => (
-                        <TableRow key={e.id}>
-                            <TableCell className="font-medium max-w-xs truncate">{e.subject}</TableCell>
-                            <TableCell><Badge variant="outline">{e.status}</Badge></TableCell>
-                            <TableCell className="text-xs font-mono font-bold text-muted-foreground">{formatDistanceToNow(new Date(e.createdAt), { addSuffix: true, locale: de })}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+const EmailsListView = () => {
+    const [selectedFilter, setSelectedFilter] = useState('pending');
+    const [detailEmail, setDetailNote] = useState<any | null>(null);
+
+    const filteredEmails = useMemo(() => {
+        return mockEmails.filter(e => {
+            if (selectedFilter === 'all') return true;
+            if (selectedFilter === 'new') return e.status === 'Neu eingegangen';
+            if (selectedFilter === 'pending') return e.status === 'Antwort offen';
+            if (selectedFilter === 'critical') return e.subject.toLowerCase().includes('dringend') || e.status === 'Neu eingegangen';
+            if (selectedFilter === 'done') return e.status === 'Beantwortet';
+            return true;
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [selectedFilter]);
+
+    const stats = {
+        today: mockEmails.filter(e => isToday(new Date(e.createdAt))).length,
+        unread: mockEmails.filter(e => e.status === 'Neu eingegangen').length,
+        critical: mockEmails.filter(e => e.subject.toLowerCase().includes('dringend')).length,
+        pending: mockEmails.filter(e => e.status === 'Antwort offen').length,
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Neu eingegangen': return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+            case 'Antwort offen': return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+            case 'Beantwortet': return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+            default: return "bg-muted";
+        }
+    };
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
+            {/* KPI Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Neue Sales-Mails</p>
+                    <p className="text-4xl font-bold mt-2 font-mono text-primary">{stats.today}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Ungelesen</p>
+                    <p className="text-4xl font-bold mt-2 font-mono text-blue-400">{stats.unread}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative border-l-4 border-l-rose-500/50">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kritisch</p>
+                    <p className="text-4xl font-bold mt-2 font-mono text-rose-400">{stats.critical}</p>
+                </Card>
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Antwort ausstehend</p>
+                    <p className="text-4xl font-bold mt-2 font-mono text-amber-400">{stats.pending}</p>
+                </Card>
+            </div>
+
+            {/* AI Hints */}
+            <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden relative">
+                <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-sm text-blue-300 flex items-center gap-2 uppercase tracking-widest">
+                        <Sparkles className="w-4 h-4 text-blue-400 shrink-0"/> KI-Hinweise zu E-Mails
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Dringlichkeit</p>
+                        <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
+                            Kunde 'Innovate GmbH' wartet seit 3 Tagen auf eine Antwort zu seiner Rechnungsfrage.
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold uppercase border-blue-500/30 text-blue-300">Aufgabe anlegen</Button>
+                            <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold uppercase border-blue-500/30 text-blue-300">In Q-Mail antworten</Button>
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Kontext-Check</p>
+                        <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
+                            In der E-Mail von 'Global Exports' wurde eine Preisdiskussion erkannt. Abschlussrelevanz: Hoch.
+                        </p>
+                        <Button variant="link" className="h-auto p-0 text-[10px] font-black text-primary uppercase tracking-widest">Deal 'Logistik-Suite' öffnen</Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Filter and List */}
+            <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {['all', 'new', 'pending', 'critical', 'done'].map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setSelectedFilter(f)}
+                                className={cn(
+                                    "px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border",
+                                    selectedFilter === f 
+                                        ? "bg-primary border-primary text-primary-foreground shadow-lg"
+                                        : "bg-muted border-transparent text-muted-foreground hover:border-border"
+                                )}
+                            >
+                                {f === 'all' ? 'Alle' : f === 'new' ? 'Neu' : f === 'pending' ? 'Antwort ausstehend' : f === 'critical' ? 'Kritisch' : 'Abgeschlossen'}
+                            </button>
+                        ))}
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest"><Mail className="w-3 h-3 mr-2"/> In Q-Mail öffnen</Button>
+                </div>
+
+                <div className="space-y-3">
+                    <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">Verkaufsrelevante E-Mails</h3>
+                    <div className="grid grid-cols-1 gap-3">
+                        {filteredEmails.map(email => (
+                            <Card key={email.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden relative cursor-pointer" onClick={() => setDetailNote(email)}>
+                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border/50">
+                                                {email.direction === 'Eingehend' ? <PhoneIncoming className="w-4 h-4 text-blue-400"/> : <PhoneOutgoing className="w-4 h-4 text-emerald-400"/>}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h4 className="font-bold text-foreground text-sm truncate">{email.contactName}</h4>
+                                                <p className="text-[10px] text-muted-foreground uppercase font-black truncate">{email.companyName}</p>
+                                            </div>
+                                            <Badge variant="outline" className={cn("text-[9px] font-black uppercase ml-auto h-5 px-2", getStatusColor(email.status))}>
+                                                {email.status}
+                                            </Badge>
+                                        </div>
+                                        <div className="ml-11 mt-2">
+                                            <p className="font-bold text-foreground text-[13px] line-clamp-1">{email.subject}</p>
+                                            <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{email.aiSuggestion?.analysis || 'Analyse läuft...'}</p>
+                                            <div className="flex flex-wrap items-center gap-3 mt-3">
+                                                <span className="text-[10px] text-muted-foreground font-mono font-bold tracking-tighter">{formatDistanceToNow(new Date(email.createdAt), { addSuffix: true, locale: de })}</span>
+                                                <Badge variant="outline" className="text-[9px] font-black uppercase bg-primary/5 border-transparent text-primary/80 gap-1.5 h-5">
+                                                    <LinkIcon className="w-2.5 h-2.5"/> {email.contextName}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8"><ArrowUpRight className="w-4 h-4"/></Button>
+                                        <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase px-3">Öffnen</Button>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                        {filteredEmails.length === 0 && (
+                            <Card className="p-12 text-center text-muted-foreground italic border-dashed">
+                                Keine E-Mails in dieser Kategorie.
+                            </Card>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Email Detail Dialog */}
+            <Dialog open={!!detailEmail} onOpenChange={open => !open && setDetailNote(null)}>
+                <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-background">
+                    {detailEmail && (
+                        <div className="flex flex-col h-full">
+                            <DialogHeader className="p-6 pb-4 border-b border-border/50">
+                                <div className="space-y-1">
+                                    <DialogTitle className="text-xl font-bold">{detailEmail.subject}</DialogTitle>
+                                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                                        Von: {detailEmail.contactName} ({detailEmail.companyName}) • {format(new Date(detailEmail.createdAt), 'dd.MM.yyyy HH:mm', {locale: de})}
+                                    </div>
+                                </div>
+                            </DialogHeader>
+                            <ScrollArea className="flex-1 max-h-[500px]">
+                                <div className="p-6 space-y-6">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Nachricht</Label>
+                                        <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-sm leading-relaxed font-medium text-foreground/90 italic">
+                                            "Hallo zusammen, vielen Dank für den Termin gestern. Wir haben intern noch einmal über das Angebot für das Phoenix-Projekt gesprochen. Könnten wir die Laufzeit ggf. auf 24 Monate verlängern? Beste Grüße, {detailEmail.contactName.split(' ')[0]}"
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Kontext</Label>
+                                            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                                                <Handshake className="w-4 h-4 text-primary shrink-0"/>
+                                                <span className="text-[11px] font-bold text-foreground uppercase truncate">{detailEmail.contextName}</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Status</Label>
+                                            <Badge variant="outline" className={cn("w-full justify-center h-9 text-[10px] font-black uppercase", getStatusColor(detailEmail.status))}>
+                                                {detailEmail.status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+
+                                    <Card className="bg-blue-500/5 border-blue-500/10">
+                                        <CardHeader className="p-4 pb-2"><CardTitle className="text-xs text-blue-300 uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-3.5 h-3.5"/> KI-Entwurf</CardTitle></CardHeader>
+                                        <CardContent className="p-4 pt-0">
+                                            <p className="text-[11px] text-blue-200/80 leading-relaxed font-medium">
+                                                {detailEmail.aiSuggestion?.text || 'KI berechnet Antwortvorschlag...'}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            </ScrollArea>
+                            <DialogFooter className="p-4 bg-muted/20 border-t border-border/50 flex flex-wrap gap-2">
+                                <Button variant="outline" size="sm" className="font-bold text-[10px] uppercase tracking-wider"><CheckSquare className="w-3.5 h-3.5 mr-2"/> Aufgabe erstellen</Button>
+                                <Button variant="outline" size="sm" className="font-bold text-[10px] uppercase tracking-wider"><CheckCircle2 className="w-3.5 h-3.5 mr-2"/> Als erledigt markieren</Button>
+                                <Button size="sm" className="font-bold text-[10px] uppercase tracking-wider ml-auto"><Mail className="w-3.5 h-3.5 mr-2"/> In Q-Mail antworten</Button>
+                            </DialogFooter>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+};
 
 const CallsListView = () => (
     <Card id="qhub-reports" className="overflow-hidden relative">
