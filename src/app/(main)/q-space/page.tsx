@@ -97,8 +97,8 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, topKennzahlen, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, qSalesReportingData, mockLeaveRequests } from '@/lib/data';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { kpiMitarbeiter, chatThreads, teamChatsData, invitesData, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, execKpiData, featureFlags, qhubAgents, processTemplate_leadRoutingV1, leadRoutingPolicy, allLeads as qsalesLeads, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, kiManagementSummary, qSalesReportingData, mockLeaveRequests } from '@/lib/data';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
 import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -704,48 +704,216 @@ const UrlaubsplanerView = ({ currentUser }: { currentUser: any }) => {
   );
 };
 
+const TaskCard = ({ task }: { task: any }) => {
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Offen': return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+            case 'In Arbeit': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+            case 'Blockiert': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            case 'Erledigt': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            default: return 'bg-muted';
+        }
+    };
 
-const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredSops, filteredDocs, filteredFolders } : { currentUser: any, filteredTasks: any[], filteredProjects: any[], filteredSops: any[], filteredDocs: any[], filteredFolders: any[]}) => (
-    <div>
-        <h2 className="text-xl font-bold text-foreground mb-4">Workspace</h2>
-        <Tabs defaultValue="aufgaben">
-            <TabsList>
-                <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
-                <TabsTrigger value="projekte">Projekte</TabsTrigger>
-                <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
-                <TabsTrigger value="sops">Arbeitsanweisungen</TabsTrigger>
-                <TabsTrigger value="urlaubsplaner">Urlaubsplaner</TabsTrigger>
-            </TabsList>
-            <TabsContent value="aufgaben" className="mt-4">
-                <Card><CardHeader><CardTitle>Aufgaben</CardTitle></CardHeader><CardContent>
-                    <Table><TableHeader><TableRow><TableHead>Titel</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead><TableHead>Priorität</TableHead><TableHead>Fällig</TableHead></TableRow></TableHeader>
-                        <TableBody>{filteredTasks.map(t => (<TableRow key={t.id}><TableCell>{t.title}</TableCell><TableCell>{t.owner}</TableCell><TableCell>{t.status}</TableCell><TableCell>{t.prio}</TableCell><TableCell>{t.due}</TableCell></TableRow>))}</TableBody>
-                    </Table>
-                </CardContent></Card>
-            </TabsContent>
-            <TabsContent value="projekte" className="mt-4">
-                <Card><CardHeader><CardTitle>Projekte</CardTitle></CardHeader><CardContent>
-                     <Table><TableHeader><TableRow><TableHead>Projektname</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                        <TableBody>{filteredProjects.map(p => (<TableRow key={p.id}><TableCell>{p.name}</TableCell><TableCell>{p.owner}</TableCell><TableCell>{p.status}</TableCell></TableRow>))}</TableBody>
-                    </Table>
-                </CardContent></Card>
-            </TabsContent>
-            <TabsContent value="dokumente" className="mt-4">
-                <DocumentsView currentUser={currentUser} filteredDocs={filteredDocs} filteredFolders={filteredFolders} />
-            </TabsContent>
-            <TabsContent value="sops" className="mt-4">
-                <Card><CardHeader><CardTitle>Arbeitsanweisungen</CardTitle></CardHeader><CardContent>
-                    <Table><TableHeader><TableRow><TableHead>Titel der Arbeitsanweisung</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
-                        <TableBody>{filteredSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
-                    </Table>
-                </CardContent></Card>
-            </TabsContent>
-            <TabsContent value="urlaubsplaner" className="mt-4">
-                <UrlaubsplanerView currentUser={currentUser} />
-            </TabsContent>
-        </Tabs>
-    </div>
-);
+    const getPrioColor = (prio: string) => {
+        switch (prio) {
+            case 'Hoch': return 'border-rose-500/50 text-rose-400';
+            case 'Mittel': return 'border-amber-500/50 text-amber-400';
+            case 'Niedrig': return 'border-slate-500/50 text-slate-400';
+            default: return 'border-muted';
+        }
+    };
+
+    const getTimeStatusColor = (due: string) => {
+        if (due === 'Sofort' || due === 'Überfällig') return 'text-rose-400';
+        if (due === 'Heute') return 'text-primary';
+        return 'text-muted-foreground';
+    };
+
+    return (
+        <Card className="flex flex-col h-full hover:border-primary/40 transition-all overflow-hidden relative group">
+            <CardHeader className="p-4 pb-2 border-b border-border/50 flex flex-row items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                    <CardTitle className="text-sm font-bold line-clamp-2" title={task.title}>{task.title}</CardTitle>
+                </div>
+                <Badge variant="outline" className={cn("text-[9px] font-black uppercase shrink-0 h-5 px-1.5", getStatusColor(task.status))}>
+                    {task.status}
+                </Badge>
+            </CardHeader>
+            <CardContent className="p-4 flex-1 space-y-3">
+                <div className="space-y-1.5">
+                    {task.desc && (
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">{task.desc}</p>
+                    )}
+                    {task.project && (
+                        <p className="text-[10px] text-primary font-bold flex items-center gap-1.5">
+                            <Folder className="w-3 h-3"/> {task.project}
+                        </p>
+                    )}
+                    {task.sop && (
+                        <p className="text-[10px] text-amber-400 font-bold flex items-center gap-1.5">
+                            <FileText className="w-3 h-3"/> {task.sop}
+                        </p>
+                    )}
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-[11px] pt-2">
+                    <div>
+                        <p className="text-muted-foreground font-bold uppercase text-[9px] mb-0.5">Fällig</p>
+                        <p className={cn("font-bold flex items-center gap-1", getTimeStatusColor(task.due))}>
+                            <Clock className="w-3 h-3"/> {task.due}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-muted-foreground font-bold uppercase text-[9px] mb-0.5">Zuständig</p>
+                        <p className="font-medium truncate flex items-center gap-1" title={task.owner}>
+                            <UserIcon className="w-3 h-3"/> {task.owner}
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter className="p-3 bg-muted/10 border-t border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={cn("text-[9px] font-black uppercase px-1.5 h-4", getPrioColor(task.prio))}>
+                        {task.prio}
+                    </Badge>
+                    <span className={cn("text-[9px] font-bold uppercase", getTimeStatusColor(task.due))}>
+                        {task.due === 'Sofort' || task.due === 'Überfällig' ? 'Überfällig' : task.due === 'Heute' ? 'Heute' : 'Im Plan'}
+                    </span>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="w-3.5 h-3.5"/></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem className="text-xs font-bold uppercase">Status: Offen</DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-bold uppercase">Status: In Arbeit</DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-bold uppercase">Status: Blockiert</DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-bold uppercase text-emerald-400 font-black">Status: Erledigt</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-black uppercase px-3">Öffnen</Button>
+                </div>
+            </CardFooter>
+        </Card>
+    );
+};
+
+const WorkspaceView = ({ currentUser, filteredTasks, filteredProjects, filteredSops, filteredDocs, filteredFolders } : { currentUser: any, filteredTasks: any[], filteredProjects: any[], filteredSops: any[], filteredDocs: any[], filteredFolders: any[]}) => {
+    const [taskTimeFilter, setTaskTimeFilter] = useState('all');
+    const [taskStatusFilter, setTaskStatusFilter] = useState('all');
+    const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('me');
+
+    const finalFilteredTasks = useMemo(() => {
+        return filteredTasks.filter(t => {
+            // Time filter
+            if (taskTimeFilter === 'today' && t.due !== 'Heute') return false;
+            if (taskTimeFilter === 'week' && (t.due !== 'Diese Woche' && t.due !== 'Heute' && t.due !== 'Morgen' && t.due !== 'Sofort')) return false;
+            if (taskTimeFilter === 'overdue' && (t.due !== 'Sofort' && t.status !== 'Überfällig')) return false;
+
+            // Status filter
+            if (taskStatusFilter !== 'all' && t.status.toLowerCase().replace(' ', '_') !== taskStatusFilter) return false;
+
+            // Assignee filter
+            if (taskAssigneeFilter === 'me' && t.ownerId !== currentUser.id && t.owner !== currentUser.name) return false;
+
+            return true;
+        });
+    }, [filteredTasks, taskTimeFilter, taskStatusFilter, taskAssigneeFilter, currentUser]);
+
+    return (
+        <div className="space-y-6">
+            <h2 className="text-xl font-bold text-foreground">Workspace</h2>
+            <Tabs defaultValue="aufgaben">
+                <TabsList className="bg-muted/50 p-1">
+                    <TabsTrigger value="aufgaben">Aufgaben</TabsTrigger>
+                    <TabsTrigger value="projekte">Projekte</TabsTrigger>
+                    <TabsTrigger value="dokumente">Dokumente</TabsTrigger>
+                    <TabsTrigger value="sops">Arbeitsanweisungen</TabsTrigger>
+                    <TabsTrigger value="urlaubsplaner">Urlaubsplaner</TabsTrigger>
+                </TabsList>
+                <TabsContent value="aufgaben" className="mt-6 space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1 p-1 bg-muted rounded-lg border border-border">
+                                {['all', 'today', 'week', 'overdue'].map(f => (
+                                    <button 
+                                        key={f}
+                                        onClick={() => setTaskTimeFilter(f)}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all",
+                                            taskTimeFilter === f ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                                        )}
+                                    >
+                                        {f === 'all' ? 'Alle' : f === 'today' ? 'Heute' : f === 'week' ? 'Woche' : 'Überfällig'}
+                                    </button>
+                                ))}
+                            </div>
+                            <Separator orientation="vertical" className="h-8 mx-2 hidden md:block" />
+                            <Select value={taskStatusFilter} onValueChange={setTaskStatusFilter}>
+                                <SelectTrigger className="h-9 w-32 bg-input text-[10px] font-black uppercase">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Alle Status</SelectItem>
+                                    <SelectItem value="offen">Offen</SelectItem>
+                                    <SelectItem value="in_arbeit">In Arbeit</SelectItem>
+                                    <SelectItem value="blockiert">Blockiert</SelectItem>
+                                    <SelectItem value="erledigt">Erledigt</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={taskAssigneeFilter} onValueChange={setTaskAssigneeFilter}>
+                                <SelectTrigger className="h-9 w-40 bg-input text-[10px] font-black uppercase">
+                                    <SelectValue placeholder="Zuständig" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="me">Mir zugewiesen</SelectItem>
+                                    <SelectItem value="team">Gesamtes Team</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button className="h-9 font-black uppercase text-[10px] tracking-wider"><Plus className="w-4 h-4 mr-2" /> Neue Aufgabe</Button>
+                    </div>
+
+                    {finalFilteredTasks.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-in fade-in duration-500">
+                            {finalFilteredTasks.map(t => (
+                                <TaskCard key={t.id} task={t} />
+                            ))}
+                        </div>
+                    ) : (
+                        <Card className="p-12 border-dashed flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/10">
+                            <CheckCircle2 className="w-12 h-12 mb-4 opacity-20" />
+                            <h3 className="text-lg font-bold">Keine Aufgaben – alles im Plan.</h3>
+                            <p className="text-sm mt-1 max-w-xs">Nutzen Sie die Filter oben oder erstellen Sie eine neue Aufgabe für Ihren Bereich.</p>
+                            <Button variant="outline" className="mt-6" onClick={() => { setTaskTimeFilter('all'); setTaskStatusFilter('all'); }}>Filter zurücksetzen</Button>
+                        </Card>
+                    )}
+                </TabsContent>
+                <TabsContent value="projekte" className="mt-4">
+                    <Card><CardHeader><CardTitle>Projekte</CardTitle></CardHeader><CardContent>
+                         <Table><TableHeader><TableRow><TableHead>Projektname</TableHead><TableHead>Verantwortlicher</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                            <TableBody>{filteredProjects.map(p => (<TableRow key={p.id}><TableCell>{p.name}</TableCell><TableCell>{p.owner}</TableCell><TableCell>{p.status}</TableCell></TableRow>))}</TableBody>
+                        </Table>
+                    </CardContent></Card>
+                </TabsContent>
+                <TabsContent value="dokumente" className="mt-4">
+                    <DocumentsView currentUser={currentUser} filteredDocs={filteredDocs} filteredFolders={filteredFolders} />
+                </TabsContent>
+                <TabsContent value="sops" className="mt-4">
+                    <Card><CardHeader><CardTitle>Arbeitsanweisungen</CardTitle></CardHeader><CardContent>
+                        <Table><TableHeader><TableRow><TableHead>Titel der Arbeitsanweisung</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                            <TableBody>{filteredSops.map(s => (<TableRow key={s.id}><TableCell>{s.title}</TableCell><TableCell>{s.status}</TableCell></TableRow>))}</TableBody>
+                        </Table>
+                    </CardContent></Card>
+                </TabsContent>
+                <TabsContent value="urlaubsplaner" className="mt-4">
+                    <UrlaubsplanerView currentUser={currentUser} />
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+};
 
 const KpiDashboard = ({ mitarbeiter } : { mitarbeiter: any[]}) => {
     
