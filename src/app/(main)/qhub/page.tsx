@@ -68,6 +68,7 @@ import {
   LayoutDashboard,
   Mail,
   MessageSquare,
+  MessageSquarePlus,
   MoreVertical,
   Percent,
   Phone,
@@ -91,10 +92,11 @@ import {
   Sparkles,
   FilePen,
   Link as LinkIcon,
+  Trash2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
-import { kpiMitarbeiter, chatThreads, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, qSalesReportingData, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes, mockEmails, mockCalls, kiTagesfokus, mockLeaveRequests } from '@/lib/data';
+import { kpiMitarbeiter, chatThreads, docFolders, mockDocs as allMockDocs, mockSops, mockProjects, mockTasks, mockContacts, mockDeals, pipelineStages, qSalesReportingData, getDynamicQalenderBookings, mockCompanies, allActivities, mockNotes as initialMockNotes, mockEmails, mockCalls, kiTagesfokus, mockLeaveRequests } from '@/lib/data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -108,17 +110,6 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { format, formatDistanceToNow, isToday, isTomorrow, isFuture, isYesterday, isThisWeek, isBefore, startOfWeek, endOfWeek, subDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { 
-  ResponsiveContainer, 
-  Line, 
-  ComposedChart, 
-  BarChart as RechartsBarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip as RechartsTooltip 
-} from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 // --- Formatting Utils ---
 const formatZahl = (val: number | string) => {
@@ -1144,19 +1135,239 @@ const ActivitiesListView = () => {
     );
 };
 
-const NotesListView = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4" id="qhub-reports">
-        {mockNotes.map(note => (
-            <Card key={note.id}>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-base">{note.title}</CardTitle>
-                    <CardDescription>{note.contextName || 'Allgemein'}</CardDescription>
+const NotesListView = () => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedFilter, setSelectedFilter] = useState('all');
+    const [newNoteText, setNewNoteText] = useState('');
+    const [selectedContext, setSelectedContext] = useState('none');
+    const [detailNote, setDetailNote] = useState<any | null>(null);
+    const { toast } = useToast();
+
+    // Grouping notes
+    const groupedNotes = useMemo(() => {
+        const filtered = initialMockNotes.filter(n => {
+            if (selectedFilter === 'kunden' && n.contextType !== 'Kontakt' && n.contextType !== 'Firma') return false;
+            if (selectedFilter === 'deals' && n.contextType !== 'Deal') return false;
+            if (selectedFilter === 'intern' && n.contextType !== 'Intern') return false;
+            if (searchTerm && !(n.title.toLowerCase().includes(searchTerm.toLowerCase()) || n.content.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
+            return true;
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        const groups: { [key: string]: any[] } = {
+            'Heute': [],
+            'Diese Woche': [],
+            'Älter': []
+        };
+
+        filtered.forEach(n => {
+            const date = new Date(n.createdAt);
+            if (isToday(date)) groups['Heute'].push(n);
+            else if (isThisWeek(date, { weekStartsOn: 1 })) groups['Diese Woche'].push(n);
+            else groups['Älter'].push(n);
+        });
+
+        return groups;
+    }, [searchTerm, selectedFilter]);
+
+    const handleSaveNote = () => {
+        if (!newNoteText.trim()) return;
+        toast({ title: "Notiz gespeichert", description: "Ihre Notiz wurde erfolgreich erfasst." });
+        setNewNoteText('');
+        setSelectedContext('none');
+    };
+
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
+            {/* Sektion 1: Schnellerstellung */}
+            <Card className="border-primary/20 shadow-sm overflow-hidden">
+                <CardHeader className="p-4 pb-2 border-b bg-muted/30">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <MessageSquarePlus className="w-4 h-4 text-primary"/> Neue Notiz erfassen
+                    </CardTitle>
                 </CardHeader>
-                <CardContent><p className="text-sm line-clamp-3">{note.content}</p></CardContent>
+                <CardContent className="p-4 space-y-4">
+                    <Textarea 
+                        placeholder="Gedanken, Gesprächsnotizen, Entscheidungen ..." 
+                        className="bg-input min-h-[100px] text-sm resize-none focus-visible:ring-primary/30"
+                        value={newNoteText}
+                        onChange={e => setNewNoteText(e.target.value)}
+                    />
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <Label className="text-xs font-bold text-muted-foreground uppercase shrink-0">Kontext:</Label>
+                            <Select value={selectedContext} onValueChange={setSelectedContext}>
+                                <SelectTrigger className="h-8 bg-muted text-xs border-transparent hover:border-border transition-colors w-full sm:w-[180px]">
+                                    <SelectValue placeholder="Auswählen..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Kein Kontext</SelectItem>
+                                    <SelectItem value="contact">Kontakt</SelectItem>
+                                    <SelectItem value="company">Firma</SelectItem>
+                                    <SelectItem value="deal">Deal</SelectItem>
+                                    <SelectItem value="task">Aufgabe</SelectItem>
+                                    <SelectItem value="meeting">Termin</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button onClick={handleSaveNote} disabled={!newNoteText.trim()} className="w-full sm:w-auto">
+                            <Check className="w-4 h-4 mr-2"/> Notiz speichern
+                        </Button>
+                    </div>
+                </CardContent>
             </Card>
-        ))}
-    </div>
-);
+
+            {/* Sektion 2: KI-Hinweise & Filter */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="lg:col-span-8 space-y-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-1">
+                        <div className="flex items-center gap-2">
+                            {['all', 'kunden', 'deals', 'intern'].map(f => (
+                                <button
+                                    key={f}
+                                    onClick={() => setSelectedFilter(f)}
+                                    className={cn(
+                                        "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border",
+                                        selectedFilter === f 
+                                            ? "bg-primary border-primary text-primary-foreground"
+                                            : "bg-muted border-transparent text-muted-foreground hover:border-border"
+                                    )}
+                                >
+                                    {f === 'all' ? 'Alle' : f === 'kunden' ? 'Kunden' : f === 'deals' ? 'Deals' : 'Intern'}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="relative w-full sm:w-64">
+                            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                            <Input 
+                                placeholder="Notizen durchsuchen..." 
+                                className="pl-9 h-8 text-xs bg-input border-transparent focus-visible:ring-primary/30"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Notizenliste */}
+                    <div className="space-y-8">
+                        {Object.entries(groupedNotes).map(([group, notes]) => (
+                            notes.length > 0 && (
+                                <div key={group} className="space-y-3">
+                                    <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">{group}</h4>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {notes.map(n => (
+                                            <Card key={n.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden cursor-pointer" onClick={() => setDetailNote(n)}>
+                                                <div className="flex justify-between items-start gap-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-bold text-foreground text-sm truncate">{n.title}</h4>
+                                                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                                                            {n.content}
+                                                        </p>
+                                                        <div className="flex flex-wrap items-center gap-2 mt-3">
+                                                            <span className="text-[10px] text-muted-foreground font-mono">{format(new Date(n.createdAt), 'HH:mm')} Uhr</span>
+                                                            {n.contextType && (
+                                                                <Badge variant="outline" className="text-[9px] font-black uppercase bg-muted/50 border-transparent text-muted-foreground gap-1.5">
+                                                                    <LinkIcon className="w-2.5 h-2.5"/> {n.contextName || n.contextType}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-rose-400"><Trash2 className="w-4 h-4"/></Button>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        ))}
+                        {Object.values(groupedNotes).every(g => g.length === 0) && (
+                            <div className="text-center py-20 text-muted-foreground italic bg-muted/20 rounded-2xl border border-dashed">
+                                <FileText className="w-8 h-8 mx-auto mb-3 opacity-20"/>
+                                <p className="text-sm">Keine Notizen für die aktuelle Auswahl gefunden.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Rechte Spalte: KI-Hinweise */}
+                <div className="lg:col-span-4 space-y-6">
+                    <Card className="bg-blue-500/5 border-blue-500/20">
+                        <CardHeader className="p-4 pb-2">
+                            <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweis
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 space-y-4">
+                            <div className="space-y-1.5">
+                                <p className="text-xs font-bold text-blue-200">Kontext-Vorschlag</p>
+                                <p className="text-[11px] text-blue-300/90 leading-relaxed">
+                                    Die letzte Notiz könnte relevant sein für den Deal 'Innovate GmbH'. Soll ich sie verknüpfen?
+                                </p>
+                                <Button variant="link" className="h-auto p-0 text-[10px] font-bold text-primary uppercase">Kontext verknüpfen</Button>
+                            </div>
+                            <Separator className="bg-blue-500/10"/>
+                            <div className="space-y-1.5">
+                                <p className="text-xs font-bold text-blue-200">Wissens-Cluster</p>
+                                <p className aerial-label="text-[11px] text-blue-300/90 leading-relaxed">
+                                    Zu 'John Doe' existieren 5 einzelne Notizen aus dieser Woche.
+                                </p>
+                                <Button variant="link" className="h-auto p-0 text-[10px] font-bold text-primary uppercase">Zusammenfassen</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Notiz-Detail Dialog */}
+            <Dialog open={!!detailNote} onOpenChange={open => !open && setDetailNote(null)}>
+                <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl">
+                    {detailNote && (
+                        <div className="flex flex-col h-full bg-background">
+                            <DialogHeader className="p-6 pb-4 border-b">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                        <DialogTitle className="text-xl font-bold">{detailNote.title}</DialogTitle>
+                                        <DialogDescription className="text-xs flex items-center gap-2">
+                                            Erstellt am {format(new Date(detailNote.createdAt), 'dd.MM.yyyy HH:mm')} Uhr von {detailNote.createdBy}
+                                        </DialogDescription>
+                                    </div>
+                                </div>
+                            </DialogHeader>
+                            <div className="p-6 space-y-6">
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Inhalt</Label>
+                                    <div className="p-4 rounded-xl bg-muted/30 border text-sm leading-relaxed whitespace-pre-wrap min-h-[200px]">
+                                        {detailNote.content}
+                                    </div>
+                                </div>
+                                
+                                {detailNote.contextType && (
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Verknüpft mit</Label>
+                                        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                                            <LinkIcon className="w-4 h-4 text-primary"/>
+                                            <span className="text-xs font-bold text-foreground">{detailNote.contextType}: {detailNote.contextName || '-'}</span>
+                                            <Button variant="ghost" size="sm" className="ml-auto h-7 text-[10px] font-bold uppercase">Öffnen</Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <DialogFooter className="p-4 bg-muted/20 border-t gap-2 sm:justify-between items-center">
+                                <p className="text-[10px] text-muted-foreground italic">Zuletzt geändert: vor 5 Minuten</p>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" size="sm" onClick={() => setDetailNote(null)}>Schließen</Button>
+                                    <Button size="sm">Notiz bearbeiten</Button>
+                                </div>
+                            </DialogFooter>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
+};
 
 const EmailsListView = () => (
     <Card id="qhub-reports">
@@ -1274,7 +1485,7 @@ const AktivitaetTab = () => {
     const kpiData = [
         { title: 'Anrufe', value: aktivitaet.calls, target: 80, icon: Phone, color: 'blue' },
         { title: 'Erreichte Leads', value: aktivitaet.reachedLeads, target: 60, icon: UserCheck, color: 'emerald' },
-        { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: CalendarDays, color: 'purple' },
+        { title: 'Termine', value: aktivitaet.meetings, target: 10, icon: Calendar, color: 'purple' },
         { title: 'Überfällige Follow-ups', value: aktivitaet.overdueFollowups, target: 5, icon: AlertTriangle, color: 'amber', invertColor: true },
     ];
 
@@ -1424,15 +1635,17 @@ const LearningsTab = () => {
     return (
         <div className="space-y-6" id="qhub-reports">
             <Card>
-                <CardHeader><CardTitle>Top Verlustgründe</CardTitle></CardHeader>
+                <CardHeader>
+                    <CardTitle>Top Verlustgründe</CardTitle>
+                </CardHeader>
                 <CardContent>
                      <ChartContainer config={{}} className="h-64">
-                         <RechartsBarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
+                         <BarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
                              <XAxis type="number" hide />
                              <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
-                             <RechartsTooltip content={<ChartTooltipContent />} />
+                             <Tooltip content={<ChartTooltipContent />} />
                              <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
-                         </RechartsBarChart>
+                         </BarChart>
                      </ChartContainer>
                 </CardContent>
             </Card>
