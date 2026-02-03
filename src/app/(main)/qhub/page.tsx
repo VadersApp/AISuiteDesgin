@@ -34,8 +34,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
-  BarChart,
-  BarChart2,
+  BarChart as BarChartIcon,
   BarChart3,
   Bot as BotIcon,
   BrainCircuit,
@@ -110,6 +109,15 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { format, formatDistanceToNow, isToday, isTomorrow, isFuture, isYesterday, isThisWeek, isBefore, startOfWeek, endOfWeek, subDays, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { 
+    BarChart as RechartsBarChart, 
+    Bar as RechartsBar, 
+    XAxis as RechartsXAxis, 
+    YAxis as RechartsYAxis, 
+    Tooltip as RechartsTooltip,
+    ResponsiveContainer
+} from 'recharts';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 // --- Formatting Utils ---
 const formatZahl = (val: number | string) => {
@@ -165,27 +173,27 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                 <div className="lg:col-span-2 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {geschaeftsueberblickData.map(item => (
-                            <Card key={item.title}>
-                                <CardHeader>
-                                    <CardTitle className="text-base">{item.title}</CardTitle>
+                            <Card key={item.title} className="overflow-hidden min-w-0 max-w-full relative">
+                                <CardHeader className="p-4 pb-2">
+                                    <CardTitle className="text-base truncate">{item.title}</CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <p className="text-4xl font-bold">{parseValue(item.value)}</p>
-                                    <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                                <CardContent className="p-4 pt-0">
+                                    <p className="font-bold text-foreground font-mono truncate" style={{ fontSize: 'clamp(22px, 3vw, 40px)', lineHeight: '1.1' }}>{parseValue(item.value)}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
                                 </CardContent>
                             </Card>
                         ))}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         {handlungsbedarfData.map(item => {
                             const Icon = item.icon;
                             return (
-                                <Card key={item.title} className={cn("p-4 bg-card/50 border-l-4", item.color === 'rose' ? 'border-rose-500/50' : item.color === 'amber' ? 'border-amber-500/50' : item.color === 'blue' ? 'border-blue-500/50' : 'border-emerald-500/50')}>
-                                    <div className="flex items-center gap-4">
-                                        <Icon className={cn("h-6 w-6", item.color === 'rose' ? 'text-rose-400' : item.color === 'amber' ? 'text-amber-400' : item.color === 'blue' ? 'text-blue-400' : 'text-emerald-400')} />
-                                        <div>
-                                            <p className="text-2xl font-bold">{item.value}</p>
-                                            <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                                <Card key={item.title} className={cn("p-4 bg-card/50 border-l-4 overflow-hidden min-w-0 max-w-full relative", item.color === 'rose' ? 'border-rose-500/50' : item.color === 'amber' ? 'border-amber-500/50' : item.color === 'blue' ? 'border-blue-500/50' : 'border-emerald-500/50')}>
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <Icon className={cn("h-6 w-6 shrink-0", item.color === 'rose' ? 'text-rose-400' : item.color === 'amber' ? 'text-amber-400' : item.color === 'blue' ? 'text-blue-400' : 'text-emerald-400')} />
+                                        <div className="min-w-0">
+                                            <p className="text-2xl font-bold font-mono truncate">{item.value}</p>
+                                            <p className="text-xs font-bold text-muted-foreground uppercase truncate">{item.title}</p>
                                         </div>
                                     </div>
                                 </Card>
@@ -194,7 +202,7 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                     </div>
                 </div>
                 <div className="space-y-6">
-                     <Card className="border-rose-500/50 bg-rose-500/10">
+                     <Card className="border-rose-500/50 bg-rose-500/10 overflow-hidden">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-rose-400 text-base">KI-Eskalation</CardTitle>
                         </CardHeader>
@@ -207,10 +215,10 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                             </Button>
                         </CardFooter>
                     </Card>
-                    <Card className="bg-blue-950/50 border-blue-500/20">
+                    <Card className="bg-blue-950/50 border-blue-500/20 overflow-hidden">
                         <CardHeader>
                             <CardTitle className="text-base text-blue-300 flex items-center gap-2">
-                                <BrainCircuit className="w-5 h-5"/> KI-Tagesfokus
+                                <BrainCircuit className="w-5 h-5 shrink-0"/> KI-Tagesfokus
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -225,13 +233,13 @@ const DashboardView = ({ currentUser, filteredKpiMitarbeiter, filteredChatThread
                 </div>
             </div>
             <div className="space-y-8">
-                <Card>
+                <Card className="overflow-hidden">
                     <CardHeader><CardTitle>Vertrieb – Status</CardTitle></CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {vertriebsKpiData.map(kpi => (
-                             <Card key={kpi.title} className="p-4 bg-muted/50">
-                                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                                <p className="text-3xl font-bold">{parseValue(kpi.value)}</p>
+                             <Card key={kpi.title} className="p-4 bg-muted/50 overflow-hidden min-w-0">
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest truncate">{kpi.title}</p>
+                                <p className="text-3xl font-bold font-mono truncate">{parseValue(kpi.value)}</p>
                              </Card>
                         ))}
                     </CardContent>
@@ -257,16 +265,16 @@ const TermineView = () => {
                 <div className="lg:col-span-8">
                     <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1">Tagesüberblick</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                             <p className="text-xs font-bold text-muted-foreground uppercase truncate">Termine heute</p>
-                            <p className="text-4xl font-bold text-foreground mt-2">{todayBookings.length}</p>
+                            <p className="text-4xl font-bold text-foreground mt-2 font-mono">{todayBookings.length}</p>
                         </Card>
-                        <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                             <p className="text-xs font-bold text-muted-foreground uppercase truncate">Nächster Termin</p>
                             <div className="mt-2">
                                 {nextBooking ? (
                                     <>
-                                        <p className="text-2xl font-bold text-primary">{format(nextBooking.startDate, 'HH:mm')} Uhr</p>
+                                        <p className="text-2xl font-bold text-primary font-mono">{format(nextBooking.startDate, 'HH:mm')} Uhr</p>
                                         <p className="text-xs text-muted-foreground font-medium truncate mt-1">{nextBooking.guestName}</p>
                                     </>
                                 ) : (
@@ -274,28 +282,32 @@ const TermineView = () => {
                                 )}
                             </div>
                         </Card>
-                        <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                        <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                             <p className="text-xs font-bold text-muted-foreground uppercase truncate">Termine mit Kunden</p>
-                            <p className="text-4xl font-bold text-emerald-400 mt-2">{customerBookings.length}</p>
+                            <p className="text-4xl font-bold text-emerald-400 mt-2 font-mono">{customerBookings.length}</p>
                         </Card>
                     </div>
                 </div>
                 
                 <div className="lg:col-span-4">
                     <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 px-1">KI-Hinweise</h3>
-                    <Card className="bg-blue-500/5 border-blue-500/20 h-[calc(100%-2.5rem)] flex flex-col">
+                    <Card className="bg-blue-500/5 border-blue-500/20 h-[calc(100%-2.5rem)] flex flex-col overflow-hidden">
                         <CardHeader className="p-4 pb-2">
                             <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-blue-400"/> KI-Assistent
+                                <Sparkles className="w-4 h-4 text-blue-400 shrink-0"/> KI-Assistent
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0 flex-1 overflow-auto">
+                        <CardContent className="p-4 pt-0 flex-1 overflow-auto custom-scrollbar">
                             <div className="space-y-4 text-xs">
                                 <div className="space-y-2">
-                                    <p className="font-bold text-blue-200 flex items-center gap-1.5"><Info className="w-3.5 h-3.5"/> Heute wichtig</p>
+                                    <p className="font-bold text-blue-200 flex items-center gap-1.5"><Info className="w-3.5 h-3.5 shrink-0"/> Heute wichtig</p>
                                     <p className="text-blue-300/90 leading-relaxed">
                                         {nextBooking ? `Vorbereitung für ${nextBooking.guestName}: Letzter Kontakt vor 14 Tagen.` : 'Keine kritischen Fristen heute.'}
                                     </p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button size="sm" variant="outline" className="h-7 text-[10px] uppercase font-black"><MessageSquarePlus className="w-3 h-3 mr-1"/> Notiz</Button>
+                                    <Button size="sm" variant="outline" className="h-7 text-[10px] uppercase font-black"><UserIcon className="w-3 h-3 mr-1"/> Kontakt</Button>
                                 </div>
                             </div>
                         </CardContent>
@@ -306,31 +318,40 @@ const TermineView = () => {
             <div className="space-y-4">
                 <h3 className="text-lg font-bold text-foreground px-1">Nächste Termine</h3>
                 <div className="grid grid-cols-1 gap-3">
-                    {bookings.map(b => (
-                        <Card key={b.bookingId} className={cn("p-4 hover:border-primary/40 transition-all", isToday(b.startDate) && "border-l-4 border-l-primary")}>
+                    {bookings.length > 0 ? bookings.map(b => (
+                        <Card key={b.bookingId} className={cn("p-4 hover:border-primary/40 transition-all overflow-hidden relative", isToday(b.startDate) && "border-l-4 border-l-primary")}>
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="text-center min-w-[80px] p-2 bg-muted rounded-lg">
+                                <div className="flex items-center gap-4 min-w-0">
+                                    <div className="text-center min-w-[80px] p-2 bg-muted rounded-lg shrink-0">
                                         <p className="text-[10px] font-bold uppercase text-muted-foreground">{format(b.startDate, 'EEE', {locale: de})}</p>
-                                        <p className="text-lg font-bold">{format(b.startDate, 'dd.MM.')}</p>
+                                        <p className="text-lg font-bold font-mono">{format(b.startDate, 'dd.MM.')}</p>
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-foreground">{b.eventTypeName}</h4>
+                                    <div className="min-w-0">
+                                        <h4 className="font-bold text-foreground truncate">{b.eventTypeName}</h4>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                            <Badge variant="outline" className="text-[10px]">{b.role}</Badge>
-                                            <span>{format(b.startDate, 'HH:mm')} Uhr</span>
+                                            <Badge variant="outline" className="text-[9px] font-black uppercase px-1.5 py-0 h-4">{b.role}</Badge>
+                                            <span className="font-mono">{format(b.startDate, 'HH:mm')} Uhr</span>
                                             <span>•</span>
-                                            <span>{b.guestName}</span>
+                                            <span className="truncate">{b.guestName}</span>
                                         </div>
+                                        {b.context && (
+                                            <p className="text-[10px] text-primary font-bold mt-1.5 flex items-center gap-1">
+                                                <LinkIcon className="w-3 h-3"/> {b.context}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 shrink-0">
                                     <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
-                                    <Button variant="outline" size="sm">Details</Button>
+                                    <Button variant="outline" size="sm" className="text-xs font-bold px-4">Öffnen</Button>
                                 </div>
                             </div>
                         </Card>
-                    ))}
+                    )) : (
+                        <Card className="p-12 text-center text-muted-foreground italic border-dashed">
+                            Keine anstehenden Termine vorhanden.
+                        </Card>
+                    )}
                 </div>
             </div>
         </div>
@@ -353,37 +374,37 @@ const TasksListView = () => {
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
             {/* Sektion 1: Tagesüberblick */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aufgaben heute</p>
-                    <p className={cn("text-4xl font-bold mt-2", tasksHeute > 0 ? "text-primary" : "text-muted-foreground")}>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", tasksHeute > 0 ? "text-primary" : "text-muted-foreground")}>
                         {tasksHeute || 'Keine'}
                     </p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden border-l-4 border-l-rose-500/50">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative border-l-4 border-l-rose-500/50">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Überfällig</p>
-                    <p className={cn("text-4xl font-bold mt-2", tasksUeberfaellig > 0 ? "text-rose-400" : "text-muted-foreground")}>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", tasksUeberfaellig > 0 ? "text-rose-400" : "text-muted-foreground")}>
                         {tasksUeberfaellig || 'Keine'}
                     </p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hohe Priorität</p>
-                    <p className={cn("text-4xl font-bold mt-2", tasksHighPrio > 0 ? "text-amber-400" : "text-muted-foreground")}>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", tasksHighPrio > 0 ? "text-amber-400" : "text-muted-foreground")}>
                         {tasksHighPrio || 'Keine'}
                     </p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">In Arbeit</p>
-                    <p className={cn("text-4xl font-bold mt-2", tasksInArbeit > 0 ? "text-blue-400" : "text-muted-foreground")}>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", tasksInArbeit > 0 ? "text-blue-400" : "text-muted-foreground")}>
                         {tasksInArbeit || 'Keine'}
                     </p>
                 </Card>
             </div>
 
             {/* Sektion 2: KI-Hinweise */}
-            <Card className="bg-blue-500/5 border-blue-500/20">
+            <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweise zu Aufgaben
+                        <Sparkles className="w-4 h-4 text-blue-400 shrink-0"/> KI-Hinweise zu Aufgaben
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
@@ -405,8 +426,8 @@ const TasksListView = () => {
                         <div className="space-y-2">
                             <p className="text-xs font-bold text-foreground">Empfohlene Aktion</p>
                             <div className="flex gap-2">
-                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Aufgabe öffnen</Button>
-                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Notiz hinzufügen</Button>
+                                <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold uppercase">Aufgabe öffnen</Button>
+                                <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold uppercase">Notiz hinzufügen</Button>
                             </div>
                         </div>
                     </div>
@@ -419,7 +440,7 @@ const TasksListView = () => {
                 <div className="grid grid-cols-1 gap-3">
                     {openTasks.map(t => (
                         <Card key={t.id} className={cn(
-                            "p-4 hover:border-primary/40 transition-all overflow-hidden",
+                            "p-4 hover:border-primary/40 transition-all overflow-hidden relative",
                             (t.status === 'Überfällig' || t.due === 'Sofort') && "border-l-4 border-l-rose-500/50",
                             t.due === 'Heute' && "border-l-4 border-l-primary/50"
                         )}>
@@ -427,22 +448,22 @@ const TasksListView = () => {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
                                         <Badge variant="outline" className={cn(
-                                            "text-[10px] font-bold uppercase",
+                                            "text-[9px] font-black uppercase",
                                             t.prio === 'Hoch' ? "border-rose-500/50 text-rose-400" : "border-muted text-muted-foreground"
                                         )}>
                                             {t.prio}
                                         </Badge>
-                                        <h4 className="font-bold text-foreground truncate">{t.title}</h4>
+                                        <h4 className="font-bold text-foreground text-sm truncate">{t.title}</h4>
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                                         <span className="flex items-center gap-1.5"><UserIcon className="w-3.5 h-3.5"/> {t.owner}</span>
-                                        <span className={cn("font-medium", (t.status === 'Überfällig' || t.due === 'Sofort') && "text-rose-400")}>
+                                        <span className={cn("font-bold", (t.status === 'Überfällig' || t.due === 'Sofort') && "text-rose-400")}>
                                             <Clock className="w-3.5 h-3.5 inline mr-1"/> {t.due}
                                         </span>
-                                        <span className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5"/> Q-Hub</span>
+                                        <span className="flex items-center gap-1.5 font-medium text-primary"><Briefcase className="w-3.5 h-3.5"/> Q-Hub</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 shrink-0">
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
@@ -451,8 +472,8 @@ const TasksListView = () => {
                                             <TooltipContent>Notiz hinzufügen</TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
-                                    <Button variant="outline" size="sm" className="h-8">Erledigt</Button>
-                                    <Button variant="default" size="sm" className="h-8">Öffnen</Button>
+                                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase px-3">Erledigt</Button>
+                                    <Button variant="default" size="sm" className="h-8 text-[10px] font-black uppercase px-3">Öffnen</Button>
                                 </div>
                             </div>
                         </Card>
@@ -465,7 +486,7 @@ const TasksListView = () => {
                 <Collapsible open={isDoneTasksOpen} onOpenChange={setIsDoneTasksOpen}>
                     <CollapsibleTrigger asChild>
                         <Button variant="ghost" className="w-full justify-between hover:bg-transparent px-1">
-                            <span className="text-sm font-bold text-muted-foreground flex items-center gap-2">
+                            <span className="text-sm font-bold text-muted-foreground flex items-center gap-2 uppercase tracking-widest">
                                 <CheckCircle2 className="w-4 h-4"/> Erledigte Aufgaben ({doneTasks.length})
                             </span>
                             <ChevronDown className={cn("w-4 h-4 transition-transform", isDoneTasksOpen && "rotate-180")}/>
@@ -473,13 +494,13 @@ const TasksListView = () => {
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-4 space-y-3">
                         {doneTasks.map(t => (
-                            <Card key={t.id} className="p-4 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all overflow-hidden">
+                            <Card key={t.id} className="p-4 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all overflow-hidden relative">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="min-w-0">
-                                        <h4 className="font-bold text-foreground truncate line-through">{t.title}</h4>
+                                        <h4 className="font-bold text-foreground text-sm truncate line-through">{t.title}</h4>
                                         <p className="text-[10px] text-muted-foreground mt-1">Erledigt am {format(new Date(), 'dd.MM.yyyy')}</p>
                                     </div>
-                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 uppercase font-black text-[9px]">Erledigt</Badge>
+                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 uppercase font-black text-[9px] h-5">Erledigt</Badge>
                                 </div>
                             </Card>
                         ))}
@@ -493,14 +514,14 @@ const TasksListView = () => {
 const ContactsView = () => {
     const router = useRouter();
     return (
-        <Card id="qhub-reports">
+        <Card id="qhub-reports" className="overflow-hidden">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <CardTitle>Kontakte</CardTitle>
                     <Button><Plus className="mr-2 h-4 w-4" /> Kontakt erstellen</Button>
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -529,14 +550,14 @@ const ContactsView = () => {
 };
 
 const CompaniesView = () => (
-    <Card id="qhub-reports">
+    <Card id="qhub-reports" className="overflow-hidden">
         <CardHeader>
             <div className="flex justify-between items-center">
                 <CardTitle>Firmen</CardTitle>
                 <Button><Plus className="mr-2 h-4 w-4" /> Firma erstellen</Button>
             </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -582,31 +603,31 @@ const DealsView = () => {
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
             {/* Sektion 1: Tagesüberblick */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Offene Deals</p>
-                    <p className="text-4xl font-bold mt-2">{openDealsCount || 'Keine'}</p>
+                    <p className="text-4xl font-bold mt-2 font-mono">{openDealsCount || 'Keine'}</p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pipeline-Wert</p>
-                    <p className="text-4xl font-bold mt-2 text-primary">{formatWaehrung(pipelineValue)}</p>
+                    <p className="text-4xl font-bold mt-2 text-primary font-mono">{formatWaehrung(pipelineValue)}</p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">In Verhandlung</p>
-                    <p className="text-4xl font-bold mt-2 text-blue-400">{inNegotiationCount || 'Keine'}</p>
+                    <p className="text-4xl font-bold mt-2 text-blue-400 font-mono">{inNegotiationCount || 'Keine'}</p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden border-l-4 border-l-rose-500/50">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative border-l-4 border-l-rose-500/50">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kritische Deals</p>
-                    <p className={cn("text-4xl font-bold mt-2", criticalDealsCount > 0 ? "text-rose-400" : "text-muted-foreground")}>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", criticalDealsCount > 0 ? "text-rose-400" : "text-muted-foreground")}>
                         {criticalDealsCount || 'Keine'}
                     </p>
                 </Card>
             </div>
 
             {/* Sektion 2: KI-Hinweise */}
-            <Card className="bg-blue-500/5 border-blue-500/20">
+            <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweise zu Deals
+                        <Sparkles className="w-4 h-4 text-blue-400 shrink-0"/> KI-Hinweise zu Deals
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
@@ -626,8 +647,8 @@ const DealsView = () => {
                         <div className="space-y-2">
                             <p className="text-xs font-bold text-foreground">Empfohlener Schritt</p>
                             <div className="flex gap-2">
-                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Angebot nachfassen</Button>
-                                <Button size="sm" variant="outline" className="h-7 text-[10px]">Termin vorschlagen</Button>
+                                <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold uppercase">Angebot nachfassen</Button>
+                                <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold uppercase">Termin vorschlagen</Button>
                             </div>
                         </div>
                     </div>
@@ -640,32 +661,32 @@ const DealsView = () => {
                 <div className="grid grid-cols-1 gap-3">
                     {activeDeals.map(d => (
                         <Card key={d.id} className={cn(
-                            "p-4 hover:border-primary/40 transition-all overflow-hidden",
+                            "p-4 hover:border-primary/40 transition-all overflow-hidden relative",
                             (d.inactiveDays > 3 || d.aiRisk) && "border-l-4 border-l-rose-500/50",
                             d.stage === 'Verhandlung' && "border-l-4 border-l-blue-500/50"
                         )}>
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <Badge variant="secondary" className="text-[10px] font-bold uppercase">
+                                        <Badge variant="secondary" className="text-[10px] font-black uppercase px-2 h-5">
                                             {d.stage}
                                         </Badge>
-                                        <h4 className="font-bold text-foreground truncate">{d.name}</h4>
+                                        <h4 className="font-bold text-foreground text-sm truncate">{d.name}</h4>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                                         <span className="flex items-center gap-1.5 font-bold text-foreground"><DollarSign className="w-3.5 h-3.5 text-emerald-400"/> {d.value}</span>
-                                        <span className="flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5"/> Q-Hub</span>
+                                        <span className="flex items-center gap-1.5 font-medium text-primary"><Building2 className="w-3.5 h-3.5"/> Q-Hub</span>
                                         <span className="flex items-center gap-1.5"><UserIcon className="w-3.5 h-3.5"/> {d.owner}</span>
-                                        <span className={cn("font-medium", d.inactiveDays > 3 && "text-rose-400")}>
+                                        <span className={cn("font-mono font-bold", d.inactiveDays > 3 && "text-rose-400")}>
                                             <Clock className="w-3.5 h-3.5 inline mr-1"/> {d.inactiveDays === 0 ? 'Heute aktiv' : `Vor ${d.inactiveDays} Tagen`}
                                         </span>
                                     </div>
-                                    {d.aiRisk && <p className="text-[10px] text-rose-400 font-medium mt-2 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> {d.aiRisk}</p>}
+                                    {d.aiRisk && <p className="text-[10px] text-rose-400 font-bold mt-2 flex items-center gap-1 italic"><AlertTriangle className="w-3 h-3"/> {d.aiRisk}</p>}
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 shrink-0">
                                     <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
-                                    <Button variant="outline" size="sm" className="h-8">Aufgabe</Button>
-                                    <Button variant="default" size="sm" className="h-8">Öffnen</Button>
+                                    <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase px-3">Aufgabe</Button>
+                                    <Button variant="default" size="sm" className="h-8 text-[10px] font-black uppercase px-3">Öffnen</Button>
                                 </div>
                             </div>
                         </Card>
@@ -678,7 +699,7 @@ const DealsView = () => {
                 <Collapsible open={isClosedDealsOpen} onOpenChange={setIsClosedDealsOpen}>
                     <CollapsibleTrigger asChild>
                         <Button variant="ghost" className="w-full justify-between hover:bg-transparent px-1 text-muted-foreground">
-                            <span className="text-sm font-bold flex items-center gap-2">
+                            <span className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest">
                                 <HistoryIcon className="w-4 h-4"/> Geschlossene Deals ({wonDeals.length + lostDeals.length})
                             </span>
                             <ChevronDown className={cn("w-4 h-4 transition-transform", isClosedDealsOpen && "rotate-180")}/>
@@ -687,22 +708,22 @@ const DealsView = () => {
                     <CollapsibleContent className="mt-4 space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-3">
-                                <p className="text-xs font-bold text-emerald-400 uppercase px-1">Gewonnen</p>
+                                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest px-1">Gewonnen</p>
                                 {wonDeals.map(d => (
-                                    <Card key={d.id} className="p-3 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+                                    <Card key={d.id} className="p-3 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all relative overflow-hidden">
                                         <div className="flex justify-between items-center gap-2">
-                                            <p className="text-sm font-bold truncate">{d.name}</p>
+                                            <p className="text-xs font-bold truncate">{d.name}</p>
                                             <span className="text-xs font-mono font-bold text-emerald-400">{d.value}</span>
                                         </div>
                                     </Card>
                                 ))}
                             </div>
                             <div className="space-y-3">
-                                <p className="text-xs font-bold text-rose-400 uppercase px-1">Verloren</p>
+                                <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest px-1">Verloren</p>
                                 {lostDeals.map(d => (
-                                    <Card key={d.id} className="p-3 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+                                    <Card key={d.id} className="p-3 opacity-70 grayscale hover:opacity-100 hover:grayscale-0 transition-all relative overflow-hidden">
                                         <div className="flex justify-between items-center gap-2">
-                                            <p className="text-sm font-bold truncate">{d.name}</p>
+                                            <p className="text-xs font-bold truncate">{d.name}</p>
                                             <span className="text-xs font-mono font-bold text-rose-400">{d.value}</span>
                                         </div>
                                     </Card>
@@ -726,52 +747,52 @@ const PipelineView = () => {
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
             {/* Sektion 1: Tagesüberblick */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aktive Deals</p>
-                    <p className="text-4xl font-bold mt-2">{activeDeals.length}</p>
+                    <p className="text-4xl font-bold mt-2 font-mono">{activeDeals.length}</p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pipeline-Wert gesamt</p>
-                    <p className="text-4xl font-bold mt-2 text-primary">{formatWaehrung(pipelineTotalValue)}</p>
+                    <p className="text-4xl font-bold mt-2 text-primary font-mono">{formatWaehrung(pipelineTotalValue)}</p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Deals ohne Aktivität</p>
-                    <p className={cn("text-4xl font-bold mt-2", inactiveCount > 0 ? "text-amber-400" : "text-muted-foreground")}>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", inactiveCount > 0 ? "text-amber-400" : "text-muted-foreground")}>
                         {inactiveCount || 'Keine'}
                     </p>
                 </Card>
-                <Card className="p-5 flex flex-col justify-between overflow-hidden border-l-4 border-l-rose-500/50">
+                <Card className="p-5 flex flex-col justify-between overflow-hidden relative border-l-4 border-l-rose-500/50">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kritische Deals</p>
-                    <p className={cn("text-4xl font-bold mt-2", criticalCount > 0 ? "text-rose-400" : "text-muted-foreground")}>
+                    <p className={cn("text-4xl font-bold mt-2 font-mono", criticalCount > 0 ? "text-rose-400" : "text-muted-foreground")}>
                         {criticalCount || 'Keine'}
                     </p>
                 </Card>
             </div>
 
             {/* Sektion 2: KI-Hinweise */}
-            <Card className="bg-blue-500/5 border-blue-500/20">
+            <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden">
                 <CardHeader className="p-4 pb-2">
                     <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweise zur Pipeline
+                        <Sparkles className="w-4 h-4 text-blue-400 shrink-0"/> KI-Hinweise zur Pipeline
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-1">
                             <p className="text-xs font-bold text-foreground">Fokus heute</p>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            <p className="text-[11px] text-blue-300/90 leading-relaxed">
                                 {inactiveCount} Deals seit über 3 Tagen ohne Aktivität. Dringende Prüfung empfohlen.
                             </p>
                         </div>
                         <div className="space-y-1">
                             <p className="text-xs font-bold text-foreground">Risiko erkannt</p>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            <p className="text-[11px] text-blue-300/90 leading-relaxed">
                                 {criticalCount} Deals in Phase 'Angebot' haben kein folgendes Meeting.
                             </p>
                         </div>
                         <div className="space-y-1">
                             <p className="text-xs font-bold text-foreground">Empfohlene Aktion</p>
-                            <Button size="sm" variant="outline" className="h-7 text-[10px] w-full">Zu den relevanten Deals</Button>
+                            <Button size="sm" variant="outline" className="h-7 text-[10px] w-full font-black uppercase">Zu den relevanten Deals</Button>
                         </div>
                     </div>
                 </CardContent>
@@ -789,35 +810,35 @@ const PipelineView = () => {
                             <div key={phase} className={cn("flex-1 min-w-[200px] bg-muted/30 rounded-xl p-2", isArchivedPhase && "opacity-60")}>
                                 <div className="p-3 mb-3 border-b border-border/50">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-sm font-black uppercase text-foreground/80">{phase}</h3>
-                                        <Badge variant="outline" className="text-[10px] font-bold">{phaseDeals.length}</Badge>
+                                        <h3 className="text-[11px] font-black uppercase text-foreground/80 tracking-wider">{phase}</h3>
+                                        <Badge variant="outline" className="text-[10px] font-bold h-5 px-1.5">{phaseDeals.length}</Badge>
                                     </div>
-                                    <p className="text-[10px] font-bold text-muted-foreground mt-1">{formatWaehrung(phaseValue)}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground mt-1 font-mono">{formatWaehrung(phaseValue)}</p>
                                 </div>
                                 <div className="space-y-3">
                                     {phaseDeals.map(deal => (
                                         <Card key={deal.id} className={cn(
-                                            "p-3 shadow-sm hover:border-primary/40 transition-all cursor-pointer",
+                                            "p-3 shadow-sm hover:border-primary/40 transition-all cursor-pointer relative overflow-hidden",
                                             !isArchivedPhase && deal.inactiveDays > 3 && "border-l-4 border-l-amber-500/50",
                                             !isArchivedPhase && deal.aiRisk && "border-l-4 border-l-rose-500/50"
                                         )}>
-                                            <p className="font-bold text-xs text-foreground truncate">{deal.name}</p>
+                                            <p className="font-bold text-[11px] text-foreground truncate">{deal.name}</p>
                                             <p className="text-[10px] text-muted-foreground truncate">{deal.company || 'Unbekannt'}</p>
                                             <div className="mt-2 pt-2 border-t border-border/50 flex justify-between items-center">
-                                                <span className="text-[10px] font-bold">{deal.value}</span>
-                                                <span className={cn("text-[9px] font-medium", deal.inactiveDays > 3 ? "text-amber-400" : "text-muted-foreground")}>
+                                                <span className="text-[10px] font-bold font-mono">{deal.value}</span>
+                                                <span className={cn("text-[9px] font-bold font-mono", deal.inactiveDays > 3 ? "text-amber-400" : "text-muted-foreground")}>
                                                     {deal.inactiveDays === 0 ? 'Aktiv' : `Vor ${deal.inactiveDays} T.`}
                                                 </span>
                                             </div>
                                             {!isArchivedPhase && (
                                                 <p className="mt-2 text-[9px] text-blue-400 font-bold flex items-center gap-1 italic">
-                                                    <Sparkles className="w-2.5 h-2.5"/> {deal.nextStep || 'Nächster Schritt fehlt'}
+                                                    <Sparkles className="w-2.5 h-2.5 shrink-0"/> {deal.nextStep || 'Nächster Schritt fehlt'}
                                                 </p>
                                             )}
                                         </Card>
                                     ))}
                                     {phaseDeals.length === 0 && (
-                                        <div className="text-center py-8 text-[10px] text-muted-foreground italic">Leer</div>
+                                        <div className="text-center py-8 text-[10px] text-muted-foreground italic uppercase tracking-widest opacity-30">Leer</div>
                                     )}
                                 </div>
                             </div>
@@ -900,41 +921,41 @@ const ActivitiesListView = () => {
             {/* Sektion 1: Tagesüberblick & Eskalationen */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                 <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aktivitäten heute</p>
-                        <p className="text-4xl font-bold mt-2">{stats.today || 'Keine'}</p>
+                        <p className="text-4xl font-bold mt-2 font-mono">{stats.today || 'Keine'}</p>
                     </Card>
-                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Kundenkontakte</p>
-                        <p className="text-4xl font-bold mt-2 text-blue-400">{stats.contacts || 'Keine'}</p>
+                        <p className="text-4xl font-bold mt-2 text-blue-400 font-mono">{stats.contacts || 'Keine'}</p>
                     </Card>
-                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Abgeschlossen</p>
-                        <p className="text-4xl font-bold mt-2 text-emerald-400">{stats.done || 'Keine'}</p>
+                        <p className="text-4xl font-bold mt-2 text-emerald-400 font-mono">{stats.done || 'Keine'}</p>
                     </Card>
-                    <Card className="p-5 flex flex-col justify-between overflow-hidden">
+                    <Card className="p-5 flex flex-col justify-between overflow-hidden relative">
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Folgeaktionen</p>
-                        <p className="text-4xl font-bold mt-2 text-amber-400">{stats.open || 'Keine'}</p>
+                        <p className="text-4xl font-bold mt-2 text-amber-400 font-mono">{stats.open || 'Keine'}</p>
                     </Card>
                 </div>
                 
                 <div className="lg:col-span-4">
-                    <Card className="bg-amber-500/5 border-amber-500/20 h-full flex flex-col">
+                    <Card className="bg-amber-500/5 border-amber-500/20 h-full flex flex-col overflow-hidden">
                         <CardHeader className="p-4 pb-2">
                             <CardTitle className="text-sm text-amber-400 flex items-center gap-2">
-                                <AlertTriangle className="w-4 h-4"/> Hinweise & Eskalationen
+                                <AlertTriangle className="w-4 h-4 shrink-0"/> Hinweise & Eskalationen
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 pt-0 space-y-3 flex-1 overflow-auto">
+                        <CardContent className="p-4 pt-0 space-y-3 flex-1 overflow-auto custom-scrollbar">
                             <div className="space-y-1.5 p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                                <p className="text-[11px] font-bold text-amber-200">Kritisch</p>
+                                <p className="text-[11px] font-bold text-amber-200 uppercase tracking-widest">Kritisch</p>
                                 <p className="text-[11px] text-amber-300 leading-tight">Seit 10 Tagen kein Kontakt mit Innovate GmbH.</p>
-                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase p-0 hover:bg-transparent text-amber-400">Jetzt anrufen</Button>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-black uppercase p-0 hover:bg-transparent text-amber-400 hover:text-amber-300">Jetzt anrufen</Button>
                             </div>
                             <div className="space-y-1.5 p-2 bg-slate-500/10 rounded-lg border border-slate-500/20">
-                                <p className="text-[11px] font-bold text-slate-300">Achtung</p>
+                                <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">Achtung</p>
                                 <p className="text-[11px] text-slate-400 leading-tight">Deal 'Data Corp' ohne geplante Folgeaktion.</p>
-                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-bold uppercase p-0 hover:bg-transparent text-primary">Aufgabe anlegen</Button>
+                                <Button size="sm" variant="ghost" className="h-6 text-[9px] font-black uppercase p-0 hover:bg-transparent text-primary hover:text-primary/80">Aufgabe anlegen</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -946,13 +967,13 @@ const ActivitiesListView = () => {
                 <div className="flex items-center gap-2 p-1 bg-muted rounded-xl border border-border">
                     <button 
                         onClick={() => setGroupBy('time')}
-                        className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", groupBy === 'time' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                        className={cn("px-4 py-1.5 rounded-lg text-[11px] font-black uppercase transition-all", groupBy === 'time' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
                     >
                         Nach Zeit
                     </button>
                     <button 
                         onClick={() => setGroupBy('customer')}
-                        className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", groupBy === 'customer' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                        className={cn("px-4 py-1.5 rounded-lg text-[11px] font-black uppercase transition-all", groupBy === 'customer' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
                     >
                         Nach Kunde
                     </button>
@@ -964,9 +985,9 @@ const ActivitiesListView = () => {
                             key={f}
                             onClick={() => setSelectedFilter(f)}
                             className={cn(
-                                "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border",
+                                "px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border",
                                 selectedFilter === f 
-                                    ? "bg-primary border-primary text-primary-foreground"
+                                    ? "bg-primary border-primary text-primary-foreground shadow-lg"
                                     : "bg-muted border-transparent text-muted-foreground hover:border-border"
                             )}
                         >
@@ -988,34 +1009,34 @@ const ActivitiesListView = () => {
                                     {acts.map(a => {
                                         const Icon = typeIcons[a.type] || Activity;
                                         return (
-                                            <Card key={a.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden">
+                                            <Card key={a.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden relative">
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                                     <div className="flex items-center gap-4 flex-1 min-w-0">
-                                                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors shrink-0 border border-transparent group-hover:border-primary/20">
+                                                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors shrink-0 border border-transparent group-hover:border-primary/20 shadow-inner">
                                                             <Icon className="w-5 h-5"/>
                                                         </div>
                                                         <div className="min-w-0">
                                                             <div className="flex items-center gap-2 mb-0.5">
-                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase">{a.type}</span>
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{a.type}</span>
                                                                 <span className="text-[10px] text-muted-foreground/50">•</span>
-                                                                <span className="text-[10px] text-muted-foreground font-mono">{format(new Date(a.dueDate), 'HH:mm')} Uhr</span>
+                                                                <span className="text-[10px] text-muted-foreground font-mono font-bold">{format(new Date(a.dueDate), 'HH:mm')} Uhr</span>
                                                             </div>
                                                             <h4 className="font-bold text-foreground text-sm truncate">{a.description}</h4>
-                                                            <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-1">
-                                                                <LinkIcon className="w-3 h-3"/> {a.context}
+                                                            <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1.5 mt-1 font-medium">
+                                                                <LinkIcon className="w-3 h-3 text-primary/60"/> {a.context}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
                                                         <Badge variant="outline" className={cn(
-                                                            "text-[9px] font-black uppercase",
+                                                            "text-[9px] font-black uppercase h-5 px-2",
                                                             a.status === 'Erledigt' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
                                                         )}>
                                                             {a.status}
                                                         </Badge>
                                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
-                                                            <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold uppercase">Öffnen</Button>
+                                                            <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase">Öffnen</Button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1030,18 +1051,18 @@ const ActivitiesListView = () => {
                     /* Kunden-Timeline */
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {groupedByCustomer.map(customer => (
-                            <Card key={customer.id} className="flex flex-col h-full overflow-hidden hover:border-primary/30 transition-all">
+                            <Card key={customer.id} className="flex flex-col h-full overflow-hidden hover:border-primary/30 transition-all relative">
                                 <CardHeader className="p-4 bg-muted/30 border-b border-border/50">
                                     <div className="flex justify-between items-start gap-4">
                                         <div className="min-w-0">
                                             <h4 className="font-bold text-foreground truncate">{customer.name}</h4>
-                                            <p className="text-[10px] text-muted-foreground truncate">{customer.company}</p>
+                                            <p className="text-[10px] text-muted-foreground uppercase font-black truncate">{customer.company}</p>
                                         </div>
-                                        <Badge variant="outline" className="text-[9px] font-black uppercase bg-background">
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase bg-background border-primary/20 text-primary h-5 px-2">
                                             {customer.leadStatus}
                                         </Badge>
                                     </div>
-                                    <p className="text-[9px] text-muted-foreground font-bold uppercase mt-2">Letzter Kontakt: {customer.lastActivity}</p>
+                                    <p className="text-[9px] text-muted-foreground font-bold uppercase mt-2 tracking-widest">Letzter Kontakt: {customer.lastActivity}</p>
                                 </CardHeader>
                                 <CardContent className="p-4 flex-1">
                                     <div className="space-y-4">
@@ -1052,27 +1073,27 @@ const ActivitiesListView = () => {
                                                     {i < customer.activities.slice(0, 3).length - 1 && (
                                                         <div className="absolute left-[13px] top-7 bottom-[-16px] w-[1px] bg-border"/>
                                                     )}
-                                                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0 border border-border/50">
+                                                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0 border border-border/50 shadow-inner">
                                                         <Icon className="w-3.5 h-3.5"/>
                                                     </div>
                                                     <div className="min-w-0 pt-0.5">
-                                                        <p className="font-bold text-foreground truncate">{act.description}</p>
-                                                        <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(act.dueDate), 'dd.MM.yyyy HH:mm')} Uhr</p>
+                                                        <p className="font-bold text-foreground text-[13px] truncate">{act.description}</p>
+                                                        <p className="text-[10px] text-muted-foreground font-mono font-bold mt-0.5">{format(new Date(act.dueDate), 'dd.MM.yyyy HH:mm')} Uhr</p>
                                                     </div>
                                                 </div>
                                             )
                                         })}
                                         {customer.activities.length > 3 && (
-                                            <Button variant="ghost" className="w-full h-8 text-[10px] font-bold text-muted-foreground uppercase hover:text-primary">
+                                            <Button variant="ghost" className="w-full h-8 text-[10px] font-black text-muted-foreground uppercase hover:text-primary tracking-widest">
                                                 + {customer.activities.length - 3} weitere anzeigen
                                             </Button>
                                         )}
                                     </div>
                                 </CardContent>
                                 <CardFooter className="p-2 border-t border-border/50 bg-muted/10 gap-2">
-                                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[10px] font-bold uppercase">Anrufen</Button>
-                                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[10px] font-bold uppercase">Termin</Button>
-                                    <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] font-bold uppercase">Kunde öffnen</Button>
+                                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[10px] font-black uppercase tracking-wider">Anrufen</Button>
+                                    <Button variant="ghost" size="sm" className="flex-1 h-8 text-[10px] font-black uppercase tracking-wider">Termin</Button>
+                                    <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] font-black uppercase tracking-wider bg-background">Kunde öffnen</Button>
                                 </CardFooter>
                             </Card>
                         ))}
@@ -1086,42 +1107,42 @@ const ActivitiesListView = () => {
                     <CollapsibleTrigger asChild>
                         <Button variant="ghost" className="w-full justify-between hover:bg-transparent px-1 text-muted-foreground">
                             <span className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest">
-                                <BarChart className="w-4 h-4"/> Aktivitäts-Übersicht (ROI & Trends)
+                                <BarChartIcon className="w-4 h-4"/> Aktivitäts-Übersicht (ROI & Trends)
                             </span>
                             <ChevronDown className={cn("w-4 h-4 transition-transform", isPerformanceOpen && "rotate-180")}/>
                         </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Card className="p-6 bg-blue-500/5 border-blue-500/10">
-                                <h5 className="text-xs font-bold text-blue-300 uppercase mb-4 flex items-center gap-2"><Clock className="w-3.5 h-3.5"/> Diese Woche</h5>
+                            <Card className="p-6 bg-blue-500/5 border-blue-500/10 overflow-hidden relative">
+                                <h5 className="text-xs font-bold text-blue-300 uppercase mb-4 flex items-center gap-2 tracking-widest"><Clock className="w-3.5 h-3.5"/> Diese Woche</h5>
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center pb-2 border-b border-blue-500/10">
-                                        <span className="text-sm text-blue-200/80">Kundenkontakte geführt</span>
-                                        <span className="text-lg font-bold text-white">42</span>
+                                        <span className="text-sm text-blue-200/80 font-medium">Kundenkontakte geführt</span>
+                                        <span className="text-2xl font-bold text-white font-mono">42</span>
                                     </div>
                                     <div className="flex justify-between items-center pb-2 border-b border-blue-500/10">
-                                        <span className="text-sm text-blue-200/80">Termine durchgeführt</span>
-                                        <span className="text-lg font-bold text-white">12</span>
+                                        <span className="text-sm text-blue-200/80 font-medium">Termine durchgeführt</span>
+                                        <span className="text-2xl font-bold text-white font-mono">12</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm text-blue-200/80">Folgeaktionen erstellt</span>
-                                        <span className="text-lg font-bold text-white">28</span>
+                                        <span className="text-sm text-blue-200/80 font-medium">Folgeaktionen erstellt</span>
+                                        <span className="text-2xl font-bold text-white font-mono">28</span>
                                     </div>
                                 </div>
                             </Card>
-                            <Card className="p-6 bg-emerald-500/5 border-emerald-500/10">
-                                <h5 className="text-xs font-bold text-emerald-300 uppercase mb-4 flex items-center gap-2"><TrendingUp className="w-3.5 h-3.5"/> Letzte 30 Tage</h5>
+                            <Card className="p-6 bg-emerald-500/5 border-emerald-500/10 overflow-hidden relative">
+                                <h5 className="text-xs font-bold text-emerald-300 uppercase mb-4 flex items-center gap-2 tracking-widest"><TrendingUp className="w-3.5 h-3.5"/> Letzte 30 Tage</h5>
                                 <div className="space-y-4">
                                     <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                                        <p className="text-xs font-bold text-emerald-200">Aktivitäts-Trend</p>
-                                        <p className="text-sm text-emerald-300 mt-1 flex items-center gap-2">
+                                        <p className="text-[10px] font-black text-emerald-200 uppercase tracking-widest">Aktivitäts-Trend</p>
+                                        <p className="text-[13px] text-emerald-300 mt-1 font-medium leading-relaxed">
                                             Die Gesamtaktivität ist im Vergleich zum Vormonat stabil geblieben.
                                         </p>
                                     </div>
                                     <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                        <p className="text-xs font-bold text-blue-200">Effizienz-Verhältnis</p>
-                                        <p className="text-sm text-blue-300 mt-1">
+                                        <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Effizienz-Verhältnis</p>
+                                        <p className="text-[13px] text-blue-300 mt-1 font-medium leading-relaxed">
                                             Im Schnitt führten 18 qualifizierte Gespräche zu 4 erfolgreichen Abschlüssen.
                                         </p>
                                     </div>
@@ -1179,24 +1200,24 @@ const NotesListView = () => {
     return (
         <div className="space-y-8 animate-in fade-in duration-500" id="qhub-reports">
             {/* Sektion 1: Schnellerstellung */}
-            <Card className="border-primary/20 shadow-sm overflow-hidden">
+            <Card className="border-primary/20 shadow-sm overflow-hidden relative">
                 <CardHeader className="p-4 pb-2 border-b bg-muted/30">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <MessageSquarePlus className="w-4 h-4 text-primary"/> Neue Notiz erfassen
+                    <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-widest">
+                        <MessageSquarePlus className="w-4 h-4 text-primary shrink-0"/> Neue Notiz erfassen
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 space-y-4">
                     <Textarea 
                         placeholder="Gedanken, Gesprächsnotizen, Entscheidungen ..." 
-                        className="bg-input min-h-[100px] text-sm resize-none focus-visible:ring-primary/30"
+                        className="bg-input min-h-[100px] text-sm resize-none focus-visible:ring-primary/30 border-transparent hover:border-border transition-colors"
                         value={newNoteText}
                         onChange={e => setNewNoteText(e.target.value)}
                     />
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <Label className="text-xs font-bold text-muted-foreground uppercase shrink-0">Kontext:</Label>
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest shrink-0">Kontext:</Label>
                             <Select value={selectedContext} onValueChange={setSelectedContext}>
-                                <SelectTrigger className="h-8 bg-muted text-xs border-transparent hover:border-border transition-colors w-full sm:w-[180px]">
+                                <SelectTrigger className="h-8 bg-muted text-[11px] font-bold uppercase border-transparent hover:border-border transition-colors w-full sm:w-[180px]">
                                     <SelectValue placeholder="Auswählen..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1209,7 +1230,7 @@ const NotesListView = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button onClick={handleSaveNote} disabled={!newNoteText.trim()} className="w-full sm:w-auto">
+                        <Button onClick={handleSaveNote} disabled={!newNoteText.trim()} className="w-full sm:w-auto font-black uppercase text-[11px] h-9 px-6 shadow-lg">
                             <Check className="w-4 h-4 mr-2"/> Notiz speichern
                         </Button>
                     </div>
@@ -1226,9 +1247,9 @@ const NotesListView = () => {
                                     key={f}
                                     onClick={() => setSelectedFilter(f)}
                                     className={cn(
-                                        "px-3 py-1.5 rounded-full text-[10px] font-bold uppercase transition-all border",
+                                        "px-3 py-1.5 rounded-full text-[10px] font-black uppercase transition-all border",
                                         selectedFilter === f 
-                                            ? "bg-primary border-primary text-primary-foreground"
+                                            ? "bg-primary border-primary text-primary-foreground shadow-lg"
                                             : "bg-muted border-transparent text-muted-foreground hover:border-border"
                                     )}
                                 >
@@ -1240,7 +1261,7 @@ const NotesListView = () => {
                             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <Input 
                                 placeholder="Notizen durchsuchen..." 
-                                className="pl-9 h-8 text-xs bg-input border-transparent focus-visible:ring-primary/30"
+                                className="pl-9 h-8 text-[11px] font-bold uppercase bg-input border-transparent focus-visible:ring-primary/30"
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
@@ -1255,23 +1276,23 @@ const NotesListView = () => {
                                     <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest px-1">{group}</h4>
                                     <div className="grid grid-cols-1 gap-3">
                                         {notes.map(n => (
-                                            <Card key={n.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden cursor-pointer" onClick={() => setDetailNote(n)}>
+                                            <Card key={n.id} className="p-4 hover:border-primary/40 transition-all group overflow-hidden cursor-pointer relative" onClick={() => setDetailNote(n)}>
                                                 <div className="flex justify-between items-start gap-4">
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className="font-bold text-foreground text-sm truncate">{n.title}</h4>
-                                                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                                                        <h4 className="font-bold text-foreground text-[13px] truncate">{n.title}</h4>
+                                                        <p className="text-[12px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed font-medium">
                                                             {n.content}
                                                         </p>
                                                         <div className="flex flex-wrap items-center gap-2 mt-3">
-                                                            <span className="text-[10px] text-muted-foreground font-mono">{format(new Date(n.createdAt), 'HH:mm')} Uhr</span>
+                                                            <span className="text-[10px] text-muted-foreground font-mono font-bold tracking-tighter">{format(new Date(n.createdAt), 'HH:mm')} Uhr</span>
                                                             {n.contextType && (
-                                                                <Badge variant="outline" className="text-[9px] font-black uppercase bg-muted/50 border-transparent text-muted-foreground gap-1.5">
-                                                                    <LinkIcon className="w-2.5 h-2.5"/> {n.contextName || n.contextType}
+                                                                <Badge variant="outline" className="text-[9px] font-black uppercase bg-muted/50 border-transparent text-muted-foreground gap-1.5 h-5">
+                                                                    <LinkIcon className="w-2.5 h-2.5 text-primary/60"/> {n.contextName || n.contextType}
                                                                 </Badge>
                                                             )}
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                                         <Button variant="ghost" size="icon" className="h-8 w-8"><FilePen className="w-4 h-4"/></Button>
                                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-rose-400"><Trash2 className="w-4 h-4"/></Button>
                                                     </div>
@@ -1283,9 +1304,9 @@ const NotesListView = () => {
                             )
                         ))}
                         {Object.values(groupedNotes).every(g => g.length === 0) && (
-                            <div className="text-center py-20 text-muted-foreground italic bg-muted/20 rounded-2xl border border-dashed">
+                            <div className="text-center py-20 text-muted-foreground italic bg-muted/20 rounded-2xl border border-dashed border-border/50">
                                 <FileText className="w-8 h-8 mx-auto mb-3 opacity-20"/>
-                                <p className="text-sm">Keine Notizen für die aktuelle Auswahl gefunden.</p>
+                                <p className="text-sm font-medium">Keine Notizen für die aktuelle Auswahl gefunden.</p>
                             </div>
                         )}
                     </div>
@@ -1293,27 +1314,27 @@ const NotesListView = () => {
 
                 {/* Rechte Spalte: KI-Hinweise */}
                 <div className="lg:col-span-4 space-y-6">
-                    <Card className="bg-blue-500/5 border-blue-500/20">
+                    <Card className="bg-blue-500/5 border-blue-500/20 overflow-hidden relative">
                         <CardHeader className="p-4 pb-2">
-                            <CardTitle className="text-sm text-blue-300 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-blue-400"/> KI-Hinweis
+                            <CardTitle className="text-sm text-blue-300 flex items-center gap-2 uppercase tracking-widest">
+                                <Sparkles className="w-4 h-4 text-blue-400 shrink-0"/> KI-Hinweis
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-4 pt-0 space-y-4">
                             <div className="space-y-1.5">
-                                <p className="text-xs font-bold text-blue-200">Kontext-Vorschlag</p>
-                                <p className="text-[11px] text-blue-300/90 leading-relaxed">
+                                <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Kontext-Vorschlag</p>
+                                <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
                                     Die letzte Notiz könnte relevant sein für den Deal 'Innovate GmbH'. Soll ich sie verknüpfen?
                                 </p>
-                                <Button variant="link" className="h-auto p-0 text-[10px] font-bold text-primary uppercase">Kontext verknüpfen</Button>
+                                <Button variant="link" className="h-auto p-0 text-[10px] font-black text-primary uppercase tracking-widest">Kontext verknüpfen</Button>
                             </div>
                             <Separator className="bg-blue-500/10"/>
                             <div className="space-y-1.5">
-                                <p className="text-xs font-bold text-blue-200">Wissens-Cluster</p>
-                                <p className aerial-label="text-[11px] text-blue-300/90 leading-relaxed">
+                                <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Wissens-Cluster</p>
+                                <p className="text-[11px] text-blue-300/90 leading-relaxed font-medium">
                                     Zu 'John Doe' existieren 5 einzelne Notizen aus dieser Woche.
                                 </p>
-                                <Button variant="link" className="h-auto p-0 text-[10px] font-bold text-primary uppercase">Zusammenfassen</Button>
+                                <Button variant="link" className="h-auto p-0 text-[10px] font-black text-primary uppercase tracking-widest">Zusammenfassen</Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -1322,23 +1343,23 @@ const NotesListView = () => {
 
             {/* Notiz-Detail Dialog */}
             <Dialog open={!!detailNote} onOpenChange={open => !open && setDetailNote(null)}>
-                <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl">
+                <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl bg-background">
                     {detailNote && (
-                        <div className="flex flex-col h-full bg-background">
-                            <DialogHeader className="p-6 pb-4 border-b">
+                        <div className="flex flex-col h-full">
+                            <DialogHeader className="p-6 pb-4 border-b border-border/50">
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-1">
                                         <DialogTitle className="text-xl font-bold">{detailNote.title}</DialogTitle>
-                                        <DialogDescription className="text-xs flex items-center gap-2">
-                                            Erstellt am {format(new Date(detailNote.createdAt), 'dd.MM.yyyy HH:mm')} Uhr von {detailNote.createdBy}
-                                        </DialogDescription>
+                                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                                            Erstellt {format(new Date(detailNote.createdAt), 'dd.MM.yyyy HH:mm', {locale: de})} Uhr von {detailNote.createdBy}
+                                        </div>
                                     </div>
                                 </div>
                             </DialogHeader>
                             <div className="p-6 space-y-6">
                                 <div className="space-y-2">
                                     <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Inhalt</Label>
-                                    <div className="p-4 rounded-xl bg-muted/30 border text-sm leading-relaxed whitespace-pre-wrap min-h-[200px]">
+                                    <div className="p-4 rounded-xl bg-muted/30 border border-border/50 text-[13px] leading-relaxed whitespace-pre-wrap min-h-[200px] font-medium">
                                         {detailNote.content}
                                     </div>
                                 </div>
@@ -1347,18 +1368,18 @@ const NotesListView = () => {
                                     <div className="space-y-2">
                                         <Label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Verknüpft mit</Label>
                                         <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                                            <LinkIcon className="w-4 h-4 text-primary"/>
-                                            <span className="text-xs font-bold text-foreground">{detailNote.contextType}: {detailNote.contextName || '-'}</span>
-                                            <Button variant="ghost" size="sm" className="ml-auto h-7 text-[10px] font-bold uppercase">Öffnen</Button>
+                                            <LinkIcon className="w-4 h-4 text-primary shrink-0"/>
+                                            <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">{detailNote.contextType}: {detailNote.contextName || '-'}</span>
+                                            <Button variant="ghost" size="sm" className="ml-auto h-7 text-[9px] font-black uppercase tracking-widest">Öffnen</Button>
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            <DialogFooter className="p-4 bg-muted/20 border-t gap-2 sm:justify-between items-center">
-                                <p className="text-[10px] text-muted-foreground italic">Zuletzt geändert: vor 5 Minuten</p>
+                            <DialogFooter className="p-4 bg-muted/20 border-t border-border/50 gap-2 sm:justify-between items-center">
+                                <p className="text-[10px] text-muted-foreground italic font-medium">Zuletzt geändert: vor wenigen Augenblicken</p>
                                 <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setDetailNote(null)}>Schließen</Button>
-                                    <Button size="sm">Notiz bearbeiten</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setDetailNote(null)} className="font-bold text-[11px] uppercase tracking-wider">Schließen</Button>
+                                    <Button size="sm" className="font-bold text-[11px] uppercase tracking-wider px-6">Notiz bearbeiten</Button>
                                 </div>
                             </DialogFooter>
                         </div>
@@ -1370,9 +1391,9 @@ const NotesListView = () => {
 };
 
 const EmailsListView = () => (
-    <Card id="qhub-reports">
+    <Card id="qhub-reports" className="overflow-hidden relative">
         <CardHeader><CardTitle>E-Mails</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -1386,7 +1407,7 @@ const EmailsListView = () => (
                         <TableRow key={e.id}>
                             <TableCell className="font-medium max-w-xs truncate">{e.subject}</TableCell>
                             <TableCell><Badge variant="outline">{e.status}</Badge></TableCell>
-                            <TableCell className="text-xs">{formatDistanceToNow(new Date(e.createdAt), { addSuffix: true, locale: de })}</TableCell>
+                            <TableCell className="text-xs font-mono font-bold text-muted-foreground">{formatDistanceToNow(new Date(e.createdAt), { addSuffix: true, locale: de })}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -1396,9 +1417,9 @@ const EmailsListView = () => (
 );
 
 const CallsListView = () => (
-    <Card id="qhub-reports">
+    <Card id="qhub-reports" className="overflow-hidden relative">
         <CardHeader><CardTitle>Anrufe</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -1411,10 +1432,10 @@ const CallsListView = () => (
                 <TableBody>
                     {mockCalls.map(c => (
                         <TableRow key={c.id}>
-                            <TableCell className="flex items-center gap-2">{c.type}</TableCell>
-                            <TableCell>{c.contactName}</TableCell>
-                            <TableCell><Badge variant="outline">{c.status}</Badge></TableCell>
-                            <TableCell className="text-xs">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: de })}</TableCell>
+                            <TableCell className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider">{c.type}</TableCell>
+                            <TableCell className="font-medium">{c.contactName}</TableCell>
+                            <TableCell><Badge variant="outline" className="text-[10px] font-black uppercase">{c.status}</Badge></TableCell>
+                            <TableCell className="text-xs font-mono font-bold text-muted-foreground">{formatDistanceToNow(new Date(c.createdAt), { addSuffix: true, locale: de })}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -1435,15 +1456,15 @@ const UebersichtTab = () => {
           {uebersicht.kpis.map(kpi => {
             const Icon = IconMap[kpi.icon as string] || Activity;
             return (
-              <Card key={kpi.title} className="overflow-hidden">
+              <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
                 <CardHeader className="pb-2 p-4 flex flex-row items-center justify-between space-y-0 gap-2">
-                  <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate flex-1">
+                  <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate flex-1 tracking-wider">
                     {kpi.title}
                   </CardTitle>
                   <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold text-foreground font-mono truncate">
+                  <p className="font-bold text-foreground font-mono truncate" style={{ fontSize: 'clamp(20px, 2.5vw, 32px)', lineHeight: '1.1' }}>
                     {parseValue(kpi.value)}
                   </p>
                 </CardContent>
@@ -1452,22 +1473,22 @@ const UebersichtTab = () => {
           })}
         </div>
         
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden relative">
             <CardHeader>
                 <CardTitle>Sales Flow</CardTitle>
                 <CardDescription>Konvertierungsraten zwischen den Vertriebsphasen.</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-around overflow-x-auto p-6 gap-6 no-scrollbar">
+            <CardContent className="flex items-center justify-around overflow-x-auto p-6 gap-6 no-scrollbar min-w-0">
                 {uebersicht.salesFlow.map((step, index) => (
                     <React.Fragment key={step.stage}>
                         <div className="text-center shrink-0 min-w-[80px]">
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">{step.stage}</p>
-                            <p className="text-2xl font-bold font-mono">{formatZahl(step.value)}</p>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase mb-1 tracking-widest">{step.stage}</p>
+                            <p className="text-2xl font-bold font-mono tracking-tighter">{formatZahl(step.value)}</p>
                         </div>
                         {index < uebersicht.salesFlow.length - 1 && (
                             <div className="text-center shrink-0">
                                 <ChevronsRight className="w-6 h-6 text-muted-foreground/30 mx-auto"/>
-                                <p className="text-emerald-400 font-bold mt-1 text-xs">
+                                <p className="text-emerald-400 font-bold mt-1 text-[11px] font-mono">
                                   {formatProzent(parseFloat(uebersicht.salesFlow[index+1].conversion || '0'))}
                                 </p>
                             </div>
@@ -1501,29 +1522,29 @@ const AktivitaetTab = () => {
                 {kpiData.map(kpi => {
                     const Icon = kpi.icon;
                     return(
-                    <Card key={kpi.title}>
+                    <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
                         <CardHeader className="p-4 pb-2 flex-row items-center justify-between gap-2 space-y-0">
-                            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate">{kpi.title}</CardTitle>
+                            <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate tracking-wider">{kpi.title}</CardTitle>
                             <Icon className={cn('w-3.5 h-3.5 shrink-0', getKpiColor(kpi.value, kpi.target, kpi.invertColor))} />
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
-                            <p className="text-3xl font-bold font-mono">{formatZahl(kpi.value)}</p>
+                            <p className="text-3xl font-bold font-mono tracking-tighter">{formatZahl(kpi.value)}</p>
                         </CardContent>
                     </Card>
                 )})}
             </div>
-             <Card>
+             <Card className="overflow-hidden relative">
                 <CardHeader><CardTitle className="text-base">Zuständigkeiten</CardTitle></CardHeader>
-                <CardContent className="p-0 overflow-x-auto">
+                <CardContent className="p-0 overflow-x-auto custom-scrollbar">
                     <Table>
                         <TableHeader><TableRow><TableHead>Zuständig</TableHead><TableHead className="text-right">Anrufe</TableHead><TableHead className="text-right">Termine</TableHead><TableHead className="text-right">Überfällig</TableHead></TableRow></TableHeader>
                         <TableBody>
                             {aktivitaet.ranking.map(r => (
                                 <TableRow key={r.assignee}>
                                     <TableCell className="font-bold">{r.assignee}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatZahl(r.calls)}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatZahl(r.meetings)}</TableCell>
-                                    <TableCell className={cn("text-right font-mono font-bold", r.followupsOverdue > 0 ? 'text-rose-400' : 'text-emerald-400')}>{formatZahl(r.followupsOverdue)}</TableCell>
+                                    <TableCell className="text-right font-mono font-bold">{formatZahl(r.calls)}</TableCell>
+                                    <TableCell className="text-right font-mono font-bold">{formatZahl(r.meetings)}</TableCell>
+                                    <TableCell className={cn("text-right font-mono font-black", r.followupsOverdue > 0 ? 'text-rose-400' : 'text-emerald-400')}>{formatZahl(r.followupsOverdue)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -1549,13 +1570,13 @@ const AbschluesseTab = () => {
                 {kpiData.map(kpi => {
                     const Icon = kpi.icon;
                     return(
-                    <Card key={kpi.title} className="overflow-hidden">
+                    <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
                         <CardHeader className="p-4 pb-2 flex-row items-center justify-between space-y-0 gap-2">
-                            <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate">{kpi.title}</CardTitle>
+                            <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate tracking-wider">{kpi.title}</CardTitle>
                             <Icon className={cn('w-3.5 h-3.5 shrink-0', `text-${kpi.color}-400`)} />
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
-                          <p className="text-2xl font-bold font-mono truncate">
+                          <p className="font-bold font-mono truncate tracking-tighter" style={{ fontSize: 'clamp(18px, 2vw, 28px)' }}>
                             {kpi.isCurrency ? formatWaehrung(kpi.value) : kpi.isPercent ? formatProzent(kpi.value) : formatZahl(kpi.value)}
                             {kpi.suffix}
                           </p>
@@ -1563,17 +1584,17 @@ const AbschluesseTab = () => {
                     </Card>
                 )})}
             </div>
-             <Card>
+             <Card className="overflow-hidden relative">
                 <CardHeader><CardTitle>Laufende Deals</CardTitle></CardHeader>
-                <CardContent className="p-0 overflow-x-auto">
+                <CardContent className="p-0 overflow-x-auto custom-scrollbar">
                     <Table>
                         <TableHeader><TableRow><TableHead>Deal</TableHead><TableHead className="text-right">Wert</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                          <TableBody>
                             {abschluesse.deals.map(d => (
                                 <TableRow key={d.id}>
                                     <TableCell className="font-bold">{d.name}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatWaehrung(d.value)}</TableCell>
-                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'}>{d.status}</Badge></TableCell>
+                                    <TableCell className="text-right font-mono font-bold">{formatWaehrung(d.value)}</TableCell>
+                                    <TableCell><Badge variant={d.status === 'Won' ? 'default' : 'destructive'} className={cn("text-[10px] font-black uppercase", d.status === 'Won' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "")}>{d.status}</Badge></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -1598,29 +1619,29 @@ const RisikoTab = () => {
                 {kpiData.map(kpi => {
                      const Icon = kpi.icon;
                     return (
-                        <Card key={kpi.title} className="overflow-hidden">
+                        <Card key={kpi.title} className="overflow-hidden min-w-0 max-w-full relative">
                             <CardHeader className="p-4 pb-2 flex-row items-center justify-between space-y-0 gap-2">
-                                <CardTitle className="text-[10px] font-bold uppercase text-muted-foreground truncate">{kpi.title}</CardTitle>
+                                <CardTitle className="text-[10px] font-black uppercase text-muted-foreground truncate tracking-wider">{kpi.title}</CardTitle>
                                 <Icon className={cn('w-3.5 h-3.5 shrink-0', `text-${kpi.color}-400`)} />
                             </CardHeader>
                             <CardContent className="p-4 pt-0">
-                              <p className="text-3xl font-bold font-mono">{formatZahl(kpi.value)}</p>
+                              <p className="text-3xl font-bold font-mono tracking-tighter">{formatZahl(kpi.value)}</p>
                             </CardContent>
                         </Card>
                     )
                 })}
             </div>
-             <Card>
+             <Card className="overflow-hidden relative">
                 <CardHeader><CardTitle>Dringender Handlungsbedarf</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     {risiko.atRiskDeals.map(d => (
-                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5">
+                         <Card key={d.id} className="p-4 border-l-4 border-rose-500 bg-rose-500/5 overflow-hidden">
                             <div className="flex justify-between items-start gap-4">
                                 <div className="min-w-0">
                                     <p className="font-bold truncate">{d.name}</p>
-                                    <p className="text-sm font-mono text-muted-foreground">{formatWaehrung(d.dealValue)}</p>
+                                    <p className="text-xs font-mono font-bold text-muted-foreground">{formatWaehrung(d.dealValue)}</p>
                                 </div>
-                                <Badge variant="destructive">At Risk</Badge>
+                                <Badge variant="destructive" className="text-[9px] font-black uppercase">At Risk</Badge>
                             </div>
                          </Card>
                     ))}
@@ -1634,26 +1655,28 @@ const LearningsTab = () => {
     const { learnings } = qSalesReportingData;
     return (
         <div className="space-y-6" id="qhub-reports">
-            <Card>
+            <Card className="overflow-hidden relative">
                 <CardHeader>
                     <CardTitle>Top Verlustgründe</CardTitle>
                 </CardHeader>
                 <CardContent>
-                     <ChartContainer config={{}} className="h-64">
-                         <BarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
-                             <XAxis type="number" hide />
-                             <YAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))' }}/>
-                             <Tooltip content={<ChartTooltipContent />} />
-                             <Bar dataKey="count" fill="hsl(var(--primary))" radius={4} />
-                         </BarChart>
-                     </ChartContainer>
+                     <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RechartsBarChart data={learnings.lostReasonData} layout="vertical" margin={{left: 20}}>
+                                <RechartsXAxis type="number" hide />
+                                <RechartsYAxis dataKey="reason" type="category" tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' }} width={120}/>
+                                <RechartsTooltip content={<ChartTooltipContent />} />
+                                <RechartsBar dataKey="count" fill="hsl(var(--primary))" radius={4} barSize={24} />
+                            </RechartsBarChart>
+                        </ResponsiveContainer>
+                     </div>
                 </CardContent>
             </Card>
-             <Card className="bg-blue-500/5 border-blue-500/10">
+             <Card className="bg-blue-500/5 border-blue-500/10 overflow-hidden relative">
                 <CardHeader>
-                    <CardTitle className="text-blue-300 text-sm font-bold uppercase flex items-center gap-2"><BrainCircuit className="w-4 h-4"/> KI-Zusammenfassung</CardTitle>
+                    <CardTitle className="text-blue-300 text-[10px] font-black uppercase flex items-center gap-2 tracking-widest"><BrainCircuit className="w-4 h-4 shrink-0"/> KI-Zusammenfassung</CardTitle>
                 </CardHeader>
-                <CardContent><p className="text-blue-200/90 text-sm leading-relaxed">{learnings.aiSummary}</p></CardContent>
+                <CardContent><p className="text-blue-200/90 text-sm leading-relaxed font-medium">{learnings.aiSummary}</p></CardContent>
             </Card>
         </div>
     );
@@ -1670,7 +1693,7 @@ const ReportingView = () => (
                 <TabsTrigger value="learnings">Learnings</TabsTrigger>
             </TabsList>
             <Select defaultValue="30d">
-                <SelectTrigger className="w-full md:w-[180px] bg-input"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full md:w-[180px] bg-input font-bold text-xs uppercase"><SelectValue /></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="today">Heute</SelectItem>
                     <SelectItem value="7d">Diese Woche</SelectItem>
@@ -1743,9 +1766,9 @@ export default function QhubPage() {
   };
 
   return (
-    <div className="flex h-full min-h-[calc(100vh-10rem)]" id="qhub-reports">
-        <aside className="w-56 border-r border-border pr-4 space-y-1">
-            <p className="px-3 pb-2 text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Q-Hub</p>
+    <div className="flex h-full min-h-[calc(100vh-10rem)] overflow-hidden" id="qhub-reports">
+        <aside className="w-56 border-r border-border pr-4 space-y-1 shrink-0">
+            <p className="px-3 pb-2 text-[10px] font-black uppercase text-muted-foreground tracking-widest">Q-Hub</p>
             {modules.map((mod) => {
                 const Icon = mod.icon;
                 return (
@@ -1753,41 +1776,43 @@ export default function QhubPage() {
                         key={mod.name}
                         variant={activeModule === mod.name ? 'secondary' : 'ghost'}
                         onClick={() => setActiveModule(mod.name)}
-                        className="w-full justify-start text-sm"
+                        className="w-full justify-start text-sm font-bold h-9"
                     >
-                        <Icon className="mr-2 h-4 w-4" />
+                        <Icon className="mr-2 h-4 w-4 shrink-0" />
                         {mod.name}
                     </Button>
                 )
             })}
         </aside>
 
-        <main className="flex-1 pl-6 space-y-6 overflow-hidden">
-             <header className="flex justify-between items-center gap-4">
+        <main className="flex-1 pl-6 space-y-6 overflow-hidden flex flex-col min-w-0">
+             <header className="flex justify-between items-center gap-4 shrink-0">
                  <div>
                     <h1 className="text-3xl font-bold text-foreground tracking-tight">Q-Hub</h1>
-                    <p className="text-muted-foreground text-sm">Zentrale für Kunden, Vertrieb & Service</p>
+                    <p className="text-muted-foreground text-sm font-medium">Zentrale für Kunden, Vertrieb & Service</p>
                 </div>
                  <div className="flex items-center gap-3">
                     <div className="relative hidden lg:block w-72">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                        <Input type="text" placeholder="Suchen..." className="pl-9 bg-input" />
+                        <Input type="text" placeholder="Suchen..." className="pl-9 bg-input text-xs font-bold uppercase h-9 border-transparent focus-visible:ring-primary/30" />
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                           <Button><Plus className="mr-2 h-4 w-4" /> Erstellen</Button>
+                           <Button className="h-9 px-4 font-black uppercase text-xs tracking-wider"><Plus className="mr-2 h-4 w-4" /> Erstellen</Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Neuer Kontakt</DropdownMenuItem>
-                            <DropdownMenuItem>Neue Firma</DropdownMenuItem>
-                            <DropdownMenuItem>Neuer Deal</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem className="font-bold text-xs uppercase">Neuer Kontakt</DropdownMenuItem>
+                            <DropdownMenuItem className="font-bold text-xs uppercase">Neue Firma</DropdownMenuItem>
+                            <DropdownMenuItem className="font-bold text-xs uppercase">Neuer Deal</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             </header>
-            <div className="animate-in fade-in duration-300">
-                {renderModule()}
-            </div>
+            <ScrollArea className="flex-1 -mx-2 px-2">
+                <div className="animate-in fade-in duration-300 pb-10">
+                    {renderModule()}
+                </div>
+            </ScrollArea>
         </main>
     </div>
   );
