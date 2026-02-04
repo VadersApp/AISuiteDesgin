@@ -972,9 +972,11 @@ const NotificationsView = ({ providers, setProviders, reminderDefaults, onRemind
     const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
     const [currentChannel, setCurrentChannel] = useState<'whatsapp' | 'sms' | 'E-Mail' | null>(null);
     const [localDefaults, setLocalDefaults] = useState(reminderDefaults);
+    const [smsCharCount, setSmsCharCount] = useState(0);
 
     useEffect(() => {
         setLocalDefaults(reminderDefaults);
+        setSmsCharCount(reminderDefaults.templates?.sms?.body?.length || 0);
     }, [reminderDefaults]);
 
     const handleConnectClick = (channel: 'whatsapp' | 'sms') => {
@@ -1037,6 +1039,35 @@ const NotificationsView = ({ providers, setProviders, reminderDefaults, onRemind
         onReminderDefaultsChange(localDefaults);
         toast({ title: 'Voreinstellungen gespeichert' });
     }
+
+    const handleTemplateChange = (channel: 'email' | 'whatsapp' | 'sms', field: 'subject' | 'body', value: string) => {
+        setLocalDefaults((prev: any) => {
+            const newTemplates = { ...prev.templates };
+            if (field === 'subject') {
+                newTemplates[channel].subject = value;
+            } else {
+                newTemplates[channel].body = value;
+            }
+            return { ...prev, templates: newTemplates };
+        });
+        if(channel === 'sms' && field === 'body') {
+            setSmsCharCount(value.length);
+        }
+    };
+
+    const resetTemplate = (channel: 'email' | 'whatsapp' | 'sms') => {
+        const defaultTemplates = {
+            email: { subject: "Erinnerung: Termin am {{date}} um {{time}}", body: "Hallo {{customer_name}},\n\nhier ist eine Erinnerung an deinen Termin am {{date}} um {{time}}.\n{{location_or_link}}\n\nVerschieben: {{reschedule_link}}\nAbsagen: {{cancel_link}}\n\nViele Grüße\n{{company_name}}" },
+            whatsapp: { body: "Hallo {{customer_name}}, Erinnerung an deinen Termin am {{date}} um {{time}}. {{location_or_link}}" },
+            sms: { body: "Erinnerung: Termin {{date}} {{time}}. {{location_or_link}}" }
+        };
+        handleTemplateChange(channel, 'body', defaultTemplates[channel].body);
+        if (channel === 'email') {
+            handleTemplateChange(channel, 'subject', defaultTemplates[channel].subject);
+        }
+    };
+    
+    const placeholders = [ "{{customer_name}}", "{{date}}", "{{time}}", "{{timezone}}", "{{appointment_type}}", "{{duration}}", "{{location_or_link}}", "{{reschedule_link}}", "{{cancel_link}}", "{{company_name}}" ];
 
     const providerChannels = [
         { key: 'email', name: 'E-Mail', icon: Mail },
@@ -1101,7 +1132,47 @@ const NotificationsView = ({ providers, setProviders, reminderDefaults, onRemind
                              <Button variant="outline" size="sm" onClick={addDefaultTrigger}><Plus className="w-4 h-4 mr-2"/> Zeitpunkt hinzufügen</Button>
                          </div>
                     </div>
-                    <div className="space-y-4 pt-4 border-t">
+
+                    <Separator className="my-6" />
+
+                    <div>
+                        <h4 className="font-bold text-foreground">Erinnerungstexte (Standard)</h4>
+                        <p className="text-sm text-muted-foreground">Definieren Sie die Standardtexte für Ihre Erinnerungen.</p>
+                    </div>
+
+                    <Tabs defaultValue="email" className="w-full">
+                        <TabsList>
+                            <TabsTrigger value="email">E-Mail</TabsTrigger>
+                            <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+                            <TabsTrigger value="sms">SMS</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="email" className="mt-4 space-y-4">
+                            <div className="space-y-2"><Label htmlFor="tpl-email-subject">Betreff</Label><Input id="tpl-email-subject" value={localDefaults.templates.email.subject} onChange={(e) => handleTemplateChange('email', 'subject', e.target.value)} className="bg-input"/></div>
+                            <div className="space-y-2"><Label htmlFor="tpl-email-body">Nachricht</Label><Textarea id="tpl-email-body" value={localDefaults.templates.email.body} onChange={(e) => handleTemplateChange('email', 'body', e.target.value)} rows={6} className="bg-input"/></div>
+                            <div className="flex flex-wrap gap-2 pt-2"><Button size="sm" variant="outline" onClick={() => toast({title: "KI-Prüfung gestartet"})}>🧠 Text prüfen</Button><Button size="sm" variant="outline" onClick={() => toast({title: "KI-Vorschlag wird generiert"})}>🧠 Umformulieren</Button><Button size="sm" variant="outline" onClick={() => resetTemplate('email')}>Zurücksetzen</Button></div>
+                        </TabsContent>
+                         <TabsContent value="whatsapp" className="mt-4 space-y-4">
+                             <div className="space-y-2"><Label htmlFor="tpl-wa-body">Nachricht</Label><Textarea id="tpl-wa-body" value={localDefaults.templates.whatsapp.body} onChange={(e) => handleTemplateChange('whatsapp', 'body', e.target.value)} rows={4} className="bg-input"/></div>
+                             <div className="flex flex-wrap gap-2 pt-2"><Button size="sm" variant="outline" onClick={() => toast({title: "KI-Prüfung gestartet"})}>🧠 Text prüfen</Button><Button size="sm" variant="outline" onClick={() => toast({title: "KI-Vorschlag wird generiert"})}>🧠 Umformulieren</Button><Button size="sm" variant="outline" onClick={() => resetTemplate('whatsapp')}>Zurücksetzen</Button></div>
+                         </TabsContent>
+                         <TabsContent value="sms" className="mt-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="tpl-sms-body">Nachricht</Label>
+                                <Textarea id="tpl-sms-body" value={localDefaults.templates.sms.body} onChange={(e) => handleTemplateChange('sms', 'body', e.target.value)} rows={3} className="bg-input"/>
+                                <p className="text-xs text-muted-foreground text-right">{smsCharCount} / 160 Zeichen</p>
+                            </div>
+                             <div className="flex flex-wrap gap-2 pt-2"><Button size="sm" variant="outline" onClick={() => toast({title: "KI-Prüfung gestartet"})}>🧠 Text prüfen</Button><Button size="sm" variant="outline" onClick={() => toast({title: "KI-Vorschlag wird generiert"})}>🧠 Umformulieren</Button><Button size="sm" variant="outline" onClick={() => resetTemplate('sms')}>Zurücksetzen</Button></div>
+                         </TabsContent>
+                    </Tabs>
+                    
+                    <div className="pt-4 border-t border-border">
+                        <Label className="text-xs font-bold uppercase text-muted-foreground">Verfügbare Platzhalter</Label>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                            {placeholders.map(p => <code key={p} className="text-xs p-1 bg-muted rounded-md font-mono">{p}</code>)}
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-6 border-t">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="def-ai-toggle" className="flex items-center gap-2 font-bold"><BrainCircuit className="w-4 h-4 text-blue-400"/> KI-Vorschläge global aktiv</Label>
                             <Switch id="def-ai-toggle" checked={localDefaults.ai.enabled} onCheckedChange={(c) => handleDefaultsChange('ai', { ...localDefaults.ai, enabled: c })} />
@@ -1333,7 +1404,12 @@ export default function QalenderPage() {
     channels: { email: true, whatsapp: false, sms: false },
     triggers: [{ value: 24, unit: 'hours' }, { value: 1, unit: 'hours' }],
     ai: { enabled: true },
-    fallback: { enabled: true }
+    fallback: { enabled: true },
+    templates: {
+      email: { subject: "Erinnerung: Termin am {{date}} um {{time}}", body: "Hallo {{customer_name}},\n\nhier ist eine Erinnerung an deinen Termin am {{date}} um {{time}}.\n{{location_or_link}}\n\nVerschieben: {{reschedule_link}}\nAbsagen: {{cancel_link}}\n\nViele Grüße\n{{company_name}}" },
+      whatsapp: { body: "Hallo {{customer_name}}, Erinnerung an deinen Termin am {{date}} um {{time}}. {{location_or_link}}" },
+      sms: { body: "Erinnerung: Termin {{date}} {{time}}. {{location_or_link}}" }
+    }
   });
 
   const renderContent = () => {
