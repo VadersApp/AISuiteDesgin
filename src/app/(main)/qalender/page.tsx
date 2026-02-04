@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  BrainCircuit,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -70,6 +71,14 @@ import {
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
+
 
 const tabs = [
   'Kalender',
@@ -81,6 +90,117 @@ const tabs = [
   'Benachrichtigungen',
   'Buchungen',
 ];
+
+const SmartReminders = ({ reminders, onRemindersChange, appointmentContext }: { reminders: any, onRemindersChange: (newReminders: any) => void, appointmentContext: any }) => {
+    const [aiSuggestion, setAiSuggestion] = React.useState<any>(null);
+
+    // Mock AI Suggestion Logic
+    React.useEffect(() => {
+        if (reminders?.ai?.enabled) {
+            // In a real app, call a service: getSmartReminderSuggestion(appointmentContext)
+            const suggestion = {
+                channels: { email: true, whatsapp: true, sms: false },
+                triggers: [{ value: 24, unit: 'hours' }, { value: 2, unit: 'hours' }],
+                reason: "Für diesen Termin sind Erinnerungen per E-Mail und WhatsApp 24h & 2h vorher empfohlen."
+            };
+            setAiSuggestion(suggestion);
+        } else {
+            setAiSuggestion(null);
+        }
+    }, [reminders?.ai?.enabled, appointmentContext]);
+
+    const handleChannelChange = (channel: 'email' | 'whatsapp' | 'sms', checked: boolean) => {
+        const newChannels = { ...reminders.channels, [channel]: checked };
+        onRemindersChange({ ...reminders, channels: newChannels, enabled: Object.values(newChannels).some(c => c) && reminders.triggers.length > 0 });
+    };
+
+    const handleTriggerChange = (index: number, field: 'value' | 'unit', value: string | number) => {
+        const newTriggers = [...reminders.triggers];
+        newTriggers[index] = { ...newTriggers[index], [field]: value };
+        onRemindersChange({ ...reminders, triggers: newTriggers });
+    };
+
+    const addTrigger = () => {
+        const newTriggers = [...reminders.triggers, { value: 1, unit: 'days' }];
+        onRemindersChange({ ...reminders, triggers: newTriggers, enabled: reminders.channels.email || reminders.channels.whatsapp || reminders.channels.sms });
+    };
+    
+    const removeTrigger = (index: number) => {
+        const newTriggers = reminders.triggers.filter((_: any, i: number) => i !== index);
+        onRemindersChange({ ...reminders, triggers: newTriggers, enabled: Object.values(reminders.channels).some(c => c) && newTriggers.length > 0 });
+    };
+
+    const applyAiSuggestion = () => {
+        if (aiSuggestion) {
+            onRemindersChange({ ...reminders, channels: aiSuggestion.channels, triggers: aiSuggestion.triggers, enabled: true });
+        }
+    };
+    
+    const toggleAi = (enabled: boolean) => {
+        onRemindersChange({ ...reminders, ai: { ...reminders.ai, enabled } });
+    }
+
+    return (
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="reminders">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <Bell className="w-4 h-4"/>
+                        <span className="font-bold">Erinnerungen (Smart · KI-gestützt)</span>
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 space-y-6">
+                    {/* Channel Selection */}
+                    <div className="space-y-2">
+                        <Label>Kanäle</Label>
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-2"><Checkbox id="email" checked={reminders.channels.email} onCheckedChange={(c) => handleChannelChange('email', !!c)} /><Label htmlFor="email">E-Mail</Label></div>
+                            <div className="flex items-center gap-2"><Checkbox id="whatsapp" checked={reminders.channels.whatsapp} onCheckedChange={(c) => handleChannelChange('whatsapp', !!c)} /><Label htmlFor="whatsapp">WhatsApp</Label></div>
+                            <div className="flex items-center gap-2"><Checkbox id="sms" checked={reminders.channels.sms} onCheckedChange={(c) => handleChannelChange('sms', !!c)} /><Label htmlFor="sms">SMS</Label></div>
+                        </div>
+                    </div>
+                    
+                    {/* Trigger Points */}
+                    <div className="space-y-2">
+                         <Label>Erinnerungszeitpunkte</Label>
+                         <div className="space-y-2">
+                             {reminders.triggers.map((trigger: any, index: number) => (
+                                 <div key={index} className="flex items-center gap-2">
+                                     <Input type="number" min="1" max="30" value={trigger.value} onChange={(e) => handleTriggerChange(index, 'value', parseInt(e.target.value))} className="w-20 bg-input" />
+                                     <Select value={trigger.unit} onValueChange={(v) => handleTriggerChange(index, 'unit', v)}>
+                                         <SelectTrigger className="w-32 bg-input"><SelectValue /></SelectTrigger>
+                                         <SelectContent>
+                                             <SelectItem value="minutes">Minuten</SelectItem>
+                                             <SelectItem value="hours">Stunden</SelectItem>
+                                             <SelectItem value="days">Tage</SelectItem>
+                                         </SelectContent>
+                                     </Select>
+                                     <Button variant="ghost" size="icon" onClick={() => removeTrigger(index)} className="w-8 h-8"><Trash2 className="w-4 h-4 text-muted-foreground"/></Button>
+                                 </div>
+                             ))}
+                             <Button variant="outline" size="sm" onClick={addTrigger}><Plus className="w-4 h-4 mr-2"/> Zeitpunkt hinzufügen</Button>
+                         </div>
+                    </div>
+                    
+                    {/* AI Suggestions */}
+                    <div className="space-y-4 pt-4 border-t border-border">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="ai-toggle" className="flex items-center gap-2 font-bold"><BrainCircuit className="w-4 h-4 text-blue-400"/> KI-Vorschläge aktiv</Label>
+                            <Switch id="ai-toggle" checked={reminders.ai.enabled} onCheckedChange={toggleAi} />
+                        </div>
+                        {reminders.ai.enabled && aiSuggestion && (
+                            <Card className="bg-blue-500/5 border-blue-500/10 p-4">
+                                <CardTitle className="text-sm text-blue-300 mb-2">KI-Empfehlung</CardTitle>
+                                <CardDescription className="text-xs text-blue-200/80 mb-4">{aiSuggestion.reason}</CardDescription>
+                                <Button size="sm" onClick={applyAiSuggestion}>Übernehmen</Button>
+                            </Card>
+                        )}
+                    </div>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+    );
+};
 
 const MonthView = ({ currentDate, bookings, onBookingClick, statusColors, onDayClick }: any) => {
     const calendarStart = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
@@ -236,9 +356,12 @@ const CalendarView = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [editedBooking, setEditedBooking] = useState<any | null>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<Date | null>(null);
+  const [newBookingData, setNewBookingData] = useState<any>(null);
+
 
   useEffect(() => {
     const dynamicBookings = getDynamicQalenderBookings().map((b) => ({
@@ -270,6 +393,7 @@ const CalendarView = () => {
 
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking);
+    setEditedBooking(JSON.parse(JSON.stringify(booking))); // Deep copy
   };
   
   const handleDayClick = (day: Date) => {
@@ -281,12 +405,31 @@ const CalendarView = () => {
     const newDate = new Date(day);
     newDate.setHours(hour, 0, 0, 0);
     setSelectedSlot(newDate);
-    setIsCreateSheetOpen(true);
+    handleCreateSheetOpen(true);
   };
+  
+  const handleCreateSheetOpen = (open: boolean) => {
+      if (open) {
+        setNewBookingData({
+            eventTypeName: '',
+            guestName: '',
+            guestEmail: '',
+            smartReminders: {
+                enabled: false,
+                channels: { email: false, whatsapp: false, sms: false },
+                triggers: [],
+                ai: { enabled: true, lastSuggestion: null }
+            }
+        });
+    } else {
+        setNewBookingData(null);
+    }
+    setIsCreateSheetOpen(open);
+  }
 
   const handleCreateBooking = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedSlot) return;
+    if (!selectedSlot || !newBookingData) return;
 
     const formData = new FormData(event.currentTarget);
     const guestName = formData.get('guestName') as string;
@@ -303,6 +446,7 @@ const CalendarView = () => {
     }
     
     const newBooking = {
+        ...newBookingData,
         bookingId: `bk-${Date.now()}`,
         eventTypeName: eventTypeName,
         guestName,
@@ -315,11 +459,20 @@ const CalendarView = () => {
 
     setBookings(prev => [...prev, newBooking]);
     setIsCreateSheetOpen(false);
+    setNewBookingData(null);
     toast({
         title: "Termin erstellt",
         description: `${eventTypeName} für ${guestName} wurde gebucht.`,
     });
   };
+
+  const handleSaveBookingChanges = () => {
+    // In a real app, send `editedBooking` to the backend
+    setBookings(prev => prev.map(b => b.bookingId === editedBooking.bookingId ? editedBooking : b));
+    setSelectedBooking(null);
+    setEditedBooking(null);
+    toast({ title: "Termin aktualisiert" });
+  }
 
   const calendarTitle = () => {
     if (view === 'month') {
@@ -377,25 +530,30 @@ const CalendarView = () => {
       </div>
       <Sheet
         open={!!selectedBooking}
-        onOpenChange={(open) => !open && setSelectedBooking(null)}
+        onOpenChange={(open) => {
+            if (!open) {
+                setSelectedBooking(null);
+                setEditedBooking(null);
+            }
+        }}
       >
         <SheetContent>
-          {selectedBooking && (
+          {editedBooking && (
             <>
               <SheetHeader>
-                <SheetTitle>{selectedBooking.eventTypeName}</SheetTitle>
+                <SheetTitle>{editedBooking.eventTypeName}</SheetTitle>
                 <SheetDescription>
-                  Buchungsdetails für {selectedBooking.guestName}.
+                  Buchungsdetails für {editedBooking.guestName}.
                 </SheetDescription>
               </SheetHeader>
               <div className="py-4 space-y-4">
                 <p>
-                  <strong>Gast:</strong> {selectedBooking.guestName} (
-                  {selectedBooking.guestEmail})
+                  <strong>Gast:</strong> {editedBooking.guestName} (
+                  {editedBooking.guestEmail})
                 </p>
                 <p>
                   <strong>Datum:</strong>{' '}
-                  {format(new Date(selectedBooking.startAt), 'dd. MMMM yyyy, HH:mm', {
+                  {format(new Date(editedBooking.startAt), 'dd. MMMM yyyy, HH:mm', {
                     locale: de,
                   })}{' '}
                   Uhr
@@ -403,16 +561,22 @@ const CalendarView = () => {
                 <p>
                   <strong>Status:</strong>{' '}
                   <Badge variant="outline" className="capitalize">
-                    {selectedBooking.status}
+                    {editedBooking.status}
                   </Badge>
                 </p>
                 <p>
-                  <strong>Zuständig:</strong> {selectedBooking.assignedOwnerId}
+                  <strong>Zuständig:</strong> {editedBooking.assignedOwnerId}
                 </p>
+                 <Separator />
+                    <SmartReminders 
+                        reminders={editedBooking.smartReminders}
+                        onRemindersChange={(newReminders) => setEditedBooking((prev: any) => ({ ...prev, smartReminders: newReminders }))}
+                        appointmentContext={editedBooking}
+                    />
               </div>
               <div className="mt-6 flex gap-2">
                 <Button variant="outline">Stornieren</Button>
-                <Button>Umplanen</Button>
+                <Button onClick={handleSaveBookingChanges}>Änderungen speichern</Button>
               </div>
             </>
           )}
@@ -420,10 +584,7 @@ const CalendarView = () => {
       </Sheet>
       <Sheet
         open={isCreateSheetOpen}
-        onOpenChange={(open) => {
-          if (!open) setSelectedSlot(null);
-          setIsCreateSheetOpen(open);
-        }}
+        onOpenChange={handleCreateSheetOpen}
       >
         <SheetContent>
           <SheetHeader>
@@ -432,6 +593,7 @@ const CalendarView = () => {
               {selectedSlot ? `Für ${format(selectedSlot, "eeee, d. MMMM yyyy 'um' HH:mm 'Uhr'", { locale: de })}` : 'Bitte Zeitfenster im Kalender auswählen.'}
             </SheetDescription>
           </SheetHeader>
+         {newBookingData && (
           <form onSubmit={handleCreateBooking} className="py-4 space-y-4">
             <div>
               <Label htmlFor="guestName">Name des Gasts</Label>
@@ -456,6 +618,12 @@ const CalendarView = () => {
                 </SelectContent>
               </Select>
             </div>
+             <Separator />
+             <SmartReminders 
+                reminders={newBookingData.smartReminders}
+                onRemindersChange={(newReminders) => setNewBookingData((prev: any) => ({ ...prev, smartReminders: newReminders }))}
+                appointmentContext={newBookingData}
+            />
             <div className="mt-6 flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsCreateSheetOpen(false)}>
                 Abbrechen
@@ -463,6 +631,7 @@ const CalendarView = () => {
               <Button type="submit" disabled={!selectedSlot}>Termin erstellen</Button>
             </div>
           </form>
+         )}
         </SheetContent>
       </Sheet>
     </Card>
@@ -822,5 +991,3 @@ export default function QalenderPage() {
     </div>
   );
 }
-
-    
