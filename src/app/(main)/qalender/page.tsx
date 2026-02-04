@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect, type FormEvent, useCallback } from 'react';
-import { Card, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Calendar as CalendarIcon,
@@ -23,6 +22,8 @@ import {
   ChevronLeft,
   ChevronRight,
   BrainCircuit,
+  Mail,
+  Send,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -78,6 +79,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
 
 const tabs = [
@@ -755,37 +757,182 @@ const FormsQuestionsView = () => (
   </Card>
 );
 
-const NotificationsView = () => (
-   <Card className="p-6">
-    <h2 className="text-lg font-bold text-foreground mb-1">Benachrichtigungen</h2>
-    <p className="text-sm text-muted-foreground mb-6">
-      Verwalten Sie automatische E-Mail-Bestätigungen und Erinnerungen.
-    </p>
-    <div className="space-y-4">
-      <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
-          <div>
-              <Label htmlFor="confirm-guest" className="font-bold text-foreground">Bestätigung an Gast</Label>
-              <p className="text-xs text-muted-foreground">Wird sofort nach der Buchung gesendet.</p>
-          </div>
-          <Switch id="confirm-guest" defaultChecked />
-      </div>
-      <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
-          <div>
-              <Label htmlFor="notify-owner" className="font-bold text-foreground">Info an Kalender-Inhaber</Label>
-              <p className="text-xs text-muted-foreground">Benachrichtigt Sie über neue Termine.</p>
-          </div>
-          <Switch id="notify-owner" defaultChecked />
-      </div>
-       <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
-          <div>
-              <Label htmlFor="reminder-24h" className="font-bold text-foreground">Erinnerung (24h vorher)</Label>
-              <p className="text-xs text-muted-foreground">Sendet eine Erinnerung an den Gast.</p>
-          </div>
-          <Switch id="reminder-24h" defaultChecked />
-      </div>
-    </div>
-  </Card>
-);
+const ProviderConnectDialog = ({ open, onOpenChange, channel, onConnect }: { open: boolean, onOpenChange: (open: boolean) => void, channel: 'whatsapp' | 'sms' | null, onConnect: (channel: 'whatsapp' | 'sms', data: any) => void }) => {
+    const { toast } = useToast();
+    if (!channel) return null;
+
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        const formData = new FormData(e.target as HTMLFormElement);
+        const data = Object.fromEntries(formData.entries());
+        onConnect(channel, data);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{channel === 'whatsapp' ? 'WhatsApp' : 'SMS'} Provider verbinden</DialogTitle>
+                    <DialogDescription>
+                        Geben Sie die API-Daten für Ihren Provider ein, um den Kanal zu aktivieren.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label>Provider</Label>
+                            <Select name="provider" defaultValue={channel === 'whatsapp' ? 'meta' : 'twilio'}>
+                                <SelectTrigger className="bg-input"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    {channel === 'whatsapp' ? (
+                                        <SelectItem value="meta">Meta Cloud API</SelectItem>
+                                    ) : (
+                                        <SelectItem value="twilio">Twilio</SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="apiKey">API Key / Token</Label>
+                            <Input id="apiKey" name="apiKey" type="password" className="bg-input" required />
+                        </div>
+                        {channel === 'whatsapp' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="phoneNumberId">Phone Number ID</Label>
+                                <Input id="phoneNumberId" name="phoneNumberId" className="bg-input" required />
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="sender">Sender Nummer / ID</Label>
+                            <Input id="sender" name="sender" className="bg-input" required />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+                        <Button type="submit">Verbinden & Speichern</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const NotificationsView = () => {
+    const { toast } = useToast();
+    const [providers, setProviders] = useState({
+        email: { connected: true, provider: 'System-Standard (SMTP)', sender: 'ceo@aisuite.de' },
+        whatsapp: { connected: false, provider: null, sender: null },
+        sms: { connected: false, provider: null, sender: null }
+    });
+    const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
+    const [currentChannel, setCurrentChannel] = useState<'whatsapp' | 'sms' | null>(null);
+
+    const handleConnectClick = (channel: 'whatsapp' | 'sms') => {
+        setCurrentChannel(channel);
+        setIsConnectDialogOpen(true);
+    };
+    
+    const handleConnect = (channel: 'whatsapp' | 'sms', data: any) => {
+        setProviders(prev => ({
+            ...prev,
+            [channel]: {
+                connected: true,
+                provider: data.provider === 'meta' ? 'Meta Cloud API' : 'Twilio',
+                sender: data.sender
+            }
+        }));
+        setIsConnectDialogOpen(false);
+        toast({ title: "Provider erfolgreich verbunden", description: `Der ${channel === 'whatsapp' ? 'WhatsApp' : 'SMS'} Kanal ist jetzt aktiv.` });
+    };
+
+    const handleDisconnect = (channel: 'whatsapp' | 'sms') => {
+        setProviders(prev => ({ ...prev, [channel]: { connected: false, provider: null, sender: null } }));
+        toast({ title: "Verbindung getrennt", variant: "destructive" });
+    };
+
+    const handleTest = (channel: string) => {
+        toast({ title: "Test gesendet", description: `Eine Testnachricht wurde über ${channel} versendet.`});
+    }
+
+    const providerChannels = [
+        { key: 'email', name: 'E-Mail', icon: Mail },
+        { key: 'whatsapp', name: 'WhatsApp', icon: MessageSquare },
+        { key: 'sms', name: 'SMS', icon: Bell }
+    ] as const;
+
+    return (
+        <div className="space-y-8">
+            <Card className="p-6">
+                <h2 className="text-lg font-bold text-foreground mb-1">Workflow-Benachrichtigungen</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                    Legen Sie fest, wann und wie Nutzer und Gäste über den Status eines Termins informiert werden.
+                </p>
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                        <div><Label htmlFor="confirm-guest" className="font-bold text-foreground">Bestätigung an Gast</Label><p className="text-xs text-muted-foreground">Wird sofort nach der Buchung gesendet.</p></div>
+                        <Switch id="confirm-guest" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                        <div><Label htmlFor="notify-owner" className="font-bold text-foreground">Info an Kalender-Inhaber</Label><p className="text-xs text-muted-foreground">Benachrichtigt Sie über neue Termine.</p></div>
+                        <Switch id="notify-owner" defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
+                        <div><Label htmlFor="reminder-24h" className="font-bold text-foreground">Erinnerung (24h vorher)</Label><p className="text-xs text-muted-foreground">Sendet eine Erinnerung an den Gast.</p></div>
+                        <Switch id="reminder-24h" defaultChecked />
+                    </div>
+                </div>
+            </Card>
+
+            <Card className="p-6">
+                <h2 className="text-lg font-bold text-foreground mb-1">Kanäle & Provider</h2>
+                <p className="text-sm text-muted-foreground mb-6">Verbinden Sie externe Dienste für den Versand via WhatsApp oder SMS.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {providerChannels.map(channel => {
+                        const Icon = channel.icon;
+                        const provider = providers[channel.key];
+                        return (
+                            <Card key={channel.key} className="p-4 flex flex-col justify-between">
+                                <div>
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-3">
+                                            <Icon className="w-5 h-5 text-muted-foreground"/>
+                                            <h3 className="font-bold text-foreground">{channel.name}</h3>
+                                        </div>
+                                        <Badge variant={provider.connected ? 'default' : 'outline'} className={cn(provider.connected ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : '')}>
+                                            {provider.connected ? 'Verbunden' : 'Nicht verbunden'}
+                                        </Badge>
+                                    </div>
+                                    <div className="mt-4 text-xs space-y-1">
+                                        <p><strong className="text-muted-foreground">Provider:</strong> {provider.provider || '---'}</p>
+                                        <p><strong className="text-muted-foreground">Sender:</strong> {provider.sender || '---'}</p>
+                                    </div>
+                                </div>
+                                <div className="mt-6 flex gap-2">
+                                    {provider.connected ? (
+                                        <>
+                                            <Button variant="outline" size="sm" onClick={() => handleTest(channel.name)}><Send className="w-3.5 h-3.5 mr-2"/>Test</Button>
+                                            <Button variant="destructive" size="sm" onClick={() => handleDisconnect(channel.key)}><Trash2 className="w-3.5 h-3.5 mr-2"/>Trennen</Button>
+                                        </>
+                                    ) : (
+                                        channel.key !== 'email' && <Button variant="default" size="sm" onClick={() => handleConnectClick(channel.key)} className="w-full"><LinkIcon className="w-3.5 h-3.5 mr-2"/>Verbinden</Button>
+                                    )}
+                                </div>
+                            </Card>
+                        )
+                    })}
+                </div>
+            </Card>
+
+            <ProviderConnectDialog 
+                open={isConnectDialogOpen}
+                onOpenChange={setIsConnectDialogOpen}
+                channel={currentChannel}
+                onConnect={handleConnect}
+            />
+        </div>
+    )
+};
+
 
 const ConnectView = () => (
   <div className="space-y-8">
@@ -908,7 +1055,7 @@ const BookingsView = () => {
                     <TableRow>
                         <TableHead>Terminart</TableHead>
                         <TableHead>Gast</TableHead>
-                        <TableHead>Datum & Uhrzeit</TableHead>
+                        <TableHead>Datum &amp; Uhrzeit</TableHead>
                         <TableHead>Zuständig</TableHead>
                         <TableHead>Status</TableHead>
                     </TableRow>
