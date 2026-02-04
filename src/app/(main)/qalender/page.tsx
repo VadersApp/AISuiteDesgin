@@ -37,6 +37,12 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
   LayoutDashboard,
   BookCopy,
   Network,
@@ -137,12 +143,15 @@ const tabs = [
   'Buchungen',
 ];
 
-const SmartReminders = ({ reminders, onRemindersChange, appointmentContext, providerStatus }: { reminders: any, onRemindersChange: (newReminders: any) => void, appointmentContext: any, providerStatus: any }) => {
+const SmartReminders = ({ reminders, onRemindersChange, appointmentContext, providerStatus, defaults }: { reminders: any, onRemindersChange: (newReminders: any) => void, appointmentContext: any, providerStatus: any, defaults: any }) => {
+    const { toast } = useToast();
     const [aiSuggestion, setAiSuggestion] = React.useState<any>(null);
+    const isUsingDefaults = !reminders?.override;
+    const effectiveReminders = isUsingDefaults ? defaults : reminders;
 
     // Mock AI Suggestion Logic
     React.useEffect(() => {
-        if (reminders?.ai?.enabled) {
+        if (effectiveReminders?.ai?.enabled) {
             // In a real app, call a service: getSmartReminderSuggestion(appointmentContext)
             const suggestion = {
                 channels: { email: true, whatsapp: true, sms: false },
@@ -153,37 +162,53 @@ const SmartReminders = ({ reminders, onRemindersChange, appointmentContext, prov
         } else {
             setAiSuggestion(null);
         }
-    }, [reminders?.ai?.enabled, appointmentContext]);
+    }, [effectiveReminders?.ai?.enabled, appointmentContext]);
+
+    const handleToggleOverride = () => {
+        const newOverrideState = !isUsingDefaults;
+        const newReminders = newOverrideState
+            ? { ...defaults, override: true } // Start with defaults when overriding
+            : { override: false }; // Clear specific settings when switching back
+        onRemindersChange(newReminders);
+    };
+
+    const ensureOverride = (updates: Partial<typeof reminders>) => {
+        onRemindersChange({
+            ...reminders,
+            ...updates,
+            override: true,
+        });
+    };
 
     const handleChannelChange = (channel: 'email' | 'whatsapp' | 'sms', checked: boolean) => {
         const newChannels = { ...reminders.channels, [channel]: checked };
-        onRemindersChange({ ...reminders, channels: newChannels, enabled: Object.values(newChannels).some(c => c) && reminders.triggers.length > 0 });
+        ensureOverride({ channels: newChannels, enabled: Object.values(newChannels).some(c => c) && reminders.triggers.length > 0 });
     };
 
     const handleTriggerChange = (index: number, field: 'value' | 'unit', value: string | number) => {
         const newTriggers = [...reminders.triggers];
         newTriggers[index] = { ...newTriggers[index], [field]: value };
-        onRemindersChange({ ...reminders, triggers: newTriggers });
+        ensureOverride({ triggers: newTriggers });
     };
 
     const addTrigger = () => {
         const newTriggers = [...reminders.triggers, { value: 1, unit: 'days' }];
-        onRemindersChange({ ...reminders, triggers: newTriggers, enabled: reminders.channels.email || reminders.channels.whatsapp || reminders.channels.sms });
+        ensureOverride({ triggers: newTriggers, enabled: Object.values(reminders.channels).some(c => c) && newTriggers.length > 0 });
     };
     
     const removeTrigger = (index: number) => {
         const newTriggers = reminders.triggers.filter((_: any, i: number) => i !== index);
-        onRemindersChange({ ...reminders, triggers: newTriggers, enabled: Object.values(reminders.channels).some(c => c) && newTriggers.length > 0 });
+        ensureOverride({ triggers: newTriggers, enabled: Object.values(reminders.channels).some(c => c) && newTriggers.length > 0 });
     };
 
     const applyAiSuggestion = () => {
         if (aiSuggestion) {
-            onRemindersChange({ ...reminders, channels: aiSuggestion.channels, triggers: aiSuggestion.triggers, enabled: true });
+            ensureOverride({ channels: aiSuggestion.channels, triggers: aiSuggestion.triggers, enabled: true });
         }
     };
     
     const toggleAi = (enabled: boolean) => {
-        onRemindersChange({ ...reminders, ai: { ...reminders.ai, enabled } });
+        ensureOverride({ ai: { ...reminders.ai, enabled } });
     }
 
     return (
@@ -196,70 +221,79 @@ const SmartReminders = ({ reminders, onRemindersChange, appointmentContext, prov
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-4 space-y-6">
-                    {reminders.channels.whatsapp && !providerStatus.whatsapp.connected && (
-                        <Alert variant="destructive" className="text-xs">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertTitle className="font-bold">WhatsApp nicht verbunden</AlertTitle>
-                            <AlertDescription>
-                                Um Erinnerungen per WhatsApp zu senden, verbinden Sie bitte einen Provider in den Benachrichtigungs-Einstellungen.
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                    {reminders.channels.sms && !providerStatus.sms.connected && (
-                         <Alert variant="destructive" className="text-xs">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertTitle className="font-bold">SMS nicht verbunden</AlertTitle>
-                            <AlertDescription>
-                                Um Erinnerungen per SMS zu senden, verbinden Sie bitte einen Provider in den Benachrichtigungs-Einstellungen.
-                            </AlertDescription>
-                        </Alert>
-                    )}
-                    {/* Channel Selection */}
-                    <div className="space-y-2">
-                        <Label>Kanäle</Label>
-                        <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-2"><Checkbox id="email" checked={reminders.channels.email} onCheckedChange={(c) => handleChannelChange('email', !!c)} /><Label htmlFor="email">E-Mail</Label></div>
-                            <div className="flex items-center gap-2"><Checkbox id="whatsapp" checked={reminders.channels.whatsapp} onCheckedChange={(c) => handleChannelChange('whatsapp', !!c)} /><Label htmlFor="whatsapp">WhatsApp</Label></div>
-                            <div className="flex items-center gap-2"><Checkbox id="sms" checked={reminders.channels.sms} onCheckedChange={(c) => handleChannelChange('sms', !!c)} /><Label htmlFor="sms">SMS</Label></div>
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+                        <Label htmlFor="use-defaults" className="font-bold">Voreinstellung verwenden</Label>
+                        <Switch id="use-defaults" checked={isUsingDefaults} onCheckedChange={handleToggleOverride} />
+                    </div>
+
+                    {!isUsingDefaults && (
+                        <div className="space-y-6 border-t border-border pt-6 animate-in fade-in">
+                            {reminders.channels.whatsapp && !providerStatus.whatsapp.connected && (
+                                <Alert variant="destructive" className="text-xs">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertTitle className="font-bold">WhatsApp nicht verbunden</AlertTitle>
+                                    <AlertDescription>
+                                        Um Erinnerungen per WhatsApp zu senden, verbinden Sie bitte einen Provider in den Benachrichtigungs-Einstellungen.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                            {reminders.channels.sms && !providerStatus.sms.connected && (
+                                <Alert variant="destructive" className="text-xs">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <AlertTitle className="font-bold">SMS nicht verbunden</AlertTitle>
+                                    <AlertDescription>
+                                        Um Erinnerungen per SMS zu senden, verbinden Sie bitte einen Provider in den Benachrichtigungs-Einstellungen.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                            {/* Channel Selection */}
+                            <div className="space-y-2">
+                                <Label>Kanäle</Label>
+                                <div className="flex items-center gap-6">
+                                    <div className="flex items-center gap-2"><Checkbox id="email" checked={reminders.channels.email} onCheckedChange={(c) => handleChannelChange('email', !!c)} /><Label htmlFor="email">E-Mail</Label></div>
+                                    <div className="flex items-center gap-2"><Checkbox id="whatsapp" checked={reminders.channels.whatsapp} onCheckedChange={(c) => handleChannelChange('whatsapp', !!c)} /><Label htmlFor="whatsapp">WhatsApp</Label></div>
+                                    <div className="flex items-center gap-2"><Checkbox id="sms" checked={reminders.channels.sms} onCheckedChange={(c) => handleChannelChange('sms', !!c)} /><Label htmlFor="sms">SMS</Label></div>
+                                </div>
+                            </div>
+                            
+                            {/* Trigger Points */}
+                            <div className="space-y-2">
+                                <Label>Erinnerungszeitpunkte</Label>
+                                <div className="space-y-2">
+                                    {reminders.triggers.map((trigger: any, index: number) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <Input type="number" min="1" max="30" value={trigger.value} onChange={(e) => handleTriggerChange(index, 'value', parseInt(e.target.value))} className="w-20 bg-input" />
+                                            <Select value={trigger.unit} onValueChange={(v) => handleTriggerChange(index, 'unit', v)}>
+                                                <SelectTrigger className="w-32 bg-input"><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="minutes">Minuten</SelectItem>
+                                                    <SelectItem value="hours">Stunden</SelectItem>
+                                                    <SelectItem value="days">Tage</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <Button variant="ghost" size="icon" onClick={() => removeTrigger(index)} className="w-8 h-8"><Trash2 className="w-4 h-4 text-muted-foreground"/></Button>
+                                        </div>
+                                    ))}
+                                    <Button variant="outline" size="sm" onClick={addTrigger}><Plus className="w-4 h-4 mr-2"/> Zeitpunkt hinzufügen</Button>
+                                </div>
+                            </div>
+                            
+                            {/* AI Suggestions */}
+                            <div className="space-y-4 pt-4 border-t border-border">
+                                <div className="flex items-center justify-between">
+                                    <Label htmlFor="ai-toggle" className="flex items-center gap-2 font-bold"><BrainCircuit className="w-4 h-4 text-blue-400"/> KI-Vorschläge aktiv</Label>
+                                    <Switch id="ai-toggle" checked={reminders.ai.enabled} onCheckedChange={toggleAi} />
+                                </div>
+                                {reminders.ai.enabled && aiSuggestion && (
+                                    <Card className="bg-blue-500/5 border-blue-500/10 p-4">
+                                        <CardTitle className="text-sm text-blue-300 mb-2">KI-Empfehlung</CardTitle>
+                                        <CardDescription className="text-xs text-blue-200/80 mb-4">{aiSuggestion.reason}</CardDescription>
+                                        <Button size="sm" onClick={applyAiSuggestion}>Übernehmen</Button>
+                                    </Card>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                    
-                    {/* Trigger Points */}
-                    <div className="space-y-2">
-                         <Label>Erinnerungszeitpunkte</Label>
-                         <div className="space-y-2">
-                             {reminders.triggers.map((trigger: any, index: number) => (
-                                 <div key={index} className="flex items-center gap-2">
-                                     <Input type="number" min="1" max="30" value={trigger.value} onChange={(e) => handleTriggerChange(index, 'value', parseInt(e.target.value))} className="w-20 bg-input" />
-                                     <Select value={trigger.unit} onValueChange={(v) => handleTriggerChange(index, 'unit', v)}>
-                                         <SelectTrigger className="w-32 bg-input"><SelectValue /></SelectTrigger>
-                                         <SelectContent>
-                                             <SelectItem value="minutes">Minuten</SelectItem>
-                                             <SelectItem value="hours">Stunden</SelectItem>
-                                             <SelectItem value="days">Tage</SelectItem>
-                                         </SelectContent>
-                                     </Select>
-                                     <Button variant="ghost" size="icon" onClick={() => removeTrigger(index)} className="w-8 h-8"><Trash2 className="w-4 h-4 text-muted-foreground"/></Button>
-                                 </div>
-                             ))}
-                             <Button variant="outline" size="sm" onClick={addTrigger}><Plus className="w-4 h-4 mr-2"/> Zeitpunkt hinzufügen</Button>
-                         </div>
-                    </div>
-                    
-                    {/* AI Suggestions */}
-                    <div className="space-y-4 pt-4 border-t border-border">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="ai-toggle" className="flex items-center gap-2 font-bold"><BrainCircuit className="w-4 h-4 text-blue-400"/> KI-Vorschläge aktiv</Label>
-                            <Switch id="ai-toggle" checked={reminders.ai.enabled} onCheckedChange={toggleAi} />
-                        </div>
-                        {reminders.ai.enabled && aiSuggestion && (
-                            <Card className="bg-blue-500/5 border-blue-500/10 p-4">
-                                <CardTitle className="text-sm text-blue-300 mb-2">KI-Empfehlung</CardTitle>
-                                <CardDescription className="text-xs text-blue-200/80 mb-4">{aiSuggestion.reason}</CardDescription>
-                                <Button size="sm" onClick={applyAiSuggestion}>Übernehmen</Button>
-                            </Card>
-                        )}
-                    </div>
+                    )}
                 </AccordionContent>
             </AccordionItem>
         </Accordion>
@@ -415,7 +449,7 @@ const DayView = ({ currentDate, bookings, onBookingClick, onSlotClick, statusCol
     )
 }
 
-const CalendarView = ({ providers }: { providers: any }) => {
+const CalendarView = ({ providers, reminderDefaults }: { providers: any, reminderDefaults: any }) => {
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
@@ -434,6 +468,22 @@ const CalendarView = ({ providers }: { providers: any }) => {
     }));
     setBookings(dynamicBookings);
   }, []);
+
+  useEffect(() => {
+    if (selectedBooking) {
+      const initialReminders = selectedBooking.smartReminders ? {
+        override: false,
+        ...selectedBooking.smartReminders,
+      } : {
+        override: false,
+        enabled: reminderDefaults.enabled,
+        channels: { ...reminderDefaults.channels },
+        triggers: [...reminderDefaults.triggers],
+        ai: { ...reminderDefaults.ai }
+      };
+      setEditedBooking({ ...selectedBooking, smartReminders: initialReminders });
+    }
+  }, [selectedBooking, reminderDefaults]);
 
   const statusColors: { [key: string]: string } = {
     booked: 'bg-primary/20 text-primary-foreground border-primary/30',
@@ -457,7 +507,6 @@ const CalendarView = ({ providers }: { providers: any }) => {
 
   const handleBookingClick = (booking: any) => {
     setSelectedBooking(booking);
-    setEditedBooking(JSON.parse(JSON.stringify(booking))); // Deep copy
   };
   
   const handleDayClick = (day: Date) => {
@@ -479,10 +528,11 @@ const CalendarView = ({ providers }: { providers: any }) => {
             guestName: '',
             guestEmail: '',
             smartReminders: {
-                enabled: false,
-                channels: { email: false, whatsapp: false, sms: false },
-                triggers: [],
-                ai: { enabled: true, lastSuggestion: null }
+                override: false,
+                enabled: reminderDefaults.enabled,
+                channels: { ...reminderDefaults.channels },
+                triggers: [...reminderDefaults.triggers],
+                ai: { ...reminderDefaults.ai }
             }
         });
     } else {
@@ -637,6 +687,7 @@ const CalendarView = ({ providers }: { providers: any }) => {
                         onRemindersChange={(newReminders) => setEditedBooking((prev: any) => ({ ...prev, smartReminders: newReminders }))}
                         appointmentContext={editedBooking}
                         providerStatus={providers}
+                        defaults={reminderDefaults}
                     />
               </div>
               <div className="mt-6 flex gap-2">
@@ -689,6 +740,7 @@ const CalendarView = ({ providers }: { providers: any }) => {
                 onRemindersChange={(newReminders) => setNewBookingData((prev: any) => ({ ...prev, smartReminders: newReminders }))}
                 appointmentContext={newBookingData}
                 providerStatus={providers}
+                defaults={reminderDefaults}
             />
             <div className="mt-6 flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsCreateSheetOpen(false)}>
@@ -914,11 +966,16 @@ const TestSendDialog = ({ open, onOpenChange, channel }: { open: boolean, onOpen
     );
 };
 
-const NotificationsView = ({ providers, setProviders }: { providers: any, setProviders: any }) => {
+const NotificationsView = ({ providers, setProviders, reminderDefaults, onReminderDefaultsChange }: { providers: any, setProviders: any, reminderDefaults: any, onReminderDefaultsChange: (newDefaults: any) => void }) => {
     const { toast } = useToast();
     const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
     const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
     const [currentChannel, setCurrentChannel] = useState<'whatsapp' | 'sms' | 'E-Mail' | null>(null);
+    const [localDefaults, setLocalDefaults] = useState(reminderDefaults);
+
+    useEffect(() => {
+        setLocalDefaults(reminderDefaults);
+    }, [reminderDefaults]);
 
     const handleConnectClick = (channel: 'whatsapp' | 'sms') => {
         setCurrentChannel(channel);
@@ -947,6 +1004,39 @@ const NotificationsView = ({ providers, setProviders }: { providers: any, setPro
         setCurrentChannel(channel);
         setIsTestDialogOpen(true);
     }
+    
+    const handleDefaultsChange = (field: string, value: any) => {
+        setLocalDefaults((prev: any) => ({ ...prev, [field]: value }));
+    };
+
+    const handleDefaultChannelChange = (channel: 'email' | 'whatsapp' | 'sms', checked: boolean) => {
+        const newChannels = { ...localDefaults.channels, [channel]: checked };
+        handleDefaultsChange('channels', newChannels);
+        handleDefaultsChange('enabled', Object.values(newChannels).some(c => c) && localDefaults.triggers.length > 0);
+    };
+    
+    const handleDefaultTriggerChange = (index: number, field: 'value' | 'unit', value: string | number) => {
+        const newTriggers = [...localDefaults.triggers];
+        newTriggers[index] = { ...newTriggers[index], [field]: value };
+        handleDefaultsChange('triggers', newTriggers);
+    };
+
+    const addDefaultTrigger = () => {
+        const newTriggers = [...localDefaults.triggers, { value: 1, unit: 'days' }];
+        handleDefaultsChange('triggers', newTriggers);
+        handleDefaultsChange('enabled', Object.values(localDefaults.channels).some(c => c));
+    };
+    
+    const removeDefaultTrigger = (index: number) => {
+        const newTriggers = localDefaults.triggers.filter((_: any, i: number) => i !== index);
+        handleDefaultsChange('triggers', newTriggers);
+        handleDefaultsChange('enabled', Object.values(localDefaults.channels).some(c => c) && newTriggers.length > 0);
+    };
+
+    const handleSaveDefaults = () => {
+        onReminderDefaultsChange(localDefaults);
+        toast({ title: 'Voreinstellungen gespeichert' });
+    }
 
     const providerChannels = [
         { key: 'email', name: 'E-Mail', icon: Mail },
@@ -970,11 +1060,61 @@ const NotificationsView = ({ providers, setProviders }: { providers: any, setPro
                         <div><Label htmlFor="notify-owner" className="font-bold text-foreground">Info an Kalender-Inhaber</Label><p className="text-xs text-muted-foreground">Benachrichtigt Sie über neue Termine.</p></div>
                         <Switch id="notify-owner" defaultChecked />
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
-                        <div><Label htmlFor="reminder-24h" className="font-bold text-foreground">Erinnerung (24h vorher)</Label><p className="text-xs text-muted-foreground">Sendet eine Erinnerung an den Gast.</p></div>
-                        <Switch id="reminder-24h" defaultChecked />
-                    </div>
                 </div>
+            </Card>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>Smart Reminders – Voreinstellungen</CardTitle>
+                    <CardDescription>Legen Sie globale Standards für automatische Terminerinnerungen fest.</CardDescription>
+                </CardHeader>
+                 <CardContent className="space-y-6">
+                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+                        <Label htmlFor="defaults-enabled" className="font-bold">Erinnerungen standardmäßig aktiv</Label>
+                        <Switch id="defaults-enabled" checked={localDefaults.enabled} onCheckedChange={(c) => handleDefaultsChange('enabled', c)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Standard-Kanäle</Label>
+                        <div className="flex items-center gap-6 p-3 rounded-lg bg-muted/50 border">
+                            <div className="flex items-center gap-2"><Checkbox id="def-email" checked={localDefaults.channels.email} onCheckedChange={(c) => handleDefaultChannelChange('email', !!c)} /><Label htmlFor="def-email">E-Mail</Label></div>
+                            <div className="flex items-center gap-2"><Checkbox id="def-whatsapp" checked={localDefaults.channels.whatsapp} onCheckedChange={(c) => handleDefaultChannelChange('whatsapp', !!c)} /><Label htmlFor="def-whatsapp">WhatsApp</Label></div>
+                            <div className="flex items-center gap-2"><Checkbox id="def-sms" checked={localDefaults.channels.sms} onCheckedChange={(c) => handleDefaultChannelChange('sms', !!c)} /><Label htmlFor="def-sms">SMS</Label></div>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                         <Label>Standard-Zeitpunkte</Label>
+                         <div className="space-y-2 p-3 rounded-lg bg-muted/50 border">
+                             {localDefaults.triggers.map((trigger: any, index: number) => (
+                                 <div key={index} className="flex items-center gap-2">
+                                     <Input type="number" min="1" max="30" value={trigger.value} onChange={(e) => handleDefaultTriggerChange(index, 'value', parseInt(e.target.value))} className="w-20 bg-input" />
+                                     <Select value={trigger.unit} onValueChange={(v) => handleDefaultTriggerChange(index, 'unit', v)}>
+                                         <SelectTrigger className="w-32 bg-input"><SelectValue /></SelectTrigger>
+                                         <SelectContent>
+                                             <SelectItem value="minutes">Minuten</SelectItem>
+                                             <SelectItem value="hours">Stunden</SelectItem>
+                                             <SelectItem value="days">Tage</SelectItem>
+                                         </SelectContent>
+                                     </Select>
+                                     <Button variant="ghost" size="icon" onClick={() => removeDefaultTrigger(index)} className="w-8 h-8"><Trash2 className="w-4 h-4 text-muted-foreground"/></Button>
+                                 </div>
+                             ))}
+                             <Button variant="outline" size="sm" onClick={addDefaultTrigger}><Plus className="w-4 h-4 mr-2"/> Zeitpunkt hinzufügen</Button>
+                         </div>
+                    </div>
+                    <div className="space-y-4 pt-4 border-t">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="def-ai-toggle" className="flex items-center gap-2 font-bold"><BrainCircuit className="w-4 h-4 text-blue-400"/> KI-Vorschläge global aktiv</Label>
+                            <Switch id="def-ai-toggle" checked={localDefaults.ai.enabled} onCheckedChange={(c) => handleDefaultsChange('ai', { ...localDefaults.ai, enabled: c })} />
+                        </div>
+                         <div className="flex items-center justify-between">
+                            <Label htmlFor="def-fallback-toggle" className="font-bold">Fallback aktivieren</Label>
+                            <Switch id="def-fallback-toggle" checked={localDefaults.fallback.enabled} onCheckedChange={(c) => handleDefaultsChange('fallback', { ...localDefaults.fallback, enabled: c })} />
+                        </div>
+                    </div>
+                 </CardContent>
+                 <CardFooter>
+                     <Button onClick={handleSaveDefaults}>Voreinstellungen speichern</Button>
+                 </CardFooter>
             </Card>
 
             <Card className="p-6">
@@ -1187,11 +1327,19 @@ export default function QalenderPage() {
       whatsapp: { connected: false, provider: null, sender: null },
       sms: { connected: false, provider: null, sender: null }
   });
+  
+  const [smartReminderDefaults, setSmartReminderDefaults] = useState({
+    enabled: true,
+    channels: { email: true, whatsapp: false, sms: false },
+    triggers: [{ value: 24, unit: 'hours' }, { value: 1, unit: 'hours' }],
+    ai: { enabled: true },
+    fallback: { enabled: true }
+  });
 
   const renderContent = () => {
     switch (activeTab) {
       case 'Kalender':
-        return <CalendarView providers={providers} />;
+        return <CalendarView providers={providers} reminderDefaults={smartReminderDefaults} />;
       case 'Kalender verbinden':
         return <ConnectView />;
       case 'Terminarten':
@@ -1203,11 +1351,11 @@ export default function QalenderPage() {
       case 'Formulare':
         return <FormsQuestionsView />;
       case 'Benachrichtigungen':
-        return <NotificationsView providers={providers} setProviders={setProviders} />;
+        return <NotificationsView providers={providers} setProviders={setProviders} reminderDefaults={smartReminderDefaults} onReminderDefaultsChange={setSmartReminderDefaults} />;
        case 'Buchungen':
         return <BookingsView />;
       default:
-        return <CalendarView providers={providers} />;
+        return <CalendarView providers={providers} reminderDefaults={smartReminderDefaults} />;
     }
   };
 

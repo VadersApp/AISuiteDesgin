@@ -344,6 +344,7 @@ export function getDynamicQalenderBookings() {
             role: 'Interessent', 
             context: 'Verkaufschance #123',
             smartReminders: {
+              override: false,
               enabled: true,
               channels: { email: true, whatsapp: false, sms: false },
               triggers: [
@@ -361,24 +362,24 @@ export function getDynamicQalenderBookings() {
               }
             }
         },
-        { bookingId: 'bk-today-2', eventTypeName: 'Q-Hub Sync', guestName: 'Anna Schmidt', guestEmail: 'anna.schmidt@qore.com', startAt: new Date(new Date().setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Projekt Phoenix', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-today-2', eventTypeName: 'Q-Hub Sync', guestName: 'Anna Schmidt', guestEmail: 'anna.schmidt@qore.com', startAt: new Date(new Date().setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Projekt Phoenix', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
 
         // Tomorrow
-        { bookingId: 'bk-tomorrow-1', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: new Date(tomorrow.setHours(11, 30, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Kunde', context: 'Deal #456', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-tomorrow-1', eventTypeName: 'Technische Demo 60 Min', guestName: 'Erika Musterfrau', guestEmail: 'erika@beispiel.de', startAt: new Date(tomorrow.setHours(11, 30, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'bestätigt', role: 'Kunde', context: 'Deal #456', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
 
         // This Week
-        { bookingId: 'bk-week-1', eventTypeName: 'Support-Call 15 Min', guestName: 'Ben Weber', guestEmail: 'ben.weber@qore.com', startAt: new Date(addDays(new Date(),3).setHours(15, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'bestätigt', role: 'Intern', context: 'Ticket #9981', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-week-1', eventTypeName: 'Support-Call 15 Min', guestName: 'Ben Weber', guestEmail: 'ben.weber@qore.com', startAt: new Date(addDays(new Date(),3).setHours(15, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'bestätigt', role: 'Intern', context: 'Ticket #9981', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
         
         // Later
-        { bookingId: 'bk-later-1', eventTypeName: 'Strategie-Session', guestName: 'Management Team', guestEmail: '-', startAt: new Date(addDays(new Date(), 14).setHours(9, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Q2 Planung', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-later-1', eventTypeName: 'Strategie-Session', guestName: 'Management Team', guestEmail: '-', startAt: new Date(addDays(new Date(), 14).setHours(9, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'bestätigt', role: 'Intern', context: 'Q2 Planung', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
 
         // Critical / Open
-        { bookingId: 'bk-overdue-1', eventTypeName: 'Follow-Up Call', guestName: 'Peter Panik', guestEmail: 'peter.panik@alt.com', startAt: new Date(overdue.setHours(16, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'überfällig', role: 'Interessent', context: 'Verkaufschance #098', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
-        { bookingId: 'bk-unconfirmed-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Wanda Warter', guestEmail: 'wanda.warter@mail.com', startAt: new Date(dayAfter.setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'unbestätigt', role: 'Interessent', context: 'Verkaufschance #111', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
-        { bookingId: 'bk-no-result-1', eventTypeName: 'Kundenfeedback', guestName: 'Zufrieden GmbH', guestEmail: 'kontakt@zufrieden.de', startAt: new Date(overdue.setHours(11, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'ohne Ergebnis', role: 'Kunde', context: 'Ticket #887', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-overdue-1', eventTypeName: 'Follow-Up Call', guestName: 'Peter Panik', guestEmail: 'peter.panik@alt.com', startAt: new Date(overdue.setHours(16, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'überfällig', role: 'Interessent', context: 'Verkaufschance #098', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-unconfirmed-1', eventTypeName: 'Erstgespräch 30 Min', guestName: 'Wanda Warter', guestEmail: 'wanda.warter@mail.com', startAt: new Date(dayAfter.setHours(14, 0, 0, 0)).toISOString(), assignedOwnerId: 'Leo Sales', status: 'unbestätigt', role: 'Interessent', context: 'Verkaufschance #111', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-no-result-1', eventTypeName: 'Kundenfeedback', guestName: 'Zufrieden GmbH', guestEmail: 'kontakt@zufrieden.de', startAt: new Date(overdue.setHours(11, 0, 0, 0)).toISOString(), assignedOwnerId: 'Ava Assist', status: 'ohne Ergebnis', role: 'Kunde', context: 'Ticket #887', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
 
         // Past
-        { bookingId: 'bk-past-1', eventTypeName: 'Kick-Off Projekt Phoenix', guestName: 'Projektteam', guestEmail: '-', startAt: new Date(past.setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'erledigt', role: 'Intern', context: 'Projekt Phoenix', smartReminders: { enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
+        { bookingId: 'bk-past-1', eventTypeName: 'Kick-Off Projekt Phoenix', guestName: 'Projektteam', guestEmail: '-', startAt: new Date(past.setHours(10, 0, 0, 0)).toISOString(), assignedOwnerId: 'Dr. Müller', status: 'erledigt', role: 'Intern', context: 'Projekt Phoenix', smartReminders: { override: false, enabled: false, channels: { email: false, whatsapp: false, sms: false }, triggers: [], ai: { enabled: true, lastSuggestion: null } } },
     ];
 }
 
