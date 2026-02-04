@@ -1,34 +1,11 @@
 'use client';
 
-import { useState, useEffect, type FormEvent, useCallback } from 'react';
-import { Card, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import React from 'react';
+import { useState, useRef, useEffect, type FormEvent, useCallback } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Calendar as CalendarIcon,
-  Link as LinkIcon,
-  Power,
-  Plus,
-  Clock,
-  Users,
-  FileQuestion,
-  Bell,
-  Plug,
-  List,
-  Video,
-  Phone,
-  Pencil,
-  Copy,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  BrainCircuit,
-  Mail,
-  Send,
-  MessageSquare,
-} from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { eventTypes, getDynamicQalenderBookings, qalenderTeams } from '@/lib/data';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -37,15 +14,100 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
+import {
+  LayoutDashboard,
+  BookCopy,
+  Network,
+  FolderKanban,
+  Users,
+  Building,
+  BarChart3,
+  Award,
+  Settings,
+  Search,
+  Plus,
+  GraduationCap,
+  Video,
+  File as FileIcon,
+  BrainCircuit,
+  Camera,
+  Mic,
+  ScreenShare,
+  StopCircle,
+  Play,
+  Loader2,
+  Check,
+  Radio,
+  Upload,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  FileQuestion,
+  CheckSquare,
+  CheckCircle,
+  GitBranch,
+  ThumbsUp,
+  ThumbsDown,
+  ListTodo,
+  FileClock,
+  BookOpenCheck,
+  MoreHorizontal,
+  Info,
+  Sparkles,
+  MessageSquare,
+  Calendar as CalendarIcon,
+  Link as LinkIcon,
+  Power,
+  Clock,
+  FileText,
+  Phone,
+  Pencil,
+  Copy,
+  Trash2,
+  Bell,
+  Plug,
+  List,
+  Mail,
+  Send,
+  AlertTriangle,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { mockCourses, mockParticipants, mockLearningPaths, qOnboardingModules, mockAcademyVideos, mockAcademyDocs, mockCertificates, kpiMitarbeiter, departmentsConfig, eventTypes, getDynamicQalenderBookings, qalenderTeams } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import {
   format,
   startOfMonth,
@@ -62,25 +124,6 @@ import {
   endOfWeek,
 } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
-import React from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 
 
 const tabs = [
@@ -94,7 +137,7 @@ const tabs = [
   'Buchungen',
 ];
 
-const SmartReminders = ({ reminders, onRemindersChange, appointmentContext }: { reminders: any, onRemindersChange: (newReminders: any) => void, appointmentContext: any }) => {
+const SmartReminders = ({ reminders, onRemindersChange, appointmentContext, providerStatus }: { reminders: any, onRemindersChange: (newReminders: any) => void, appointmentContext: any, providerStatus: any }) => {
     const [aiSuggestion, setAiSuggestion] = React.useState<any>(null);
 
     // Mock AI Suggestion Logic
@@ -153,6 +196,24 @@ const SmartReminders = ({ reminders, onRemindersChange, appointmentContext }: { 
                     </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-4 space-y-6">
+                    {reminders.channels.whatsapp && !providerStatus.whatsapp.connected && (
+                        <Alert variant="destructive" className="text-xs">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle className="font-bold">WhatsApp nicht verbunden</AlertTitle>
+                            <AlertDescription>
+                                Um Erinnerungen per WhatsApp zu senden, verbinden Sie bitte einen Provider in den Benachrichtigungs-Einstellungen.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {reminders.channels.sms && !providerStatus.sms.connected && (
+                         <Alert variant="destructive" className="text-xs">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle className="font-bold">SMS nicht verbunden</AlertTitle>
+                            <AlertDescription>
+                                Um Erinnerungen per SMS zu senden, verbinden Sie bitte einen Provider in den Benachrichtigungs-Einstellungen.
+                            </AlertDescription>
+                        </Alert>
+                    )}
                     {/* Channel Selection */}
                     <div className="space-y-2">
                         <Label>Kanäle</Label>
@@ -354,7 +415,7 @@ const DayView = ({ currentDate, bookings, onBookingClick, onSlotClick, statusCol
     )
 }
 
-const CalendarView = () => {
+const CalendarView = ({ providers }: { providers: any }) => {
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
@@ -575,6 +636,7 @@ const CalendarView = () => {
                         reminders={editedBooking.smartReminders}
                         onRemindersChange={(newReminders) => setEditedBooking((prev: any) => ({ ...prev, smartReminders: newReminders }))}
                         appointmentContext={editedBooking}
+                        providerStatus={providers}
                     />
               </div>
               <div className="mt-6 flex gap-2">
@@ -626,6 +688,7 @@ const CalendarView = () => {
                 reminders={newBookingData.smartReminders}
                 onRemindersChange={(newReminders) => setNewBookingData((prev: any) => ({ ...prev, smartReminders: newReminders }))}
                 appointmentContext={newBookingData}
+                providerStatus={providers}
             />
             <div className="mt-6 flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsCreateSheetOpen(false)}>
@@ -818,15 +881,44 @@ const ProviderConnectDialog = ({ open, onOpenChange, channel, onConnect }: { ope
     );
 };
 
-const NotificationsView = () => {
+const TestSendDialog = ({ open, onOpenChange, channel }: { open: boolean, onOpenChange: (open: boolean) => void, channel: string | null }) => {
     const { toast } = useToast();
-    const [providers, setProviders] = useState({
-        email: { connected: true, provider: 'System-Standard (SMTP)', sender: 'ceo@aisuite.de' },
-        whatsapp: { connected: false, provider: null, sender: null },
-        sms: { connected: false, provider: null, sender: null }
-    });
+    if (!channel) return null;
+
+    const handleSubmit = (e: FormEvent) => {
+        e.preventDefault();
+        toast({ title: "Test gesendet", description: `Eine Testnachricht wurde über ${channel} versendet.`});
+        onOpenChange(false);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Testnachricht senden: {channel}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="recipient">{channel === 'E-Mail' ? 'Empfänger-E-Mail' : 'Empfänger-Nummer (E.164)'}</Label>
+                            <Input id="recipient" type={channel === 'E-Mail' ? 'email' : 'tel'} placeholder={channel === 'E-Mail' ? 'test@example.com' : '+491701234567'} className="bg-input" required />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+                        <Button type="submit">Test senden</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const NotificationsView = ({ providers, setProviders }: { providers: any, setProviders: any }) => {
+    const { toast } = useToast();
     const [isConnectDialogOpen, setIsConnectDialogOpen] = useState(false);
-    const [currentChannel, setCurrentChannel] = useState<'whatsapp' | 'sms' | null>(null);
+    const [isTestDialogOpen, setIsTestDialogOpen] = useState(false);
+    const [currentChannel, setCurrentChannel] = useState<'whatsapp' | 'sms' | 'E-Mail' | null>(null);
 
     const handleConnectClick = (channel: 'whatsapp' | 'sms') => {
         setCurrentChannel(channel);
@@ -834,7 +926,7 @@ const NotificationsView = () => {
     };
     
     const handleConnect = (channel: 'whatsapp' | 'sms', data: any) => {
-        setProviders(prev => ({
+        setProviders((prev: any) => ({
             ...prev,
             [channel]: {
                 connected: true,
@@ -847,12 +939,13 @@ const NotificationsView = () => {
     };
 
     const handleDisconnect = (channel: 'whatsapp' | 'sms') => {
-        setProviders(prev => ({ ...prev, [channel]: { connected: false, provider: null, sender: null } }));
+        setProviders((prev: any) => ({ ...prev, [channel]: { connected: false, provider: null, sender: null } }));
         toast({ title: "Verbindung getrennt", variant: "destructive" });
     };
 
-    const handleTest = (channel: string) => {
-        toast({ title: "Test gesendet", description: `Eine Testnachricht wurde über ${channel} versendet.`});
+    const handleTestClick = (channel: 'whatsapp' | 'sms' | 'E-Mail') => {
+        setCurrentChannel(channel);
+        setIsTestDialogOpen(true);
     }
 
     const providerChannels = [
@@ -888,16 +981,16 @@ const NotificationsView = () => {
                 <h2 className="text-lg font-bold text-foreground mb-1">Kanäle & Provider</h2>
                 <p className="text-sm text-muted-foreground mb-6">Verbinden Sie externe Dienste für den Versand via WhatsApp oder SMS.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {providerChannels.map(channel => {
-                        const Icon = channel.icon;
-                        const provider = providers[channel.key];
+                    {providerChannels.map(channelInfo => {
+                        const Icon = channelInfo.icon;
+                        const provider = providers[channelInfo.key];
                         return (
-                            <Card key={channel.key} className="p-4 flex flex-col justify-between">
+                            <Card key={channelInfo.key} className="p-4 flex flex-col justify-between">
                                 <div>
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
                                             <Icon className="w-5 h-5 text-muted-foreground"/>
-                                            <h3 className="font-bold text-foreground">{channel.name}</h3>
+                                            <h3 className="font-bold text-foreground">{channelInfo.name}</h3>
                                         </div>
                                         <Badge variant={provider.connected ? 'default' : 'outline'} className={cn(provider.connected ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : '')}>
                                             {provider.connected ? 'Verbunden' : 'Nicht verbunden'}
@@ -911,11 +1004,11 @@ const NotificationsView = () => {
                                 <div className="mt-6 flex gap-2">
                                     {provider.connected ? (
                                         <>
-                                            <Button variant="outline" size="sm" onClick={() => handleTest(channel.name)}><Send className="w-3.5 h-3.5 mr-2"/>Test</Button>
-                                            <Button variant="destructive" size="sm" onClick={() => handleDisconnect(channel.key)}><Trash2 className="w-3.5 h-3.5 mr-2"/>Trennen</Button>
+                                            <Button variant="outline" size="sm" onClick={() => handleTestClick(channelInfo.name)}><Send className="w-3.5 h-3.5 mr-2"/>Test</Button>
+                                            {channelInfo.key !== 'email' && <Button variant="destructive" size="sm" onClick={() => handleDisconnect(channelInfo.key)}><Trash2 className="w-3.5 h-3.5 mr-2"/>Trennen</Button>}
                                         </>
                                     ) : (
-                                        channel.key !== 'email' && <Button variant="default" size="sm" onClick={() => handleConnectClick(channel.key)} className="w-full"><LinkIcon className="w-3.5 h-3.5 mr-2"/>Verbinden</Button>
+                                        channelInfo.key !== 'email' && <Button variant="default" size="sm" onClick={() => handleConnectClick(channelInfo.key)} className="w-full"><LinkIcon className="w-3.5 h-3.5 mr-2"/>Verbinden</Button>
                                     )}
                                 </div>
                             </Card>
@@ -927,8 +1020,13 @@ const NotificationsView = () => {
             <ProviderConnectDialog 
                 open={isConnectDialogOpen}
                 onOpenChange={setIsConnectDialogOpen}
-                channel={currentChannel}
+                channel={currentChannel as 'whatsapp' | 'sms' | null}
                 onConnect={handleConnect}
+            />
+            <TestSendDialog
+                 open={isTestDialogOpen}
+                 onOpenChange={setIsTestDialogOpen}
+                 channel={currentChannel}
             />
         </div>
     )
@@ -1084,11 +1182,16 @@ const BookingsView = () => {
 
 export default function QalenderPage() {
   const [activeTab, setActiveTab] = useState(tabs[0]);
+  const [providers, setProviders] = useState({
+      email: { connected: true, provider: 'System-Standard (SMTP)', sender: 'ceo@aisuite.de' },
+      whatsapp: { connected: false, provider: null, sender: null },
+      sms: { connected: false, provider: null, sender: null }
+  });
 
   const renderContent = () => {
     switch (activeTab) {
       case 'Kalender':
-        return <CalendarView />;
+        return <CalendarView providers={providers} />;
       case 'Kalender verbinden':
         return <ConnectView />;
       case 'Terminarten':
@@ -1100,11 +1203,11 @@ export default function QalenderPage() {
       case 'Formulare':
         return <FormsQuestionsView />;
       case 'Benachrichtigungen':
-        return <NotificationsView />;
+        return <NotificationsView providers={providers} setProviders={setProviders} />;
        case 'Buchungen':
         return <BookingsView />;
       default:
-        return <CalendarView />;
+        return <CalendarView providers={providers} />;
     }
   };
 
