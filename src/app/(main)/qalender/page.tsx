@@ -1412,6 +1412,11 @@ export default function QalenderPage() {
     }
   });
 
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'Kalender':
@@ -1462,7 +1467,9 @@ export default function QalenderPage() {
         ))}
       </div>
 
-      <div className="mt-8 animate-in fade-in duration-300">{renderContent()}</div>
+      <div className="mt-8 animate-in fade-in duration-300">
+          {isClient ? renderContent() : null}
+      </div>
     </div>
   );
 }
