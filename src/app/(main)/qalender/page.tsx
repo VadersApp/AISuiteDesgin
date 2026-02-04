@@ -252,12 +252,12 @@ const SmartReminders = ({ reminders, onRemindersChange, appointmentContext, prov
                         {previewTemplate?.subject && (
                             <div className="space-y-1">
                                 <Label className="text-xs font-bold uppercase text-muted-foreground">Betreff</Label>
-                                <p className="text-sm font-medium p-2 bg-muted/50 rounded-md border">{previewTemplate.subject}</p>
+                                <p className="text-sm font-medium p-2 bg-muted/50 rounded-md border">{previewTemplate?.subject}</p>
                             </div>
                         )}
                         <div className="space-y-1">
                             <Label className="text-xs font-bold uppercase text-muted-foreground">Nachricht</Label>
-                            <p className="text-sm p-2 bg-muted/50 rounded-md border whitespace-pre-wrap">{previewTemplate.body}</p>
+                            <p className="text-sm p-2 bg-muted/50 rounded-md border whitespace-pre-wrap">{previewTemplate?.body}</p>
                         </div>
                     </div>
                 </DialogContent>
@@ -1331,7 +1331,7 @@ const NotificationsView = ({ providers, setProviders, reminderDefaults, onRemind
                                             {channelInfo.key !== 'email' && <Button variant="destructive" size="sm" onClick={() => handleDisconnect(channelInfo.key)}><Trash2 className="w-3.5 h-3.5 mr-2"/>Trennen</Button>}
                                         </>
                                     ) : (
-                                        channelInfo.key !== 'email' && <Button variant="default" size="sm" onClick={() => handleConnectClick(channelInfo.key)} className="w-full"><LinkIcon className="w-3.5 h-3.5 mr-2"/>Verbinden</Button>
+                                        channelInfo.key !== 'email' && <Button variant="default" size="sm" onClick={() => handleConnectClick(channelInfo.key as 'whatsapp' | 'sms')} className="w-full"><LinkIcon className="w-3.5 h-3.5 mr-2"/>Verbinden</Button>
                                     )}
                                 </div>
                             </Card>
